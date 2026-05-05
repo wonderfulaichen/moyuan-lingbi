@@ -1,0 +1,90 @@
+appId: com.moyuan.lingbi
+productName: 墨渊灵笔
+directories:
+  output: build/release
+  buildResources: src/assets
+
+files:
+  - build/renderer/**/*
+  - build/main/**/*
+  - package.json
+  - "!**/*.map"
+  - "!**/*.ts"
+  - "!**/*.js.map"
+  - "!**/*.css.map"
+  - "!**/node_modules/*/{test,__tests__,tests,powered-test,example,examples,docs,documentation,benchmark,benchmarks}/**"
+  - "!**/node_modules/.{cache,nyc_output,babel-cache,eslint-cache}/**"
+  - "!**/node_modules/*/.github/**"
+  - "!**/node_modules/*/.vscode/**"
+  - "!**/node_modules/*/CHANGELOG*"
+  - "!**/node_modules/*/README*"
+  - "!**/node_modules/*/LICENSE*"
+  - "!**/node_modules/*/package-lock.json"
+  - "!**/node_modules/*/yarn.lock"
+  - "!**/node_modules/*/pnpm-lock.yaml"
+  - "!**/*.{iml,o,hprof,orig,pyc,pyo,rbc,swp,csproj,sln,xproj}"
+  - "!._*"
+  - "!**/{.DS_Store,.git,.hg,.svn,CVS,RCS,SCCS,.gitignore,.gitattributes}"
+  - "!**/{__pycache__,thumbs.db,.flowconfig,.idea,.vs,.nyc_output}"
+  - "!**/{appveyor.yml,.travis.yml,circle.yml,codecov.yml}"
+  - "!**/{npm-debug.log,yarn.lock,.yarn-integrity,.yarn-metadata.json}"
+  - "!**/coverage/**"
+  - "!**/.github/**"
+  - "!**/.vscode/**"
+  - "!**/test*/**"
+  - "!**/__test__*/**"
+  - "!**/spec*/**"
+  - "!**/demo*/**"
+  - "!**/example*/**"
+  - "!**/doc*/**"
+  - "!**/benchmark*/**"
+  - "!**/screenshot*/**"
+  - "!**/src/**"
+
+extraFiles: []
+
+win:
+  target: portable
+  artifactName: "${productName}.${ext}"
+  files:
+    - "!**/chrome-sandbox"
+    - "!**/libGLESv2.dll"
+    - "!**/vk_swiftshader.dll"
+    - "!**/d3dcompiler_47.dll"
+    - "!**/ffmpeg.dll"
+    - "!**/libEGL.dll"
+    - "!**/resources/*.pak"
+    - "!**/resources/*.bin"
+    - "!**/locales/**"
+    - "!**/*.pak"
+
+mac:
+  target: dmg
+  category: public.app-category.productivity
+  files:
+    - "!**/chrome-sandbox"
+    - "!**/libGLESv2.dylib"
+    - "!**/libEGL.dylib"
+    - "!**/resources/*.pak"
+    - "!**/resources/*.bin"
+    - "!**/locales/**"
+    - "!**/*.pak"
+
+linux:
+  target: AppImage
+  category: Utility
+  files:
+    - "!**/chrome-sandbox"
+    - "!**/libGLESv2.so"
+    - "!**/libEGL.so"
+    - "!**/resources/*.pak"
+    - "!**/resources/*.bin"
+    - "!**/locales/**"
+    - "!**/*.pak"
+
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  shortcutName: "墨渊灵笔"

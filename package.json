@@ -1,0 +1,47 @@
+{
+  "name": "moyuan-lingbi",
+  "private": true,
+  "version": "0.1.0",
+  "license": "MIT",
+  "main": "build/main/main.js",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "electron:dev": "npm run build:electron && concurrently -k \"vite\" \"wait-on http://localhost:3000 && electron .\"",
+    "electron:build": "npm run build && npm run build:electron",
+    "electron:build-win": "npm run electron:build && electron-builder --win",
+    "electron:build-mac": "npm run electron:build && electron-builder --mac",
+    "electron:build-linux": "npm run electron:build && electron-builder --linux",
+    "build:electron": "copy src\\main\\main.js build\\main\\main.js && copy src\\main\\preload.js build\\main\\preload.js",
+    "build:android": "vite build && npx cap sync android",
+    "build:android:release": "vite build && npx cap sync android && cd android && .\\gradlew assembleRelease",
+    "build:pwa": "vite build"
+  },
+  "dependencies": {
+    "@capacitor/android": "^8.3.1",
+    "@capacitor/core": "^8.3.1",
+    "@tailwindcss/vite": "^4.1.18",
+    "@xyflow/react": "^12.10.2",
+    "react": "^19.2.3",
+    "react-dom": "^19.2.3",
+    "tailwindcss": "^4.1.18",
+    "zustand": "^5.0.12"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^8.3.1",
+    "@tailwindcss/postcss": "^4.1.18",
+    "@types/node": "^22.19.3",
+    "@types/react": "^19.2.7",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^5.0.0",
+    "autoprefixer": "^10.4.23",
+    "concurrently": "^9.2.1",
+    "electron": "^39.8.9",
+    "electron-builder": "^26.0.12",
+    "png-to-ico": "^3.0.1",
+    "typescript": "~5.8.3",
+    "vite": "^6.4.1",
+    "wait-on": "^9.0.3"
+  }
+}

@@ -1,0 +1,48 @@
+# Dependencies
+node_modules/
+
+# Build output
+build/
+dist/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Logs
+*.log
+npm-debug.log*
+
+# Cache
+.cache/
+.eslintcache
+
+# Capacitor (Android native project - generated from web build)
+android/
+
+# Keystore (Android signing)
+*.keystore
+*.keystore.properties
+
+# Reference projects (third-party code, not part of this project)
+参考项目/
+
+# Local dev files
+对话内容.txt
+debug_*.png
+debug_*.txt
+debug_*.bin
+test_write.txt
+fixed.png
