@@ -46,6 +46,7 @@ extraFiles: []
 win:
   target: portable
   artifactName: "${productName}.${ext}"
+  signAndEditExecutable: false
   files:
     - "!**/chrome-sandbox"
     - "!**/libGLESv2.dll"

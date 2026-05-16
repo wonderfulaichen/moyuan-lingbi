@@ -31,19 +31,29 @@ export function useAIGeneration() {
 
     setIsGenerating(true);
     setGenerating(model.name, label, source);
+    setProgress(0); // 初始化进度为 0
 
     try {
+      let progressValue = 0;
       const result = await aiService.generateWithContext({
         model,
         prompt,
         systemPrompt,
         temperature,
         maxTokens,
-      }, onStream ? (update) => {
+      }, (update) => {
         if (update.isStreaming && update.content) {
-          onStream(update.content);
+          // 模拟进度递增（0-95%）
+          progressValue = Math.min(progressValue + 3, 95);
+          setProgress(progressValue);
+          
+          if (onStream) {
+            onStream(update.content);
+          }
         }
-      } : undefined);
+      });
+
+      setProgress(100); // 完成进度设为 100
 
       if (result.error) {
         setError(result.error);

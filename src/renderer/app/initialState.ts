@@ -1,11 +1,17 @@
 import { AppState } from '../../shared/types';
-import { DEFAULT_PROMPTS, INITIAL_MODELS } from '../../shared/constants';
+import { INITIAL_MODELS } from '../../shared/constants';
+import { getPromptLibrary } from '../../shared/prompts';
 
 export const INITIAL_APP_STATE: AppState = {
   projects: [],
   activeProjectId: null,
   models: INITIAL_MODELS,
-  prompts: DEFAULT_PROMPTS,
+  prompts: getPromptLibrary().filter(p => p.editable).map(p => ({
+    id: p.id,
+    category: p.category as any,
+    name: p.name,
+    content: p.content,
+  })),
   activeModelId: 'default-openai',
 };
 

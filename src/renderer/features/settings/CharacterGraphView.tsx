@@ -27,19 +27,24 @@ interface ParsedCharacter {
 }
 
 function extractRealNameFromContent(content: string, fileTitle: string): string {
+  const shortTitle = fileTitle.replace(/^[【\[［]\d+[/／]\d+[】\]］]\s*[：:]\s*/).trim();
+  if (shortTitle.length >= 2 && shortTitle.length <= 15 && !/^(?:一、|二、|三、|##\s*)/.test(shortTitle)) {
+    return shortTitle;
+  }
+
+  const bracketName = content.match(/【([^】]{2,10})】/);
+  if (bracketName && !/^(?:角色类型|主角|女主|反派|配角)$/.test(bracketName[1])) {
+    return bracketName[1];
+  }
+
   const h2Match = content.match(/^#{1,3}\s+(.+)$/m);
   if (h2Match) {
     let name = h2Match[1].trim();
     name = name.replace(/^[【\[［]\d+[/／]\d+[】\]］]\s*[：:]\s*创建\s*(?:角色|人物|档案)?\s*(?:主角|后母|伪圣子|小师弟|死对头|药峰之主|之主)?[：:\s]*/, '');
     name = name.replace(/^【[^】]*】\s*/, '').replace(/[（(][^）)]*[）)]/g, '').trim();
-    if (name.length >= 2 && name.length <= 15 && !/[【】\[\]()#]/.test(name)) return name;
+    if (name.length >= 2 && name.length <= 15 && !/[【】\[\]()#]/.test(name) && !/^(?:一、|二、|三、|基础信息)$/.test(name)) return name;
   }
-  const bracketName = content.match(/【([^】]{2,10})】/);
-  if (bracketName && !/^(?:角色类型|主角|女主|反派|配角)$/.test(bracketName[1])) {
-    return bracketName[1];
-  }
-  const shortTitle = fileTitle.replace(/^[【\[［]\d+[/／]\d+[】\]］]\s*[：:]\s*/).trim();
-  if (shortTitle.length >= 2 && shortTitle.length <= 15) return shortTitle;
+
   return fileTitle;
 }
 
@@ -61,9 +66,10 @@ function parseCardToCharacter(card: ContentCard, allCardTitles: string[]): Parse
   const text = `${card.title} ${card.tagText} ${card.content}`;
 
   let role = '配角';
-  const rolePatterns = ['主角', '女主', '反派配角', '反派', '配角'];
-  for (const p of rolePatterns) {
-    if (text.includes(p)) { role = p; break; }
+  const rolePattern = /【\s*角色类型\s*[：:]\s*(主角|女主|反派配角|反派|配角)\s*】/;
+  const match = text.match(rolePattern);
+  if (match) {
+    role = match[1];
   }
 
   let gender = '';

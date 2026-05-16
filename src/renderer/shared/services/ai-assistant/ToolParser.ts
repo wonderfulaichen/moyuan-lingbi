@@ -3,6 +3,19 @@ export interface ParsedToolCall {
   [key: string]: any;
 }
 
+export type TodoStatus = 'pending' | 'in_progress' | 'completed';
+
+export interface ParsedTodoItem {
+  id?: string;
+  content: string;
+  status?: TodoStatus;
+}
+
+export interface UpdateTodoListCall {
+  action: 'update_todo_list';
+  todos: string | ParsedTodoItem[];
+}
+
 export interface ToolParseResult {
   toolCalls: ParsedToolCall[];
   textParts: string;
@@ -13,6 +26,64 @@ export class ToolParser {
     const toolCalls = ToolParser.parseWithPrecedingContent(content);
     const textParts = ToolParser.extractText(content);
     return { toolCalls, textParts };
+  }
+
+  static extract(content: string): ParsedToolCall[] {
+    const results: ParsedToolCall[] = [];
+    
+    const regex = /```tool\s*\n([\s\S]*?)```/g;
+    let match;
+    while ((match = regex.exec(content)) !== null) {
+      try {
+        const raw = match[1].trim();
+        const parsed = JSON.parse(raw);
+        if (parsed.action) results.push(parsed);
+      } catch (e) {
+        console.warn('[ToolParser] 标准解析失败:', (e as Error).message, '原始内容前200字:', match[1].trim().slice(0, 200));
+        const lenient = ToolParser.tryLenientJSON(match[1].trim());
+        if (lenient) results.push(lenient);
+      }
+    }
+    return results;
+  }
+
+  static parseMarkdownChecklist(md: string): ParsedTodoItem[] {
+    if (typeof md !== 'string') return [];
+    
+    const lines = md
+      .split(/\r?\n/)
+      .map(l => l.trim())
+      .filter(Boolean);
+    
+    const todos: ParsedTodoItem[] = [];
+    
+    for (const line of lines) {
+      const match = line.match(/^(?:[-*]\s*)?\[\s*([ xX\-~])\s*\]\s+(.+)$/);
+      if (!match) continue;
+      
+      let status: TodoStatus = 'pending';
+      if (match[1] === 'x' || match[1] === 'X') {
+        status = 'completed';
+      } else if (match[1] === '-' || match[1] === '~') {
+        status = 'in_progress';
+      }
+      
+      todos.push({
+        content: match[2].trim(),
+        status,
+      });
+    }
+    
+    return todos;
+  }
+
+  static extractUpdateTodoList(content: string): UpdateTodoListCall | null {
+    const results = ToolParser.extract(content);
+    const todoCall = results.find(tc => tc.action === 'update_todo_list');
+    
+    if (!todoCall || !todoCall.todos) return null;
+    
+    return todoCall as unknown as UpdateTodoListCall;
   }
 
   static extractStandard(content: string): ParsedToolCall[] {
@@ -103,7 +174,7 @@ export class ToolParser {
         if ((tc.action === 'create_file' || tc.action === 'update_file') && (!tc.content || tc.content.trim() === '') && pendingText) {
           const cleaned = ToolParser.cleanFileContent(pendingText);
           const inferredName = ToolParser.extractTitleFromContent(cleaned);
-          if (inferredName && tc.action === 'create_file' && (!tc.name || tc.name.length > 10 || tc.name !== inferredName)) {
+          if (inferredName && tc.action === 'create_file' && !tc.name) {
             tc.name = inferredName;
           }
           results.push({ ...tc, content: cleaned });
@@ -181,6 +252,7 @@ export class ToolParser {
       title = title.replace(/^[【\[［]\d+[/／]\d+[】\]］]\s*[：:]?\s*/, '').trim();
       if (stepPattern.test(rawHeading.replace(/^#{1,3}\s+/, '').trim())) continue;
       if (/^(?:一致性检查|角色创建规划|任务规划|计划|全部|总计|总结|✅)$/.test(title)) continue;
+      if (/^(?:创建|新建|生成|撰写|编写|制作|构建|添加|写入|设定)\S+.*$/.test(title)) continue;
 
       const bracketMatch = title.match(/【([^】]+)】/);
       if (bracketMatch && bracketMatch[1].length >= 2 && bracketMatch[1].length <= 10) {

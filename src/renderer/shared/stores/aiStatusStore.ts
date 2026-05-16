@@ -139,6 +139,7 @@ export const useAIStatusStore = create<AIStatusState>()((set, get) => ({
         progress: 100,
         statusMessage: completeMsg,
         lastDuration: duration,
+        error: null,
         tasks: updatedTasks,
       };
     });

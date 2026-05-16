@@ -1,9 +1,145 @@
-import { PromptTemplate, ModelConfig } from '../types';
+import { ModelConfig } from '../types';
 
-export const DEFAULT_PROMPTS: PromptTemplate[] = [
+export interface ProviderInfo {
+  label: string;
+  icon: string;
+  color: string;
+  gradient: string;
+  bgGradient: string;
+  defaultEndpoint: string;
+  endpointHint: string;
+  apiKeyHint: string;
+  website: string;
+  apiApplyUrl: string;
+  modelExamples: string[];
+  description: string;
+  tips: string[];
+}
+
+export const PROVIDER_INFO: Record<string, ProviderInfo> = {
+  'openai-compatible': {
+    label: 'OpenAI Compatible',
+    icon: 'fa-cloud',
+    color: 'text-green-400',
+    gradient: 'from-green-500/20 to-emerald-500/10',
+    bgGradient: 'from-[var(--color-primary-400)] to-[var(--color-primary-500)]',
+    defaultEndpoint: 'https://api.openai.com/v1',
+    endpointHint: '兼容 OpenAI 格式的 API 端点',
+    apiKeyHint: '以 sk- 开头的 API 密钥',
+    website: 'https://platform.openai.com',
+    apiApplyUrl: 'https://platform.openai.com/api-keys',
+    modelExamples: ['gpt-4o', 'gpt-4-turbo', 'gpt-3.5-turbo'],
+    description: '标准 OpenAI 兼容接口，支持大多数 AI 模型服务商',
+    tips: [
+      '支持所有提供 OpenAI 兼容 API 的服务商',
+      'API Key 在服务商平台获取',
+      '确保端点地址以 /v1 结尾',
+      '支持流式输出（Streaming）'
+    ],
+  },
+  'deepseek': {
+    label: 'DeepSeek',
+    icon: 'fa-dragon',
+    color: 'text-blue-400',
+    gradient: 'from-blue-500/20 to-indigo-500/10',
+    bgGradient: 'from-blue-500 to-cyan-600',
+    defaultEndpoint: 'https://api.deepseek.com/v1',
+    endpointHint: 'DeepSeek 官方 API 端点',
+    apiKeyHint: '在 platform.deepseek.com 获取 API 密钥',
+    website: 'https://platform.deepseek.com',
+    apiApplyUrl: 'https://platform.deepseek.com/api_keys',
+    modelExamples: ['deepseek-chat', 'deepseek-coder'],
+    description: '深度求索公司开发的 AI 模型，提供高质量的对话和代码生成能力',
+    tips: [
+      '注册后可在控制台获取 API Key',
+      '免费额度：每月 1000 万 tokens',
+      '模型名称填写：deepseek-chat',
+      '支持 128K 上下文长度'
+    ],
+  },
+  'ollama': {
+    label: 'Ollama (本地)',
+    icon: 'fa-server',
+    color: 'text-emerald-400',
+    gradient: 'from-emerald-500/20 to-teal-500/10',
+    bgGradient: 'from-green-500 to-emerald-600',
+    defaultEndpoint: 'http://127.0.0.1:11434/v1',
+    endpointHint: 'Ollama 本地服务的 API 端点',
+    apiKeyHint: 'Ollama 无需 API 密钥，留空即可',
+    website: 'https://ollama.com',
+    apiApplyUrl: 'https://ollama.com/download',
+    modelExamples: ['qwen2.5', 'llama3.2', 'mistral', 'gemma', 'phi'],
+    description: '本地运行的 AI 模型服务，支持多种开源模型，数据完全本地处理',
+    tips: [
+      '下载并安装 Ollama：https://ollama.com/download',
+      '在终端运行：ollama pull qwen2.5 下载模型',
+      '启动服务：ollama serve',
+      'API Key 留空即可',
+      '模型名称填写已下载的模型名，如：qwen2.5',
+      '支持完全离线运行，保护隐私'
+    ],
+  },
+  'local': {
+    label: '本地模型 (GGUF)',
+    icon: 'fa-microchip',
+    color: 'text-amber-400',
+    gradient: 'from-amber-500/20 to-orange-500/10',
+    bgGradient: 'from-amber-500 to-orange-600',
+    defaultEndpoint: '',
+    endpointHint: '使用 node-llama-cpp 直接加载 .gguf 模型文件',
+    apiKeyHint: '无需 API 密钥，直接使用本地模型文件',
+    website: 'https://huggingface.co/models?library=gguf',
+    apiApplyUrl: 'https://huggingface.co/models?library=gguf&sort=downloads',
+    modelExamples: ['qwen2.5-7b-instruct-q4_k_m', 'llama-3.2-3b-instruct-q4_k_m', 'phi-3-mini-4k-instruct-q4'],
+    description: '内置 llama.cpp 推理引擎，用户自备 GGUF 格式模型文件，完全离线运行',
+    tips: [
+      '将 .gguf 模型文件放入 models 目录',
+      '模型名称填写文件名（不含 .gguf 后缀）',
+      '根据硬件配置选择合适的模型大小',
+      '首次运行需要加载模型，可能需要几分钟'
+    ],
+  },
+};
+
+export const INITIAL_MODELS: ModelConfig[] = [
   {
-    id: 'p1',
-    category: 'inspiration',
+    id: 'default-openai',
+    name: 'OpenAI Compatible',
+    provider: 'openai-compatible',
+    modelName: 'gpt-4o',
+    contextWindow: 128000,
+    supportsStreaming: true,
+  },
+  {
+    id: 'default-deepseek',
+    name: 'DeepSeek',
+    provider: 'deepseek',
+    endpoint: 'https://api.deepseek.com/v1',
+    modelName: 'deepseek-chat',
+    supportsStreaming: true,
+  },
+  {
+    id: 'default-ollama',
+    name: 'Ollama (本地)',
+    provider: 'ollama',
+    endpoint: 'http://127.0.0.1:11434/v1',
+    modelName: 'qwen2.5:7b',
+    contextWindow: 32768,
+    supportsStreaming: true,
+  },
+  {
+    id: 'default-local',
+    name: '本地模型 (.gguf)',
+    provider: 'local',
+    modelName: 'local-model',
+    contextWindow: 4096,
+    supportsStreaming: true,
+  },
+];
+
+export const DEFAULT_PROMPTS: Array<{ id: string; name: string; content: string; category: string }> = [
+  {
+    id: 'task-inspire-tags',
     name: '灵感标签发散',
     content: `你是一位经验丰富的创意写作顾问。用户提供了一段灵感描述，请进行以下步骤：
 
@@ -24,11 +160,11 @@ export const DEFAULT_PROMPTS: PromptTemplate[] = [
 
 用户灵感：{inspiration}
 
-请直接以逗号分隔输出标签，不要编号、不要解释、不要前缀。例如：都市异能,热血,重生,系统流,爽文,扮猪吃虎,商战,赘婿,逆袭`
+请直接以逗号分隔输出标签，不要编号、不要解释、不要前缀。例如：都市异能,热血,重生,系统流,爽文,扮猪吃虎,商战,赘婿,逆袭`,
+    category: 'inspiration',
   },
   {
-    id: 'p1b',
-    category: 'inspiration',
+    id: 'task-inspire-schemes',
     name: '小说方案构思',
     content: `你是一位从业15年的资深小说策划编辑，精通网络文学市场趋势。请根据以下信息，构思{count}个不同风格且具有市场竞争力的小说方案。
 
@@ -52,11 +188,11 @@ export const DEFAULT_PROMPTS: PromptTemplate[] = [
 目标读者定位：[简述主要面向哪类读者群体，吸引他们的核心是什么]
 
 ---
-请确保{count}个方案的题材、基调、主角类型各不相同，避免雷同。书名要朗朗上口，简介要有"一读就停不下来"的吸引力。`
+请确保{count}个方案的题材、基调、主角类型各不相同，避免雷同。书名要朗朗上口，简介要有"一读就停不下来"的吸引力。`,
+    category: 'inspiration',
   },
   {
-    id: 'p2',
-    category: 'character',
+    id: 'task-char-build',
     name: '多维角色构建',
     content: `你是一位擅长塑造深度角色的小说创作专家。请基于小说《{title}》及其简介：{intro}，系统性地构建一套完整的角色体系。
 
@@ -86,11 +222,11 @@ export const DEFAULT_PROMPTS: PromptTemplate[] = [
 **四、关系网络**
 用简短描述勾勒出全体角色之间的核心关系链条和潜在的矛盾冲突点。
 
-每个角色请保持格式完整，内容详实但精准。`
+每个角色请保持格式完整，内容详实但精准。`,
+    category: 'character',
   },
   {
-    id: 'p3',
-    category: 'outline',
+    id: 'task-outline-gen',
     name: '深度大纲生成',
     content: `你是一位精通三幕式结构和类型小说创作技巧的资深故事架构师。请根据以下信息，为小说《{title}》编写一份逻辑严密、冲突递进、节奏流畅的故事大纲。
 
@@ -130,58 +266,64 @@ export const DEFAULT_PROMPTS: PromptTemplate[] = [
 第5个情节点(最终决战/抉择) → 结局
 
 【核心悬念与伏笔清单】
-列出3-5个需要在行文中埋设的重要伏笔及其回收时机。`
+列出3-5个需要在行文中埋设的重要伏笔及其回收时机。`,
+    category: 'outline',
   },
   {
-    id: 'p4',
-    category: 'chapter',
-    name: '章节细纲生成',
-    content: `你是一位擅长节奏控制和段落编排的小说章纲写作专家。请根据以下大纲，生成一套精彩绝伦的章节细纲。
+    id: 'task-outline-detailed',
+    name: '细纲生成',
+    content: `你是一位擅长节奏控制和段落编排的小说策划专家。请根据以下大纲，生成一套精彩绝伦的分卷细纲。
 
 大纲：{outline}
 
 **输出要求：**
-请从第1章开始，每章包含以下内容。每章之间用 --- 分隔。
+将故事分为3-5卷（如：第一卷·开端、第二卷·冲突升级、第三卷·高潮等），每卷之间用 --- 分隔。
 
 **格式规范：**
 
-第N章：[标题]
+## 第N卷：[卷名]
 
-◈ 本章核心功能
-（一句话说明本章在整体剧情中的作用：节奏推进/反转揭秘/人物成长/情绪酝酿/高潮爆发）
+### 卷主题
+（一句话概括本卷的核心主题和情感基调）
 
-◈ 开场钩子
-（本章第一句话或第一个场景应该是什么，如何在开头30秒内吸引读者）
+### 时间跨度
+（本卷故事发生的时间范围）
 
-◈ 主要剧情线
-（按时间顺序，列出本章发生的具体事件，每个事件标注"起因→发展→结果"）
+### 主要地点
+（本卷主要发生的场景地点）
 
-◈ 关键对话/场景
-（本章最精彩的对手戏或场景描写要点，对话的核心目的）
+### 核心冲突
+（本卷的主要矛盾和冲突点）
 
-◈ 情绪节奏设计
-（标注本章的情绪曲线：紧张→松弛 或 平静→爆发 等）
+### 章节安排
+（列出本卷包含的章节及每章核心内容）
+- 第X章：[章节标题] - [核心事件]
+- 第Y章：[章节标题] - [核心事件]
+- ...
 
-◈ 结尾悬念
-（本章结束时留下的钩子或悬念，确保读者想继续读下一章）
+### 角色成长
+（主要角色在本卷中的变化和成长）
 
-◈ 登场角色
-（本章出现的角色及其戏份权重）
+### 伏笔埋设
+（本卷需要埋设的伏笔及其回收时机）
+
+### 与前后卷衔接
+（如何承接上一卷，如何引出下一卷）
 
 ---
 **质量要求：**
-- 每章必须有独立的小高潮或情绪起伏，不能平铺直叙
-- 章节结尾必须有翻页动力（悬念/反转/情感共鸣）
-- 章节之间的衔接要自然流畅，伏笔要前后呼应
-- 每章控制在1500-3000字的内容量纲`
+- 每卷必须有明确的主题和节奏变化
+- 卷与卷之间要有自然的过渡和衔接
+- 伏笔要在前后期呼应
+- 确保整体故事结构完整`,
+    category: 'outline',
   },
   {
-    id: 'p5',
-    category: 'writing',
+    id: 'task-writing-create',
     name: '沉浸式正文创作',
     content: `你是一位擅长营造沉浸感的畅销小说作家。请根据以下信息，为《{title}》创作当前章节的正式正文内容。
 
-当前章节：{chapter_title}
+当前章节：{chapterTitle}
 章节细纲：{summary}
 小说角色信息：{characters}
 
@@ -211,11 +353,11 @@ export const DEFAULT_PROMPTS: PromptTemplate[] = [
    - 每个情节行动都要有合理的动机驱动
    - 避免角色做出不符合其性格设定的行为
 
-请开始创作正文。注意开篇第一段要有吸引力，结尾要预留悬念或情感余韵。`
+请开始创作正文。注意开篇第一段要有吸引力，结尾要预留悬念或情感余韵。`,
+    category: 'writing',
   },
   {
-    id: 'p-w2',
-    category: 'writing',
+    id: 'task-writing-continue',
     name: '智能逻辑续写',
     content: `你是一位严谨且富有创造力的网络小说作者。请根据以下上下文，对小说章节进行逻辑严密的续写。
 
@@ -246,11 +388,11 @@ export const DEFAULT_PROMPTS: PromptTemplate[] = [
    - 如果已写内容中存在明显逻辑矛盾，优先以细纲为准进行调整
    - 如果细纲与已写内容有冲突，以最近一次的有效上下文为准
 
-请开始续写。`
+请开始续写。`,
+    category: 'writing',
   },
   {
-    id: 'p6',
-    category: 'edit',
+    id: 'task-edit-polish',
     name: '文学性精修',
     content: `你是一位顶尖的文学编辑。请对以下正文进行专业润色，提升其文学品质。
 
@@ -267,11 +409,11 @@ export const DEFAULT_PROMPTS: PromptTemplate[] = [
 
 **润色后请附带简短的修改说明**（50字以内），概括本次润色的主要改进方向。
 
-注意：保留原文的核心情节、角色性格和叙事视角，不要改变故事的本质内容。`
+注意：保留原文的核心情节、角色性格和叙事视角，不要改变故事的本质内容。`,
+    category: 'edit',
   },
   {
-    id: 'p-s1',
-    category: 'summary',
+    id: 'task-summary-extract',
     name: '章节摘要提取',
     content: `请为以下章节正文提取一份专业的章节摘要。
 
@@ -288,81 +430,26 @@ export const DEFAULT_PROMPTS: PromptTemplate[] = [
 【主要情节】（50-80字）
 【关键转折】（20-40字）
 【登场角色】（列出本章主要出场角色）
-【结尾悬念】（20-40字，如无则填写"——"）`
+【结尾悬念】（20-40字，如无则填写"——"）`,
+    category: 'summary',
   },
 ];
 
-export const INITIAL_MODELS: ModelConfig[] = [
-  {
-    id: 'default-openai',
-    name: 'OpenAI Compatible',
-    provider: 'openai-compatible',
-    modelName: 'gpt-4o',
-    contextWindow: 128000,
-    supportsStreaming: true,
-  },
-  {
-    id: 'default-deepseek',
-    name: 'DeepSeek',
-    provider: 'deepseek',
-    endpoint: 'https://api.deepseek.com/v1',
-    modelName: 'deepseek-chat',
-    supportsStreaming: true,
-  },
-  {
-    id: 'default-ollama',
-    name: 'Ollama (本地)',
-    provider: 'ollama',
-    endpoint: 'http://127.0.0.1:11434/v1',
-    modelName: 'qwen2.5:7b',
-    contextWindow: 32768,
-    supportsStreaming: true,
-  }
-];
-
-export interface ModelSpec {
-  maxTokens: number;
-  contextWindow: number;
-}
-
-const KNOWN_MODELS: Record<string, ModelSpec> = {
-  'deepseek-chat': { maxTokens: 8192, contextWindow: 128000 },
-  'deepseek-reasoner': { maxTokens: 8192, contextWindow: 128000 },
-  'deepseek-coder': { maxTokens: 8192, contextWindow: 128000 },
-  'deepseek-v3': { maxTokens: 8192, contextWindow: 128000 },
-  'deepseek-r1': { maxTokens: 8192, contextWindow: 64000 },
-  'gpt-4o': { maxTokens: 16384, contextWindow: 128000 },
-  'gpt-4o-mini': { maxTokens: 16384, contextWindow: 128000 },
-  'gpt-4-turbo': { maxTokens: 4096, contextWindow: 128000 },
-  'gpt-4': { maxTokens: 8192, contextWindow: 8192 },
-  'gpt-3.5-turbo': { maxTokens: 4096, contextWindow: 16385 },
-  'o1': { maxTokens: 100000, contextWindow: 200000 },
-  'o1-mini': { maxTokens: 65536, contextWindow: 128000 },
-  'o1-preview': { maxTokens: 100000, contextWindow: 128000 },
-  'o3': { maxTokens: 100000, contextWindow: 200000 },
-  'o3-mini': { maxTokens: 100000, contextWindow: 200000 },
-  'o4-mini': { maxTokens: 100000, contextWindow: 200000 },
-  'claude-sonnet-4-20250514': { maxTokens: 8192, contextWindow: 200000 },
-  'claude-opus-4-20250514': { maxTokens: 32000, contextWindow: 200000 },
-  'claude-3-5-sonnet-20241022': { maxTokens: 8192, contextWindow: 200000 },
-  'claude-3-5-haiku-20241022': { maxTokens: 8192, contextWindow: 200000 },
-  'claude-3-opus-20240229': { maxTokens: 4096, contextWindow: 200000 },
-  'claude-3-sonnet-20240229': { maxTokens: 4096, contextWindow: 200000 },
-  'gemini-2.0-flash': { maxTokens: 8192, contextWindow: 1048576 },
-  'gemini-2.5-pro': { maxTokens: 8192, contextWindow: 1048576 },
-  'gemini-2.5-flash': { maxTokens: 8192, contextWindow: 1048576 },
-  'gemini-2.5-flash-preview-04-17': { maxTokens: 65536, contextWindow: 1048576 },
-  'qwen-turbo': { maxTokens: 8192, contextWindow: 131072 },
-  'qwen-plus': { maxTokens: 8192, contextWindow: 131072 },
-  'qwen-max': { maxTokens: 8192, contextWindow: 131072 },
-  'glm-4': { maxTokens: 4096, contextWindow: 128000 },
-  'glm-4-plus': { maxTokens: 4096, contextWindow: 128000 },
-  'glm-4-flash': { maxTokens: 4096, contextWindow: 128000 },
-  'moonshot-v1': { maxTokens: 4096, contextWindow: 32768 },
-  'kimi-k2-thinking': { maxTokens: 16384, contextWindow: 262000 },
-};
-
-export function getKnownModelSpec(modelName: string): ModelSpec | null {
-  const key = modelName.toLowerCase().trim();
-  return KNOWN_MODELS[key] || null;
+export function getKnownModelSpec(modelName: string): { contextWindow?: number } {
+  const known: Record<string, { contextWindow: number }> = {
+    'gpt-4o': { contextWindow: 128000 },
+    'gpt-4o-mini': { contextWindow: 128000 },
+    'gpt-4-turbo': { contextWindow: 128000 },
+    'gpt-4': { contextWindow: 8192 },
+    'claude-3-5-sonnet': { contextWindow: 200000 },
+    'claude-3-opus': { contextWindow: 200000 },
+    'deepseek-chat': { contextWindow: 64000 },
+    'deepseek-coder': { contextWindow: 64000 },
+    'qwen2.5:7b': { contextWindow: 32768 },
+    'qwen2.5:14b': { contextWindow: 32768 },
+    'llama3.1:8b': { contextWindow: 128000 },
+    'llama3.2:3b': { contextWindow: 128000 },
+    'gemma2:9b': { contextWindow: 8192 },
+  };
+  return known[modelName] || {};
 }

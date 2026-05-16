@@ -1,59 +1,62 @@
-import React, { useState, useEffect, useCallback } from 'react';
+
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { AppData } from '../../shared/types/fileSystem';
 import { Project } from '../../shared/types';
 import { dataService } from '../shared/services/DataService';
 import { AIStatusProvider } from '../shared/contexts/AIStatusContext';
+import { useAIStatusStore } from '../shared/stores/aiStatusStore';
 import { ThemeProvider } from '../shared/contexts/ThemeContext';
 import { ToastProvider } from '../shared/contexts/ToastContext';
 import { ZoomProvider } from '../shared/contexts/ZoomContext';
+import { useDevice } from '../shared/hooks/useDevice';
 import StepSidebar from './app-shell/StepSidebar';
 import StepInspiration from '../features/inspiration/StepInspiration';
 import StepSettings from '../features/settings/StepSettings';
 import StepPlot from '../features/plot/StepPlot';
 import StepReview from '../features/review/StepReview';
+import StepMemory from '../features/memory/StepMemory';
 import AIAssistantPanel from './app-shell/AIAssistantPanel';
 import SettingsModal from '../features/settings/SettingsModal';
 import ThemeToggle from '../shared/components/ThemeToggle';
 import CreateProjectModal from '../shared/components/CreateProjectModal';
 import { ConfirmModal } from '../shared/components/Modal';
-import { useAIStatus } from '../shared/contexts/AIStatusContext';
 import { useZoom } from '../shared/contexts/ZoomContext';
+import { useMemoryStatus } from '../shared/hooks/useMemoryStatus';
+import MobileApp from './mobile/MobileApp';
+import { PROVIDER_INFO } from '../../shared/constants';
+import { useModule, useModuleRegistry } from '../shared/modules';
 
-export type StepId = 'inspiration' | 'content' | 'plot' | 'review';
+export type StepId = 'inspiration' | 'content' | 'plot' | 'review' | 'memory';
 
 const STEPS: { id: StepId; label: string; icon: string; shortLabel: string }[] = [
   { id: 'inspiration', label: '灵感萌发', icon: 'fa-lightbulb', shortLabel: '灵感' },
   { id: 'content', label: '内容设定', icon: 'fa-folder-tree', shortLabel: '设定' },
   { id: 'plot', label: '情节创作', icon: 'fa-pen-nib', shortLabel: '情节' },
-  { id: 'review', label: '审查校对', icon: 'fa-check-double', shortLabel: '审查' },
+  { id: 'review', label: '智能审查', icon: 'fa-search', shortLabel: '审查' },
 ];
-
-const providerColors: Record<string, string> = {
-  'openai-compatible': 'from-[var(--color-primary-400)] to-[var(--color-primary-500)]',
-  'deepseek': 'from-blue-500 to-cyan-600',
-  'ollama': 'from-green-500 to-emerald-600',
-};
-
-const providerIcons: Record<string, string> = {
-  'openai-compatible': 'fa-cloud',
-  'deepseek': 'fa-dragon',
-  'ollama': 'fa-server',
-};
 
 function TopInfoBar({ activeProject, activeStep, activeModel }: {
   activeProject: AppData['projects'][0] | null;
   activeStep: StepId;
   activeModel: AppData['models'][0];
 }) {
-  const { status } = useAIStatus();
-  const { isGenerating, statusMessage, progress, tokenUsage, error } = status;
+  const { isGenerating, statusMessage, progress, tokenUsage, error } = useAIStatusStore();
   const { zoomPercent, zoomIn, zoomOut, zoomReset } = useZoom();
+  const { lastUpdated, relativeTime, totalEntries, isInitialized } = useMemoryStatus();
   const stepLabel = STEPS.find(s => s.id === activeStep)?.label || '';
   const stepIcon = STEPS.find(s => s.id === activeStep)?.icon || '';
+  
+  // 获取记忆体模块状态
+  const memoryModuleInstance = useModule('memory');
+  const isMemoryEnabled = memoryModuleInstance && memoryModuleInstance.status !== 'disabled';
 
   return (
     <header className="h-10 flex items-center justify-between px-3 border-b shrink-0 sticky top-0 z-50"
-      style={{ backgroundColor: 'var(--color-surface-base)', borderColor: 'var(--color-border-default)' }}>
+      style={{ 
+        backgroundColor: 'var(--color-surface-elevated)', 
+        borderColor: 'var(--color-border-default)',
+        backdropFilter: 'blur(12px)',
+      }}>
 
       {/* ═══ 左侧：项目路径 + 当前步骤 ═══ */}
       <div className="flex items-center gap-2 min-w-0">
@@ -81,8 +84,8 @@ function TopInfoBar({ activeProject, activeStep, activeModel }: {
         {/* 模型指示器 — 常驻 */}
         <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-lg shrink-0"
           style={{ background: 'var(--color-surface-hover)', border: '1px solid var(--color-border-default)' }}>
-          <div className={`w-3.5 h-3.5 rounded bg-gradient-to-br ${activeModel ? providerColors[activeModel.provider] || 'from-[var(--color-primary-400)] to-[var(--color-primary-500)]' : 'from-gray-500 to-gray-600'} flex items-center justify-center shadow-sm`}>
-            <i className={`fas ${activeModel ? (providerIcons[activeModel.provider] || 'fa-robot') : 'fa-plug'} text-white text-[6px]`} />
+          <div className={`w-3.5 h-3.5 rounded bg-gradient-to-br ${activeModel ? PROVIDER_INFO[activeModel.provider]?.bgGradient || 'from-[var(--color-primary-400)] to-[var(--color-primary-500)]' : 'from-gray-500 to-gray-600'} flex items-center justify-center shadow-sm`}>
+            <i className={`fas ${activeModel ? (PROVIDER_INFO[activeModel.provider]?.icon || 'fa-robot') : 'fa-plug'} text-white text-[6px]`} />
           </div>
           <span className="text-[10px] truncate max-w-[90px]" style={{ color: activeModel ? 'var(--color-text-secondary)' : 'var(--color-text-muted)' }}>
             {activeModel?.name || '未配置'}
@@ -110,10 +113,14 @@ function TopInfoBar({ activeProject, activeStep, activeModel }: {
             )}
           </div>
         ) : error ? (
-          <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-lg shrink-0"
-            style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.18)' }}>
-            <i className="fas fa-circle-exclamation text-[9px] text-red-400" />
-            <span className="text-[10px] text-red-400 truncate max-w-[120px]">{error}</span>
+          <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-lg shrink-0 cursor-pointer"
+            style={{ background: 'var(--color-error-50, rgba(239,68,68,0.08))', border: '1px solid var(--color-error-200, rgba(239,68,68,0.18))' }}
+            title={error}
+            aria-live="polite">
+            <i className="fas fa-circle-exclamation text-[9px]" style={{ color: 'var(--color-error-400, #f87171)' }} />
+            <span className="text-[10px] truncate max-w-[180px]" style={{ color: 'var(--color-error-400, #f87171)' }}>
+              {error.includes('网络连接失败') ? '请配置API密钥' : error.split('\n')[0]}
+            </span>
           </div>
         ) : (
           <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-lg shrink-0"
@@ -145,6 +152,28 @@ function TopInfoBar({ activeProject, activeStep, activeModel }: {
             <span className="text-[9px] tabular-nums" style={{ color: 'var(--color-text-muted)', opacity: 0.45 }}>输入 0 · 输出 0 合计 0</span>
           )}
         </div>
+
+        {/* 分隔线 */}
+        <div className="w-px h-4 rounded-full shrink-0" style={{ background: 'var(--color-border-default)' }} />
+
+        {/* 记忆体状态 — 只有记忆体模块启用时显示 */}
+        {activeProject && isMemoryEnabled && (
+          <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-lg shrink-0"
+            style={{ background: 'var(--color-surface-hover)', border: '1px solid var(--color-border-default)' }}
+            title={lastUpdated ? `共 ${totalEntries} 条维护记录，最近操作：${relativeTime}` : '记忆体尚未更新'}>
+            <i className={`fas fa-brain text-[9px] ${lastUpdated ? 'animate-pulse' : ''}`}
+              style={{ color: lastUpdated ? 'var(--color-primary-400)' : 'var(--color-text-muted)', opacity: lastUpdated ? 1 : 0.45 }} />
+            {lastUpdated ? (
+              <span className="text-[9px]" style={{ color: 'var(--color-primary-300)' }}>
+                记忆已更新（{relativeTime}）
+              </span>
+            ) : (
+              <span className="text-[9px]" style={{ color: 'var(--color-text-muted)', opacity: 0.6 }}>
+                {isInitialized ? '记忆体待更新' : '记忆体未初始化'}
+              </span>
+            )}
+          </div>
+        )}
       </div>
 
       {/* ═══ 右侧：字体缩放 + 主题快速切换 ═══ */}
@@ -153,7 +182,7 @@ function TopInfoBar({ activeProject, activeStep, activeModel }: {
         {/* 缩小字体 */}
         <button
           onClick={zoomOut}
-          className="w-7 h-7 rounded-lg flex items-center justify-center transition-all duration-200 hover:bg-black/5 dark:hover:bg-white/5"
+          className="w-7 h-7 rounded-lg flex items-center justify-center transition-all duration-200 hover:bg-[var(--color-surface-hover)]"
           style={{ color: 'var(--color-text-muted)' }}
           title="缩小文字"
         >
@@ -169,7 +198,7 @@ function TopInfoBar({ activeProject, activeStep, activeModel }: {
         {/* 放大字体 */}
         <button
           onClick={zoomIn}
-          className="w-7 h-7 rounded-lg flex items-center justify-center transition-all duration-200 hover:bg-black/5 dark:hover:bg-white/5"
+          className="w-7 h-7 rounded-lg flex items-center justify-center transition-all duration-200 hover:bg-[var(--color-surface-hover)]"
           style={{ color: 'var(--color-text-muted)' }}
           title="放大文字"
         >
@@ -179,7 +208,7 @@ function TopInfoBar({ activeProject, activeStep, activeModel }: {
         {/* 重置字体 */}
         <button
           onClick={zoomReset}
-          className="w-7 h-7 rounded-lg flex items-center justify-center transition-all duration-200 hover:bg-black/5 dark:hover:bg-white/5"
+          className="w-7 h-7 rounded-lg flex items-center justify-center transition-all duration-200 hover:bg-[var(--color-surface-hover)]"
           style={{ color: 'var(--color-text-muted)', opacity: zoomPercent !== 100 ? 1 : 0.35 }}
           title="重置为默认大小 (100%)"
         >
@@ -197,12 +226,31 @@ function TopInfoBar({ activeProject, activeStep, activeModel }: {
 }
 
 const App: React.FC = () => {
+  const { isMobile } = useDevice();
   const [data, setData] = useState<AppData>(dataService.getData());
   const [activeStep, setActiveStep] = useState<StepId>('inspiration');
   const [activeFileId, setActiveFileId] = useState<string | null>(null);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isCreateProjectOpen, setIsCreateProjectOpen] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState<{ id: string } | null>(null);
+
+  // 获取记忆体模块状态
+  const memoryModuleInstance = useModule('memory');
+  const isMemoryEnabled = memoryModuleInstance && memoryModuleInstance.status !== 'disabled';
+  
+  // 动态生成步骤列表
+  const dynamicSteps = useMemo(() => {
+    let steps = [...STEPS];
+    if (isMemoryEnabled) {
+      steps = [...steps, { id: 'memory' as StepId, label: '记忆体管理', icon: 'fa-brain', shortLabel: '记忆' }];
+    }
+    return steps;
+  }, [isMemoryEnabled]);
+
+  // 移动端使用专用的MobileApp组件
+  if (isMobile) {
+    return <MobileApp />;
+  }
 
   useEffect(() => {
     const unsub = dataService.subscribe(() => {
@@ -212,7 +260,8 @@ const App: React.FC = () => {
   }, []);
 
   const activeProject = data.projects.find(p => p.id === data.activeProjectId) || null;
-  const activeModel = data.models.find(m => m.id === data.activeModelId) || data.models[0];
+  const models = dataService.getModels();
+  const activeModel = models.find(m => m.id === data.activeModelId) || models[0];
 
   const projectForSettings: Project | null = activeProject ? {
     id: activeProject.id,
@@ -281,7 +330,7 @@ const App: React.FC = () => {
             <i className="fas fa-pen-fancy text-white text-2xl"></i>
           </div>
           <h2 className="text-2xl font-black tracking-tight text-white mb-2">欢迎使用墨渊灵笔</h2>
-          <p className="text-sm text-gray-500 mb-8">从左侧创建新作品，开始你的创作之旅</p>
+          <p className="text-sm text-[var(--color-text-tertiary)] mb-8">从左侧创建新作品，开始你的创作之旅</p>
           <button
             onClick={handleCreateProject}
             className="card-float-hover px-6 py-2.5 text-white rounded-lg transition-all text-sm font-medium shadow-lg flex items-center gap-2"
@@ -313,6 +362,13 @@ const App: React.FC = () => {
             onOpenSettings={() => setIsSettingsOpen(true)}
           />
         );
+      case 'memory':
+        return (
+          <StepMemory
+            activeModel={activeModel}
+            onOpenSettings={() => setIsSettingsOpen(true)}
+          />
+        );
       case 'plot':
         return (
           <StepPlot
@@ -340,7 +396,17 @@ const App: React.FC = () => {
       <ZoomProvider>
         <AIStatusProvider>
           <ToastProvider>
-            <div className="fixed inset-0 flex flex-col overflow-hidden" style={{ backgroundColor: 'var(--color-surface-base)' }}>
+            <div className="fixed inset-0 flex flex-col overflow-hidden" 
+              style={{
+                background: 'var(--gradient-surface-base, var(--color-surface-base, #030712))',
+              }}>
+              {/* 主题渐变光晕层 */}
+              <div 
+                className="fixed inset-0 pointer-events-none"
+                style={{
+                  background: `radial-gradient(ellipse 90% 70% at 50% -20%, var(--color-p-alpha-12, rgba(139, 92, 246, 0.12)) 0%, transparent 65%), radial-gradient(ellipse 70% 55% at 88% 115%, var(--color-p-alpha-08, rgba(168, 85, 247, 0.08)) 0%, transparent 60%), radial-gradient(ellipse 50% 40% at 12% 50%, var(--color-p-alpha-05, rgba(107, 127, 168, 0.05)) 0%, transparent 55%)`,
+                }}
+              />
 
               {/* ═══════ 顶部信息栏（全宽） ═══════ */}
               <TopInfoBar
@@ -354,12 +420,12 @@ const App: React.FC = () => {
 
                 {/* ── 左侧导航栏 ── */}
                 <StepSidebar
-                  steps={STEPS}
+                  steps={dynamicSteps}
                   activeStep={activeStep}
                   onSelectStep={setActiveStep}
                   projects={data.projects}
                   activeProjectId={data.activeProjectId}
-                  models={data.models}
+                  models={models}
                   activeModelId={data.activeModelId}
                   onCreateProject={handleCreateProject}
                   onSelectProject={(id) => dataService.setActiveProject(id)}
@@ -369,7 +435,11 @@ const App: React.FC = () => {
                 />
 
                 {/* ── 中间内容区 ── */}
-                <main className="flex-1 overflow-auto min-w-0">
+                <main 
+                  className="flex-1 overflow-auto min-w-0"
+                  style={{
+                    backdropFilter: 'blur(12px)',
+                  }}>
                   {renderStepContent()}
                 </main>
 
@@ -384,7 +454,7 @@ const App: React.FC = () => {
               {/* Settings Modal */}
               {isSettingsOpen && (
                 <SettingsModal
-                  models={data.models}
+                  models={models}
                   activeModelId={data.activeModelId}
                   prompts={data.prompts}
                   onUpdateModels={(models) => dataService.updateModels(models)}

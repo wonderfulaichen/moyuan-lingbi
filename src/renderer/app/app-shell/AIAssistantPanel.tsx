@@ -1,16 +1,21 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { AIAssistantState, AgentPhase } from '../../../shared/types/fileSystem';
 import { ModelConfig } from '../../../shared/types';
+import { getKnownModelSpec } from '../../../shared/constants';
 import { aiAssistant } from '../../shared/services/AIAssistantService';
+import { memoryMaintenanceAgent } from '../../shared/services/memory-bank/MemoryMaintenanceAgent';
+import { dataService } from '../../shared/services/DataService';
 import { useAIAssistantState, useChatInput, useChatScroll, useMessageActions, usePanelResize } from './ai-assistant/hooks';
-import { ChatHistory, MessageBubble, PendingPromptRenderer, AgentMenu } from './ai-assistant/components';
+import { ChatHistory, MessageBubble, PendingPromptRenderer, AgentMenu, TodoListDisplay } from './ai-assistant/components';
+import { useTheme } from '../../shared/contexts/ThemeContext';
+import { useUIStore } from '../../shared/stores/uiStore';
 
 interface AIAssistantPanelProps {
   activeModel: ModelConfig;
   onOpenSettings: () => void;
 }
 
-type Tab = 'chat' | 'tasks';
+type Tab = 'chat' | 'check';
 
 function estimateTokens(text: string): number {
   if (!text) return 0;
@@ -23,10 +28,14 @@ function estimateTokens(text: string): number {
 }
 
 const AIAssistantPanel: React.FC<AIAssistantPanelProps> = ({ activeModel, onOpenSettings }) => {
+  const { themeInfo } = useTheme();
+  const { animationLevel } = useUIStore();
+  const hasAnimations = animationLevel !== 'none';
+  
   const state = useAIAssistantState();
   const { input, setInput, attachedFiles, inputRef, fileInputRef, handleSend, handleKeyDown, handleFileAttach, removeAttachedFile, clearAttachedFiles } = useChatInput(activeModel, onOpenSettings);
   const { messagesEndRef, chatContainerRef, handleChatScroll } = useChatScroll([state.messages.length, state.pendingPrompt, state.streamingContent]);
-  const { editingMsgId, editContent, setEditContent, collapsedIds, copyToast, handleCopy, handleEdit, handleEditSubmit, handleRegenerate, toggleCollapse, isLongContent } = useMessageActions(activeModel);
+  const { editingMsgId, editContent, setEditContent, collapsedIds, copyToast, handleCopy, handleEdit, handleEditCancel, handleEditSubmit, handleRegenerate, toggleCollapse, isLongContent } = useMessageActions(activeModel);
   const { panelWidth, isExpanded, toggleExpanded, handleResizeStart } = usePanelResize();
 
   const [tab, setTab] = useState<Tab>('chat');
@@ -35,6 +44,7 @@ const AIAssistantPanel: React.FC<AIAssistantPanelProps> = ({ activeModel, onOpen
   const [showHistory, setShowHistory] = useState(false);
   const [showAgentMenu, setShowAgentMenu] = useState(false);
   const [showJumpMenu, setShowJumpMenu] = useState(false);
+  const [isAutoChecking, setIsAutoChecking] = useState(false);
   const inputAnswerRef = useRef<HTMLInputElement>(null);
   const messageRefs = useRef<Map<string, HTMLDivElement>>(new Map());
 
@@ -48,6 +58,32 @@ const AIAssistantPanel: React.FC<AIAssistantPanelProps> = ({ activeModel, onOpen
     }
   }, [state.pendingPrompt]);
 
+  const prevProcessingRef = useRef(state.isProcessing);
+  useEffect(() => {
+    if (prevProcessingRef.current && !state.isProcessing) {
+      const project = dataService.getActiveProject();
+      if (project?.id && activeModel?.modelName) {
+        setIsAutoChecking(true);
+        memoryMaintenanceAgent.checkConsistency(project.id, '', activeModel)
+          .then(issues => {
+            if (issues.length > 0) {
+              const checkIssues = issues.map((desc, i) => ({
+                id: `check-${Date.now()}-${i}`,
+                description: desc,
+                category: 'consistency' as const,
+                selected: true,
+                fixed: false,
+              }));
+              aiAssistant.setCheckIssues(checkIssues);
+            }
+          })
+          .catch(() => {})
+          .finally(() => setIsAutoChecking(false));
+      }
+    }
+    prevProcessingRef.current = state.isProcessing;
+  }, [state.isProcessing, activeModel]);
+
   const handleInputAnswerKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter' && inputAnswer.trim()) {
       aiAssistant.answerInput(inputAnswer.trim());
@@ -58,27 +94,31 @@ const AIAssistantPanel: React.FC<AIAssistantPanelProps> = ({ activeModel, onOpen
     aiAssistant.newConversation();
   }, []);
 
+  const isMobile = typeof window !== 'undefined' && window.innerWidth <= 768;
+
   return (
     <div
-      className={`flex shrink-0 animate-fade-in relative ${isExpanded ? 'fixed inset-4 z-[200] rounded-2xl shadow-2xl border' : 'border-l'}`}
+      className={`flex shrink-0 animate-fade-in relative ${isExpanded && !isMobile ? 'fixed inset-4 z-[200] rounded-2xl shadow-2xl border' : isMobile ? '' : 'border-l'}`}
       style={{
-        width: isExpanded ? 'calc(100% - 32px)' : (showHistory ? panelWidth + 160 : panelWidth),
-        height: isExpanded ? 'calc(100% - 32px)' : undefined,
-        backgroundColor: 'var(--color-surface-base)',
+        width: isMobile ? '100%' : (isExpanded ? 'calc(100% - 32px)' : (showHistory ? panelWidth + 160 : panelWidth)),
+        height: isMobile ? '100%' : (isExpanded ? 'calc(100% - 32px)' : undefined),
+        backgroundColor: isExpanded && !isMobile ? 'var(--color-surface-overlay)' : 'rgba(255, 255, 255, 0.02)',
+        backdropFilter: 'blur(16px)',
         borderColor: 'var(--color-border-default)',
       }}
     >
-      {isExpanded && (
+      {isExpanded && !isMobile && (
         <button
           onClick={() => { toggleExpanded(); }}
           className="absolute top-3 right-3 z-50 w-7 h-7 rounded-full flex items-center justify-center border-none cursor-pointer transition-all"
           style={{ background: 'var(--color-surface-muted)', color: 'var(--color-text-muted)' }}
           title="关闭大窗口"
+          aria-label="关闭大窗口"
         >
           <i className="fas fa-xmark text-xs" />
         </button>
       )}
-      {!isExpanded && (
+      {!isExpanded && !isMobile && (
         <div
           onMouseDown={handleResizeStart}
           className="absolute left-0 top-0 bottom-0 w-[4px] z-10 cursor-col-resize transition-colors"
@@ -190,18 +230,18 @@ const AIAssistantPanel: React.FC<AIAssistantPanelProps> = ({ activeModel, onOpen
         </div>
 
         {/* Tabs */}
-        <div className="flex border-b shrink-0" style={{ borderColor: 'var(--color-border-default)' }}>
-          {(['chat', 'tasks'] as Tab[]).map(t => (
+        <div className="flex gap-1 p-1 border-b shrink-0" style={{ borderColor: 'var(--color-border-default)', background: 'var(--color-surface-muted)' }}>
+          {(['chat', 'check'] as Tab[]).map(t => (
             <button key={t} onClick={() => setTab(t)}
-              className="flex-1 text-[11px] font-medium border-none cursor-pointer transition-all py-2"
+              className={`flex-1 text-[11px] font-medium border-none cursor-pointer transition-all py-1.5 rounded-lg ${hasAnimations ? 'hover:scale-105' : ''}`}
               style={{
-                background: tab === t ? 'var(--color-primary-100)' : 'transparent',
-                color: tab === t ? 'var(--color-primary-300)' : 'var(--color-text-muted)',
-                borderBottom: tab === t ? '2px solid var(--color-primary-400)' : '2px solid transparent',
+                background: tab === t ? themeInfo.gradient : 'transparent',
+                color: tab === t ? '#fff' : 'var(--color-text-muted)',
+                boxShadow: tab === t ? '0 2px 8px var(--color-primary-100)' : 'none',
               }}
             >
-              <i className={`fas ${t === 'chat' ? 'fa-comments' : 'fa-list-check'} mr-1`} />
-              {t === 'chat' ? '对话' : `任务 (${state.tasks.length})`}
+              <i className={`fas ${t === 'chat' ? 'fa-comments' : 'fa-check-double'} mr-1`} />
+              {t === 'chat' ? '对话' : `系统粗查${state.checkIssues.length > 0 ? ` (${state.checkIssues.length})` : ''}`}
             </button>
           ))}
         </div>
@@ -212,20 +252,30 @@ const AIAssistantPanel: React.FC<AIAssistantPanelProps> = ({ activeModel, onOpen
             <div ref={chatContainerRef} onScroll={handleChatScroll} className="flex-1 overflow-auto p-3 flex flex-col gap-2.5">
               {state.messages.length === 0 && !state.pendingPrompt && (
                 <div className="flex flex-col items-center justify-center h-full text-center px-4" style={{ color: 'var(--color-text-muted)' }}>
-                  <div className="w-12 h-12 rounded-2xl flex items-center justify-center mb-4" style={{ background: 'var(--color-primary-100)' }}>
-                    <i className="fas fa-wand-magic-sparkles text-xl opacity-40" />
+                  <div className="w-12 h-12 rounded-2xl flex items-center justify-center mb-4" style={{ background: themeInfo.gradient, boxShadow: '0 4px 12px var(--color-primary-100)' }}>
+                    <i className="fas fa-wand-magic-sparkles text-xl text-white" />
                   </div>
-                  <p className="text-sm font-semibold mb-1" style={{ color: 'var(--color-text-secondary)' }}>IDE 全能 AI 助手</p>
+                  <p className="text-sm font-semibold mb-1" style={{ color: 'var(--color-text-secondary)' }}>AI小说智能体</p>
                   <p className="text-[11px] leading-relaxed mb-4">我可以直接帮你操作项目文件</p>
                   <div className="flex flex-col gap-1.5 w-full max-w-[260px]">
                     {['帮我生成5个世界观设定文件', '为角色文件夹创建主角设定', '搜索所有包含魔法的文件', '帮我规划小说的世界观体系'].map(h => (
                       <button key={h} onClick={() => { setInput(h); inputRef.current?.focus(); }}
-                        className="glass-card-inset text-left text-[10px] px-3 py-2 rounded-lg cursor-pointer transition-all border-none"
-                        style={{ borderColor: 'transparent', color: 'var(--color-text-secondary)' }}
-                        onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--color-primary-200)'}
-                        onMouseLeave={e => e.currentTarget.style.borderColor = 'transparent'}
+                        className={`glass-card-inset text-left text-[10px] px-3 py-2 rounded-lg cursor-pointer transition-all border-none ${hasAnimations ? 'hover:scale-102' : ''}`}
+                        style={{ 
+                          borderColor: 'transparent', 
+                          color: 'var(--color-text-secondary)',
+                          boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+                        }}
+                        onMouseEnter={e => {
+                          e.currentTarget.style.borderColor = themeInfo.primaryColor + '40';
+                          e.currentTarget.style.background = themeInfo.primaryColor + '10';
+                        }}
+                        onMouseLeave={e => {
+                          e.currentTarget.style.borderColor = 'transparent';
+                          e.currentTarget.style.background = 'transparent';
+                        }}
                       >
-                        <i className="fas fa-arrow-right text-[8px] mr-1.5" style={{ color: 'var(--color-primary-400)' }} />{h}
+                        <i className="fas fa-arrow-right text-[8px] mr-1.5" style={{ color: themeInfo.primaryColor }} />{h}
                       </button>
                     ))}
                   </div>
@@ -247,6 +297,7 @@ const AIAssistantPanel: React.FC<AIAssistantPanelProps> = ({ activeModel, onOpen
                   copyToast={copyToast}
                   onCopy={handleCopy}
                   onEdit={handleEdit}
+                  onEditCancel={handleEditCancel}
                   onRegenerate={handleRegenerate}
                   onToggleCollapse={toggleCollapse}
                   isLongContent={isLongContent}
@@ -255,20 +306,57 @@ const AIAssistantPanel: React.FC<AIAssistantPanelProps> = ({ activeModel, onOpen
                     if (el) messageRefs.current.set(msg.id, el);
                     else messageRefs.current.delete(msg.id);
                   }}
+                  todos={state.todoList}
                 />
               ))}
 
-              {state.streamingContent !== null && (
+              {(state.streamingContent !== null || state.streamingThinking !== null) && (
                 <div className="flex gap-1.5 items-start">
                   <div className="w-6 h-6 rounded-lg shrink-0 flex items-center justify-center" style={{ background: 'var(--color-surface-muted)' }}>
                     <i className="fas fa-robot text-[9px]" style={{ color: 'var(--color-primary-400)' }} />
                   </div>
                   <div className="relative max-w-[85%]">
-                    <div className="rounded-xl px-3 py-2 text-[11px] leading-relaxed whitespace-pre-wrap break-words"
-                      style={{ color: 'var(--color-text-secondary)', backgroundColor: 'var(--color-surface-muted)', border: '1px solid var(--color-primary-200)' }}>
-                      {state.streamingContent}
-                      <span className="inline-block w-1.5 h-3.5 ml-0.5 align-middle" style={{ background: 'var(--color-primary-400)', animation: 'blink 1s step-end infinite', borderRadius: '1px' }} />
-                    </div>
+                    {state.streamingThinking !== null && (
+                      <div className="mb-1.5">
+                        <div className="flex items-center gap-1.5 px-2 py-1 rounded-t-lg text-[9px] border-b"
+                          style={{
+                            background: 'var(--color-p-alpha-10)',
+                            color: 'var(--color-text-muted)',
+                            borderColor: 'var(--color-p-alpha-15)',
+                          }}>
+                          <i className="fas fa-brain text-[8px]" style={{ color: 'var(--color-primary-400)' }} />
+                          <span style={{ color: 'var(--color-text-secondary)' }}>思考过程</span>
+                        </div>
+                        <div className="rounded-b-lg px-2 py-1.5 text-[9px] leading-relaxed whitespace-pre-wrap break-words max-h-24 overflow-y-auto"
+                          style={{ 
+                            background: 'var(--color-p-alpha-06)', 
+                            color: 'var(--color-text-tertiary)',
+                            borderLeft: '2px solid var(--color-primary-400)',
+                            borderRight: '1px solid var(--color-p-alpha-15)',
+                            borderBottom: '1px solid var(--color-p-alpha-15)',
+                            fontStyle: 'italic',
+                          }}>
+                          {state.streamingThinking}
+                          <span className="inline-block w-1 h-3 ml-0.5 align-middle animate-pulse" style={{ background: 'var(--color-primary-400)', borderRadius: '1px' }} />
+                        </div>
+                      </div>
+                    )}
+                    {state.todoList.length > 0 && (
+                      <TodoListDisplay todos={state.todoList} compact={true} />
+                    )}
+                    {state.streamingContent !== null && (
+                      <div className="rounded-xl px-3 py-2 text-[11px] leading-relaxed whitespace-pre-wrap break-words"
+                        style={{ color: 'var(--color-text-secondary)', backgroundColor: 'var(--color-surface-muted)', border: '1px solid var(--color-primary-200)' }}>
+                        {state.streamingContent}
+                        <span className="inline-block w-1.5 h-3.5 ml-0.5 align-middle" style={{ background: 'var(--color-primary-400)', animation: 'blink 1s step-end infinite', borderRadius: '1px' }} />
+                      </div>
+                    )}
+                    {state.streamingContent === null && state.streamingThinking !== null && (
+                      <div className="rounded-xl px-3 py-2 text-[10px]" style={{ color: 'var(--color-text-muted)', backgroundColor: 'var(--color-surface-muted)', border: '1px solid var(--color-border-default)' }}>
+                        <i className="fas fa-pen text-[8px] mr-1 animate-pulse" />
+                        正在生成回复中…
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
@@ -324,21 +412,22 @@ const AIAssistantPanel: React.FC<AIAssistantPanelProps> = ({ activeModel, onOpen
                     onChange={handleFileAttach} className="hidden" />
                   <button onClick={() => fileInputRef.current?.click()}
                     className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-all hover:bg-white/10"
-                    style={{ color: 'var(--color-text-muted)' }} title="导入文件（支持 txt/md/json/csv 等，单文件最大 5MB）">
+                    style={{ color: 'var(--color-text-muted)' }} title="导入文件（支持 txt/md/json/csv 等，单文件最大 5MB）" aria-label="导入文件">
                     <i className="fas fa-paperclip text-xs" />
                   </button>
                   <textarea ref={inputRef} value={input} onChange={e => setInput(e.target.value)} onKeyDown={handleKeyDown}
-                    placeholder="输入指令，AI直接操作文件… /角色 /地点 /时间线" rows={3}
+                    placeholder="输入指令，AI直接操作文件…" rows={3}
                     className="flex-1 rounded-lg outline-none border-none resize-none px-2.5 py-2 text-xs min-h-[56px] max-h-[140px]"
                     style={{ color: 'var(--color-text-primary)', backgroundColor: 'transparent', fontFamily: 'inherit', lineHeight: 1.5 }} />
                   <button onClick={handleSend}
                     disabled={!input.trim() && attachedFiles.length === 0 || state.isProcessing}
                     className="btn-gradient rounded-lg text-xs font-semibold px-2.5 py-2 shrink-0"
-                    style={{ opacity: (input.trim() || attachedFiles.length > 0) && !state.isProcessing ? 1 : 0.45 }}>
+                    style={{ opacity: (input.trim() || attachedFiles.length > 0) && !state.isProcessing ? 1 : 0.45 }}
+                    aria-label="发送消息">
                     <i className="fas fa-paper-plane" />
                   </button>
                   {state.isProcessing && (
-                    <button onClick={() => aiAssistant.abort()} className="btn-outline-danger text-[10px] rounded-lg px-2 py-2 shrink-0">
+                    <button onClick={() => aiAssistant.abort()} className="btn-outline-danger text-[10px] rounded-lg px-2 py-2 shrink-0" aria-label="停止生成">
                       <i className="fas fa-stop" />
                     </button>
                   )}
@@ -370,15 +459,32 @@ const AIAssistantPanel: React.FC<AIAssistantPanelProps> = ({ activeModel, onOpen
                   </span>
                 )}
                 {activeModel?.contextWindow ? (() => {
-                  const maxCtx = activeModel.contextWindow;
+                  const spec = getKnownModelSpec(activeModel.modelName);
+                  const fromTable = !!spec;
+                  const maxCtx = spec?.contextWindow || activeModel.contextWindow;
                   const msgTokens = state.messages.reduce((sum, m) => sum + estimateTokens(m.content), 0);
                   const systemOverhead = Math.max(state.messages.length * 30, 200);
                   const used = msgTokens + systemOverhead;
                   const pct = Math.min(Math.round((used / maxCtx) * 100), 99);
                   const barColor = pct > 80 ? '#ef4444' : pct > 50 ? '#f59e0b' : 'var(--color-primary-400)';
+                  const ctxLabel = maxCtx >= 1000000
+                    ? `${(maxCtx / 1000000).toFixed(0)}M`
+                    : maxCtx >= 1000
+                      ? `${(maxCtx / 1000).toFixed(0)}K`
+                      : `${maxCtx}`;
                   return (
-                    <span className="text-[8px] px-1.5 py-0.5 rounded shrink-0 tabular-nums inline-flex items-center gap-1.5" style={{ color: 'var(--color-text-muted)', background: 'var(--color-surface-base)', border: '1px solid var(--color-border-default)' }}>
-                      <span>上下文 {maxCtx >= 1000 ? `${(maxCtx / 1000).toFixed(0)}K` : maxCtx}</span>
+                    <span className="text-[8px] px-1.5 py-0.5 rounded shrink-0 tabular-nums inline-flex items-center gap-1.5"
+                      style={{
+                        color: fromTable ? 'var(--color-accent-emerald)' : 'var(--color-text-muted)',
+                        background: 'var(--color-surface-base)',
+                        border: `1px solid ${fromTable ? 'var(--color-p-alpha-30)' : 'var(--color-border-default)'}`,
+                        ...(fromTable ? { boxShadow: 'var(--shadow-glow-emerald)' } : {}),
+                      }}
+                      title={fromTable
+                        ? `来自规格表: ${activeModel.modelName} = ${maxCtx.toLocaleString()} tokens`
+                        : `使用保存值: ${activeModel.modelName} = ${maxCtx.toLocaleString()} tokens（规格表中无此模型）`}
+                    >
+                      <span>上下文 {ctxLabel}</span>
                       <span className="inline-flex items-center gap-1">
                         <span className="inline-block w-10 h-1 rounded-full overflow-hidden" style={{ background: 'var(--color-border-default)' }}>
                           <span className="block h-full rounded-full transition-all duration-300" style={{ width: `${pct}%`, background: barColor }} />
@@ -395,52 +501,211 @@ const AIAssistantPanel: React.FC<AIAssistantPanelProps> = ({ activeModel, onOpen
                 ) : (
                   <span className="text-[8px] shrink-0" style={{ color: 'var(--color-text-muted)', opacity: 0.5 }}>等待生成…</span>
                 )}
+                {isAutoChecking && (
+                  <span className="text-[8px] px-1.5 py-0.5 rounded-full animate-pulse shrink-0"
+                    style={{ background: 'var(--color-p-alpha-15)', color: 'var(--color-accent-blue)', border: '1px solid var(--color-p-alpha-20)' }}>
+                    <i className="fas fa-spinner fa-spin mr-0.5" />粗查中
+                  </span>
+                )}
               </div>
             </div>
           </>
         ) : (
           <>
             <div className="flex-1 overflow-auto p-2.5">
-              {state.tasks.length === 0 ? (
-                <div className="flex flex-col items-center justify-center h-full text-center" style={{ color: 'var(--color-text-muted)' }}>
-                  <div className="w-10 h-10 rounded-xl bg-white/[0.03] flex items-center justify-center mb-3">
-                    <i className="fas fa-list-check text-lg opacity-30" />
-                  </div>
-                  <p className="text-[11px]">暂无任务记录</p>
-                  <p className="text-[9px] mt-1 opacity-60">AI 执行的操作会记录在这里</p>
-                </div>
-              ) : (
-                <div className="flex flex-col gap-1.5">
-                  {state.tasks.map(task => {
-                    const t = task as any;
-                    const status = t.status || 'completed';
-                    return (
-                    <div key={task.id} className="glass-card-inset p-2.5 rounded-lg card-float-hover group">
-                      <div className="flex items-center gap-1.5 mb-1">
-                        <div className={`w-4 h-4 rounded-md flex items-center justify-center ${status === 'completed' ? 'bg-green-500/15' : status === 'running' ? 'bg-blue-500/15' : 'bg-red-500/15'}`}>
-                          <i className={`fas ${status === 'completed' ? 'fa-check' : status === 'running' ? 'fa-spinner fa-spin' : 'fa-xmark'} text-[8px]`}
-                            style={{ color: status === 'completed' ? '#34d399' : status === 'running' ? '#60a5fa' : '#f87171' }} />
+              {(() => {
+                const total = state.checkIssues.length;
+                const fixed = state.checkIssues.filter(i => i.fixed).length;
+                const pending = total - fixed;
+                const selected = state.checkIssues.filter(i => i.selected && !i.fixed).length;
+                const charIssues = state.checkIssues.filter(i => i.category === 'character' && !i.fixed).length;
+                const plotIssues = state.checkIssues.filter(i => i.category === 'plot' && !i.fixed).length;
+                const worldIssues = state.checkIssues.filter(i => i.category === 'world' && !i.fixed).length;
+                const consistencyIssues = state.checkIssues.filter(i => i.category === 'consistency' && !i.fixed).length;
+
+                return (
+                  <>
+                    <div className="mb-3 p-3 rounded-xl" style={{
+                      background: 'linear-gradient(135deg, var(--color-p-alpha-08), var(--color-p-alpha-06))',
+                      border: '1px solid var(--color-p-alpha-15)',
+                    }}>
+                      <div className="flex items-center gap-2 mb-2">
+                        <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${isAutoChecking ? 'animate-pulse' : ''}`}
+                          style={{ background: total > 0 ? (pending > 0 ? 'rgba(251,191,36,0.15)' : 'rgba(52,211,153,0.15)') : 'rgba(99,102,241,0.12)' }}>
+                          <i className={`fas ${isAutoChecking ? 'fa-spinner fa-spin' : total === 0 ? 'fa-shield-check' : pending > 0 ? 'fa-exclamation-triangle' : 'fa-check-circle'} text-sm`}
+                            style={{ color: total === 0 ? '#6366f1' : pending > 0 ? '#fbbf24' : '#34d399' }} />
                         </div>
-                        <span className="text-[11px] font-semibold flex-1 truncate" style={{ color: 'var(--color-text-primary)' }}>{t.modelName || t.type || t.statusMessage || 'AI 任务'}</span>
-                        <button onClick={() => aiAssistant.removeTask(task.id)} className="btn-icon text-[8px] px-0.5 py-0 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <i className="fas fa-xmark" />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-[11px] font-bold" style={{ color: 'var(--color-text-primary)' }}>
+                            {isAutoChecking ? '正在系统粗查…' : total === 0 ? '系统粗查就绪' : pending > 0 ? `发现 ${pending} 个待处理问题` : '全部问题已处理'}
+                          </p>
+                          <p className="text-[9px]" style={{ color: 'var(--color-text-muted)' }}>
+                            {total === 0 && !isAutoChecking
+                              ? 'AI 完成任务后会自动粗查，也可手动触发'
+                              : `共 ${total} 个 · 已修复 ${fixed}${selected > 0 ? ` · 已选 ${selected}` : ''}`}
+                          </p>
+                        </div>
+                        <button
+                          onClick={async () => {
+                            const project = dataService.getActiveProject();
+                            if (!project?.id || !activeModel?.modelName) {
+                              console.warn('[AI粗查] 无法开始检查: project.id=', project?.id, 'activeModel.modelName=', activeModel?.modelName);
+                              return;
+                            }
+                            setIsAutoChecking(true);
+                            try {
+                              const issues = await memoryMaintenanceAgent.checkConsistency(project.id, '', activeModel);
+                              if (issues.length > 0) {
+                                const checkIssues = issues.map((desc, i) => ({
+                                  id: `check-${Date.now()}-${i}`,
+                                  description: desc,
+                                  category: 'consistency' as const,
+                                  selected: true,
+                                  fixed: false,
+                                }));
+                                aiAssistant.setCheckIssues(checkIssues);
+                              }
+                            } catch (e) {
+                              console.error('[AI粗查] 检查失败:', e);
+                            } finally { setIsAutoChecking(false); }
+                          }}
+                          disabled={isAutoChecking || !activeModel?.modelName}
+                          className="px-2 py-1 rounded-lg text-[9px] font-medium border-none cursor-pointer transition-all"
+                          style={{ background: isAutoChecking ? 'transparent' : 'var(--color-primary-100)', color: 'var(--color-primary-400)' }}
+                        >
+                          <i className={`fas ${isAutoChecking ? 'fa-spinner fa-spin' : total > 0 ? 'fa-redo' : 'fa-play'} mr-0.5`} />
+                          {isAutoChecking ? '检查中…' : total > 0 ? '重新检查' : '开始检查'}
                         </button>
                       </div>
-                      {t.statusMessage && <p className="text-[10px] line-clamp-2 ml-5.5" style={{ color: 'var(--color-text-tertiary)' }}>{t.statusMessage}</p>}
-                      <div className="flex items-center gap-2 mt-1 ml-5.5">
-                        <span className="text-[8px]" style={{ color: 'var(--color-text-muted)' }}>{new Date(t.startTime || task.createdAt || Date.now()).toLocaleTimeString('zh-CN')}</span>
-                        {(t.progress > 0 && t.progress < 100) && (
-                          <span className="text-[8px]" style={{ color: 'var(--color-primary-400)' }}>{Math.round(t.progress)}%</span>
-                        )}
+                      {total > 0 && (
+                        <div className="grid grid-cols-4 gap-1.5 mt-2 pt-2" style={{ borderTop: '1px solid var(--color-p-alpha-15)' }}>
+                          {[
+                            { icon: 'fa-user', label: '角色', value: charIssues, color: 'var(--color-primary-300)', bg: 'var(--color-p-alpha-12)' },
+                            { icon: 'fa-route', label: '剧情', value: plotIssues, color: 'var(--color-accent-blue)', bg: 'var(--color-p-alpha-12)' },
+                            { icon: 'fa-globe', label: '世界观', value: worldIssues, color: 'var(--color-accent-emerald)', bg: 'var(--color-p-alpha-12)' },
+                            { icon: 'fa-equals', label: '一致性', value: consistencyIssues, color: 'var(--color-accent-amber)', bg: 'rgba(251,191,36,0.10)' },
+                          ].map(item => (
+                            <div key={item.label} className="text-center py-1.5 rounded-lg" style={{ background: item.bg }}>
+                              <p className="text-base font-black tabular-nums leading-none" style={{ color: item.color }}>{item.value}</p>
+                              <p className="text-[8px] mt-0.5" style={{ color: 'var(--color-text-muted)' }}>{item.label}</p>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </>
+                );
+              })()}
+              {state.checkIssues.length > 0 && (
+                <div className="flex flex-col gap-2">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-[10px] font-semibold" style={{ color: 'var(--color-text-secondary)' }}>
+                      <i className="fas fa-exclamation-triangle mr-1" style={{ color: 'var(--color-warning-400)' }} />
+                      发现 {state.checkIssues.length} 个潜在问题
+                    </span>
+                    <button
+                      onClick={() => {
+                        const allSelected = state.checkIssues.every(i => i.selected);
+                        state.checkIssues.forEach(i => aiAssistant.toggleCheckIssue(i.id));
+                        if (allSelected) {
+                          state.checkIssues.forEach(i => { if (i.selected) aiAssistant.toggleCheckIssue(i.id); });
+                        } else {
+                          state.checkIssues.forEach(i => { if (!i.selected) aiAssistant.toggleCheckIssue(i.id); });
+                        }
+                      }}
+                      className="text-[9px] px-2 py-0.5 rounded border-none cursor-pointer transition-all"
+                      style={{ background: 'transparent', color: 'var(--color-text-muted)', border: '1px solid var(--color-border-default)' }}
+                    >
+                      {state.checkIssues.every(i => i.selected) ? '取消全选' : '全选'}
+                    </button>
+                  </div>
+                  {state.checkIssues.map(issue => (
+                    <div
+                      key={issue.id}
+                      className={`glass-card-inset p-2.5 rounded-lg transition-all ${issue.fixed ? 'opacity-50' : ''}`}
+                      style={issue.fixed ? { borderLeft: '3px solid var(--color-emerald-400)' } : {}}
+                    >
+                      <div className="flex items-start gap-2">
+                        <input
+                          type="checkbox"
+                          checked={issue.selected}
+                          disabled={issue.fixed}
+                          onChange={() => aiAssistant.toggleCheckIssue(issue.id)}
+                          className="mt-0.5 shrink-0"
+                          style={{ accentColor: 'var(--color-primary-400)' }}
+                        />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-[10px] leading-relaxed" style={{
+                            color: issue.fixed ? 'var(--color-text-muted)' : 'var(--color-text-primary)',
+                            textDecoration: issue.fixed ? 'line-through' : 'none',
+                          }}>
+                            {issue.description}
+                          </p>
+                          <div className="flex items-center gap-2 mt-1">
+                            <span className="text-[8px] px-1.5 py-0.5 rounded-full" style={{
+                              background: issue.category === 'character' ? 'rgba(168,85,247,0.12)' :
+                                issue.category === 'plot' ? 'rgba(59,130,246,0.12)' :
+                                issue.category === 'world' ? 'rgba(34,197,94,0.12)' :
+                                'rgba(251,191,36,0.12)',
+                              color: issue.category === 'character' ? '#a855f7' :
+                                issue.category === 'plot' ? '#3b82f6' :
+                                issue.category === 'world' ? '#22c55e' : '#fbbf24',
+                            }}>
+                              {issue.category === 'character' ? '角色' :
+                               issue.category === 'plot' ? '剧情' :
+                               issue.category === 'world' ? '世界观' : '一致性'}
+                            </span>
+                            {issue.fixed && (
+                              <span className="text-[8px] flex items-center gap-0.5" style={{ color: 'var(--color-emerald-400)' }}>
+                                <i className="fas fa-check" />已修复
+                              </span>
+                            )}
+                          </div>
+                        </div>
                       </div>
                     </div>
-                    );
-                  })}
+                  ))}
                 </div>
               )}
             </div>
-            <div className="p-2 border-t shrink-0" style={{ borderColor: 'var(--color-border-default)' }}>
-              <button onClick={() => aiAssistant.clearTasks()} className="btn-outline-muted w-full text-[10px] py-1.5 rounded-lg">清空任务记录</button>
+            <div className="p-2 border-t shrink-0 flex gap-2" style={{ borderColor: 'var(--color-border-default)' }}>
+              <button
+                onClick={async () => {
+                  const selectedIssues = state.checkIssues.filter(i => i.selected && !i.fixed);
+                  if (selectedIssues.length === 0 || !activeModel?.modelName) return;
+                  const project = dataService.getActiveProject();
+                  if (!project?.id) return;
+                  setIsAutoChecking(true);
+                  try {
+                    const issueList = selectedIssues.map((i, idx) => `${idx + 1}. ${i.description}`).join('\n');
+                    const context = dataService.buildAIContext(8000);
+                    const fixPrompt = `以下是系统粗查发现的问题，请逐一修复：
+
+${issueList}
+
+已有设定内容供参考：
+${context || '（暂无）'}
+
+请针对每个问题，给出具体的修复建议或直接修改相关文件内容。使用 tool 格式操作文件。`;
+
+                    aiAssistant.sendCommand(fixPrompt, activeModel, { silent: true, label: '修复选中的一致性问题' });
+                    selectedIssues.forEach(i => aiAssistant.markIssueFixed(i.id));
+                  } catch {} finally { setIsAutoChecking(false); }
+                }}
+                disabled={state.checkIssues.filter(i => i.selected && !i.fixed).length === 0 || isAutoChecking || !activeModel?.modelName}
+                className="flex-1 px-3 py-1.5 rounded-lg text-[10px] font-medium transition-all border-none cursor-pointer disabled:opacity-40"
+                style={{ background: 'var(--color-primary-400)', color: 'white' }}
+              >
+                <i className="fas fa-wrench mr-1" />
+                修复选中 ({state.checkIssues.filter(i => i.selected && !i.fixed).length})
+              </button>
+              <button
+                onClick={() => aiAssistant.clearCheckIssues()}
+                className="px-3 py-1.5 rounded-lg text-[10px] font-medium transition-all border-none cursor-pointer"
+                style={{ background: 'var(--color-surface-muted)', color: 'var(--color-text-muted)' }}
+              >
+                <i className="fas fa-trash mr-1" />清空
+              </button>
             </div>
           </>
         )}

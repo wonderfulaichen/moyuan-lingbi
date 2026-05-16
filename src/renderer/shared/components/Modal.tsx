@@ -19,7 +19,7 @@ export const ModalOverlay: React.FC<ModalOverlayProps> = ({ children, onClose, m
   return (
     <div
       className={`fixed inset-0 flex items-center justify-center z-50 ${isClosing ? 'animate-fade-out' : 'animate-fade-in'}`}
-      style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)' }}
+      style={{ background: 'var(--color-surface-base, rgba(0,0,0,0.6))', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', overscrollBehavior: 'contain' }}
       onClick={handleClose}
     >
       <div
@@ -32,7 +32,7 @@ export const ModalOverlay: React.FC<ModalOverlayProps> = ({ children, onClose, m
   );
 };
 
-// ========== 输入弹窗（替�?prompt�?==========
+// ========== 输入弹窗（替代prompt）==========
 
 interface InputModalProps {
   title: string;
@@ -117,7 +117,7 @@ export const InputModal: React.FC<InputModalProps> = ({
   );
 };
 
-// ========== 确认弹窗（替�?confirm�?==========
+// ========== 确认弹窗（替代confirm）==========
 
 interface ConfirmModalProps {
   title: string;
@@ -155,7 +155,7 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
       icon: 'fa-question-circle',
       iconBg: 'bg-[var(--color-primary-100)]',
       iconColor: 'text-[var(--color-primary-400)]',
-      btnBg: 'bg-[var(--color-primary-400)] hover:bg-purple-700',
+      btnBg: 'bg-[var(--color-primary-400)] hover:bg-[var(--color-primary-600)]',
     },
   };
 

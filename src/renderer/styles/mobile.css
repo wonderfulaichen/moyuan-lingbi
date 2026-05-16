@@ -1,0 +1,572 @@
+/* ============================================
+   移动端专用样式 - 手机竖屏UI布局
+   ============================================ */
+
+/* ═══════════════════════════════════════════════
+   移动端容器布局
+   ═══════════════════════════════════════════════ */
+.mobile-app-container {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100vh;
+  height: 100dvh;
+  background-color: var(--color-surface-base);
+  overflow: hidden;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+}
+
+/* ═══════════════════════════════════════════════
+   移动端顶部状态栏
+   ═══════════════════════════════════════════════ */
+.mobile-top-bar {
+  height: auto;
+  min-height: 40px;
+  flex-shrink: 0;
+  background-color: var(--color-surface-base);
+  border-bottom: 1px solid var(--color-border-default);
+  padding: 0 10px;
+  z-index: 100;
+}
+
+.mobile-top-bar-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 40px;
+  gap: 10px;
+}
+
+.mobile-top-bar-left {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+}
+
+.mobile-top-bar-right {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.mobile-project-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100px;
+}
+
+.mobile-app-title {
+  font-size: 14px;
+  font-weight: 700;
+  background: var(--gradient-primary);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.mobile-step-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 1.5px 6px;
+  border-radius: 8px;
+  font-size: 9px;
+  font-weight: 500;
+  background: var(--color-primary-100);
+  color: var(--color-primary-400);
+  border: 1px solid var(--color-primary-200);
+  white-space: nowrap;
+}
+
+.mobile-status-generating {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 5px;
+  border-radius: 6px;
+  background: var(--color-primary-100);
+}
+
+.mobile-status-ready {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 5px;
+  border-radius: 6px;
+  background: var(--color-surface-muted);
+}
+
+.mobile-status-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--color-primary-400);
+}
+
+.mobile-status-dot.pulse {
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+.mobile-status-text {
+  font-size: 9px;
+  color: var(--color-text-secondary);
+}
+
+.mobile-aux-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 4px 0;
+  border-top: 1px solid var(--color-border-default);
+}
+
+.mobile-model-info,
+.mobile-memory-info {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  color: var(--color-text-muted);
+}
+
+.mobile-model-info i,
+.mobile-memory-info i {
+  color: var(--color-primary-400);
+  font-size: 9px;
+}
+
+/* ═══════════════════════════════════════════════
+   移动端主内容区
+   ═══════════════════════════════════════════════ */
+.mobile-main-content {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  padding: 0;
+  margin: 0;
+}
+
+.mobile-content-panel {
+  min-height: 100%;
+  padding: 10px;
+  padding-bottom: 72px;
+}
+
+/* ═══════════════════════════════════════════════
+   移动端底部导航栏
+   ═══════════════════════════════════════════════ */
+.mobile-bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 56px;
+  height: calc(56px + env(safe-area-inset-bottom));
+  display: flex;
+  align-items: stretch;
+  justify-content: space-around;
+  background-color: var(--color-surface-base);
+  border-top: 1px solid var(--color-border-default);
+  padding-bottom: env(safe-area-inset-bottom);
+  z-index: 100;
+  box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.mobile-nav-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  position: relative;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--color-text-muted);
+  transition: all 0.2s ease;
+  padding: 6px 3px;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.mobile-nav-item:active {
+  transform: scale(0.95);
+}
+
+.mobile-nav-item.active {
+  color: var(--color-primary-400);
+}
+
+.mobile-nav-icon {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.mobile-nav-item.active .mobile-nav-icon {
+  background: var(--color-primary-100);
+  box-shadow: 0 0 10px var(--color-p-alpha-15);
+}
+
+.mobile-nav-label {
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
+
+.mobile-nav-indicator {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 20px;
+  height: 2.5px;
+  border-radius: 0 0 2px 2px;
+  background: linear-gradient(90deg, var(--color-primary-400), var(--color-primary-500));
+}
+
+/* ═══════════════════════════════════════════════
+   移动端欢迎页面
+   ═══════════════════════════════════════════════ */
+.mobile-welcome {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: calc(100vh - 100px);
+  min-height: calc(100dvh - 100px);
+  padding: 24px 20px;
+}
+
+.mobile-welcome-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  max-width: 280px;
+}
+
+.mobile-welcome-logo {
+  margin-bottom: 20px;
+  animation: float 3s ease-in-out infinite;
+}
+
+.mobile-logo-icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 20px;
+  background: linear-gradient(135deg, var(--color-primary-400), var(--color-primary-600));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 6px 24px var(--color-p-alpha-25);
+}
+
+.mobile-logo-icon i {
+  font-size: 28px;
+  color: white;
+}
+
+.mobile-welcome-text {
+  margin-bottom: 28px;
+}
+
+.mobile-welcome-title {
+  font-size: 24px;
+  font-weight: 800;
+  background: var(--gradient-primary);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 4px;
+  letter-spacing: -0.02em;
+}
+
+.mobile-welcome-subtitle {
+  font-size: 13px;
+  color: var(--color-text-muted);
+  font-weight: 500;
+}
+
+.mobile-features {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  width: 100%;
+  margin-bottom: 28px;
+}
+
+.mobile-feature-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 12px 10px;
+  border-radius: 12px;
+  background: var(--color-surface-muted);
+  border: 1px solid var(--color-border-default);
+}
+
+.mobile-feature-icon {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  background: var(--color-primary-100);
+}
+
+.mobile-feature-icon i {
+  font-size: 14px;
+  color: var(--color-primary-400);
+}
+
+.mobile-feature-label {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--color-text-primary);
+}
+
+.mobile-welcome-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+}
+
+.mobile-welcome-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 20px;
+  border-radius: 14px;
+  font-size: 14px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.mobile-welcome-btn:active {
+  transform: scale(0.98);
+}
+
+.mobile-welcome-btn-primary {
+  background: var(--gradient-primary);
+  color: white;
+  box-shadow: 0 4px 16px var(--color-p-alpha-30);
+}
+
+.mobile-welcome-btn-secondary {
+  background: var(--color-surface-muted);
+  color: var(--color-text-secondary);
+  border: 1px solid var(--color-border-default);
+}
+
+.mobile-welcome-hint {
+  font-size: 11px;
+  color: var(--color-text-muted);
+  opacity: 0.7;
+}
+
+.mobile-latest-update {
+  background: var(--color-surface-muted);
+  border: 1px solid var(--color-border-default);
+  border-radius: 12px;
+  padding: 12px;
+  margin-bottom: 16px;
+  max-width: 100%;
+}
+
+.mobile-latest-update .update-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 10px;
+  color: var(--color-primary-400);
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.mobile-latest-update .update-title {
+  font-size: 12px;
+  color: var(--color-text-primary);
+  font-weight: 500;
+  margin-bottom: 4px;
+  line-height: 1.4;
+}
+
+.mobile-latest-update .update-date {
+  font-size: 10px;
+  color: var(--color-text-muted);
+}
+
+.mobile-credit {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: 10px;
+  color: var(--color-text-muted);
+  opacity: 0.6;
+  margin-top: 12px;
+  margin-bottom: 8px;
+  padding: 0 16px;
+  text-align: center;
+}
+
+/* ═══════════════════════════════════════════════
+   移动端动画
+   ═══════════════════════════════════════════════ */
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+@keyframes slideInLeft {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+@keyframes fadeOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+.animate-slide-in-left {
+  animation: slideInLeft 0.3s ease-out forwards;
+}
+
+.animate-slide-in-right {
+  animation: slideInRight 0.3s ease-out forwards;
+}
+
+.animate-fade-out {
+  animation: fadeOut 0.2s ease-out forwards;
+}
+
+/* 抽屉遮罩层 */
+.drawer-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  z-index: 10000;
+}
+
+/* 助手按钮特殊样式 */
+.mobile-nav-assistant .assistant-icon {
+  background: linear-gradient(135deg, var(--color-primary-400), var(--color-primary-600));
+  color: white;
+  box-shadow: 0 3px 10px var(--color-p-alpha-25);
+}
+
+.mobile-nav-assistant.active .assistant-icon {
+  animation: pulse 2s ease-in-out infinite;
+}
+
+/* 抽屉内容滚动优化 */
+.drawer-content {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+
+/* ═══════════════════════════════════════════════
+   移动端弹窗全屏适配
+   ═══════════════════════════════════════════════ */
+@media (max-width: 768px) {
+  /* SettingsModal 移动端全屏 */
+  .settings-modal-mobile {
+    position: fixed !important;
+    inset: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    height: 100dvh !important;
+    max-width: none !important;
+    max-height: none !important;
+    border-radius: 0 !important;
+    margin: 0 !important;
+  }
+
+  /* 移动端按钮和输入框适配 */
+  button, input, select, textarea {
+    min-height: 36px;
+    font-size: 14px;
+  }
+
+  /* 防止输入框缩放 */
+  input, select, textarea {
+    font-size: 16px;
+  }
+
+  /* 移动端flex布局防止文字竖排 */
+  .flex-wrap {
+    flex-wrap: wrap;
+  }
+
+  /* 小按钮横向排列 */
+  .mobile-btn-row {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .mobile-btn-row button {
+    flex-shrink: 0;
+    white-space: nowrap;
+  }
+}
+
+/* ═══════════════════════════════════════════════
+   移动端通用工具类
+   ═══════════════════════════════════════════════ */

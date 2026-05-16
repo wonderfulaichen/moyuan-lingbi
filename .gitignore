@@ -46,3 +46,27 @@ debug_*.txt
 debug_*.bin
 test_write.txt
 fixed.png
+
+# Android build artifacts
+*.apk
+*.jks
+
+# Portable desktop build
+墨渊灵笔-win-x64/
+
+# Build/report files
+build_error.txt
+build_output.txt
+web-test.png
+test_button.py
+tauri.conf.json
+
+# Startup scripts
+*.bat
+启动命令.txt
+
+# Trae workspace
+.trae/
+
+# Temporary plans (deleted)
+plans/

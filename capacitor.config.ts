@@ -4,9 +4,6 @@ const config: CapacitorConfig = {
   appId: 'com.moyuan.lingbi',
   appName: '墨渊灵笔',
   webDir: 'build/renderer',
-  server: {
-    androidScheme: 'https',
-  },
   android: {
     buildOptions: {
       keystorePath: undefined,

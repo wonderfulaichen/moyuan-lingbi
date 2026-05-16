@@ -93,7 +93,9 @@ const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
           {/* 名称输入 */}
           <div className="px-6 pb-4">
             <div className="relative">
+              <label htmlFor="project-title" className="sr-only">作品名称</label>
               <input
+                id="project-title"
                 ref={titleInputRef}
                 type="text"
                 value={title}
@@ -114,6 +116,7 @@ const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
                   e.currentTarget.style.borderColor = 'var(--color-border-default)';
                   e.currentTarget.style.boxShadow = 'none';
                 }}
+                autoComplete="off"
               />
               <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[9px]" style={{ color: 'var(--color-text-tertiary)' }}>
                 {title.length}/30

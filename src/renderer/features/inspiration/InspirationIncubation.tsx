@@ -512,8 +512,8 @@ const InspirationIncubation: React.FC<InspirationIncubationProps> = ({
                 >
                   <i className="fas fa-history"></i>
                   <span>历史标签</span>
-                  {schemeHistory.length > 0 && (
-                    <span className="px-1.5 rounded-full text-[10px]" style={{ backgroundColor: 'var(--color-primary-100)', color: 'var(--color-primary-300)' }}>{schemeHistory.length}</span>
+                  {schemeHistory.filter(h => h.tags.length > 0 && h.schemes.length === 0).length > 0 && (
+                    <span className="px-1.5 rounded-full text-[10px]" style={{ backgroundColor: 'var(--color-primary-100)', color: 'var(--color-primary-300)' }}>{schemeHistory.filter(h => h.tags.length > 0 && h.schemes.length === 0).length}</span>
                   )}
                 </button>
               </div>

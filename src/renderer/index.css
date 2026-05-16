@@ -1,100 +1,101 @@
 @import "tailwindcss";
+@import "./styles/desktop.css";
 
 /* ===== Tailwind v4 主题配置 ===== */
 @theme {
-  /* 主色调 - primary (映射到紫色系) */
-  --color-primary-50: rgba(167, 139, 250, 0.08);
-  --color-primary-100: rgba(167, 139, 250, 0.15);
-  --color-primary-200: rgba(167, 139, 250, 0.25);
-  --color-primary-300: #a78bfa;
-  --color-primary-400: #8b5cf6;
-  --color-primary-500: #7c3aed;
-  --color-primary-600: #6d28d9;
+  /* 主色调 - primary (默认使用大地深蓝系) */
+  --color-primary-50: rgba(107, 127, 168, 0.08);
+  --color-primary-100: rgba(107, 127, 168, 0.15);
+  --color-primary-200: rgba(107, 127, 168, 0.25);
+  --color-primary-300: #8a9ab8;
+  --color-primary-400: #6b7fa8;
+  --color-primary-500: #4a5f8a;
+  --color-primary-600: #3a4f7a;
 
-  /* 主题色 alpha 变量 - 用于 hover/发光/边框等效果，跟随主题变化 */
-  --color-p-alpha-03: rgba(139, 92, 246, 0.03);
-  --color-p-alpha-04: rgba(139, 92, 246, 0.04);
-  --color-p-alpha-05: rgba(139, 92, 246, 0.05);
-  --color-p-alpha-06: rgba(139, 92, 246, 0.06);
-  --color-p-alpha-08: rgba(139, 92, 246, 0.08);
-  --color-p-alpha-10: rgba(139, 92, 246, 0.10);
-  --color-p-alpha-12: rgba(139, 92, 246, 0.12);
-  --color-p-alpha-15: rgba(139, 92, 246, 0.15);
-  --color-p-alpha-20: rgba(139, 92, 246, 0.20);
-  --color-p-alpha-25: rgba(139, 92, 246, 0.25);
-  --color-p-alpha-30: rgba(139, 92, 246, 0.30);
-  --color-p-alpha-35: rgba(139, 92, 246, 0.35);
-  --color-p-alpha-40: rgba(139, 92, 246, 0.40);
-  --color-p-alpha-45: rgba(139, 92, 246, 0.45);
-  --color-p-alpha-50: rgba(139, 92, 246, 0.50);
-  --color-p-alpha-60: rgba(139, 92, 246, 0.60);
-  --color-p-alpha-65: rgba(139, 92, 246, 0.65);
+  /* 主题色 alpha 变量 */
+  --color-p-alpha-03: rgba(107, 127, 168, 0.03);
+  --color-p-alpha-04: rgba(107, 127, 168, 0.04);
+  --color-p-alpha-05: rgba(107, 127, 168, 0.05);
+  --color-p-alpha-06: rgba(107, 127, 168, 0.06);
+  --color-p-alpha-08: rgba(107, 127, 168, 0.08);
+  --color-p-alpha-10: rgba(107, 127, 168, 0.10);
+  --color-p-alpha-12: rgba(107, 127, 168, 0.12);
+  --color-p-alpha-15: rgba(107, 127, 168, 0.15);
+  --color-p-alpha-20: rgba(107, 127, 168, 0.20);
+  --color-p-alpha-25: rgba(107, 127, 168, 0.25);
+  --color-p-alpha-30: rgba(107, 127, 168, 0.30);
+  --color-p-alpha-35: rgba(107, 127, 168, 0.35);
+  --color-p-alpha-40: rgba(107, 127, 168, 0.40);
+  --color-p-alpha-45: rgba(107, 127, 168, 0.45);
+  --color-p-alpha-50: rgba(107, 127, 168, 0.50);
+  --color-p-alpha-60: rgba(107, 127, 168, 0.60);
+  --color-p-alpha-65: rgba(107, 127, 168, 0.65);
 
-  /* 紫色系 - purple */
-  --color-purple-50: #f5f3ff;
-  --color-purple-100: #ede9fe;
-  --color-purple-200: #ddd6fe;
-  --color-purple-300: #c4b5fd;
-  --color-purple-400: #a78bfa;
-  --color-purple-500: #8b5cf6;
-  --color-purple-600: #7c3aed;
-  --color-purple-700: #6d28d9;
-  --color-purple-800: #5b21b6;
-  --color-purple-900: #4c1d95;
+  /* 紫色系 - 重新配低饱和度高级感 */
+  --color-purple-50: #f5f5f7;
+  --color-purple-100: #e8eaee;
+  --color-purple-200: #d0d4dc;
+  --color-purple-300: #a8b0c0;
+  --color-purple-400: #7a86a0;
+  --color-purple-500: #5a6680;
+  --color-purple-600: #4a5670;
+  --color-purple-700: #3a4660;
+  --color-purple-800: #2b3b6e;
+  --color-purple-900: #0f1a3a;
 
-  /* 蓝色系 - blue */
-  --color-blue-50: #eff6ff;
-  --color-blue-100: #dbeafe;
-  --color-blue-200: #bfdbfe;
-  --color-blue-300: #93c5fd;
-  --color-blue-400: #60a5fa;
-  --color-blue-500: #3b82f6;
-  --color-blue-600: #2563eb;
+  /* 蓝色系 - 蓝鲸低饱和度配色 */
+  --color-blue-50: #f0f4f5;
+  --color-blue-100: #e0e8ea;
+  --color-blue-200: #c8d8dc;
+  --color-blue-300: #a0bcc4;
+  --color-blue-400: #78a0ac;
+  --color-blue-500: #588898;
+  --color-blue-600: #437188;
 
-  /* 翠绿色系 - emerald */
-  --color-emerald-50: #ecfdf5;
-  --color-emerald-100: #d1fae5;
-  --color-emerald-200: #a7f3d0;
-  --color-emerald-300: #6ee7b7;
-  --color-emerald-400: #34d399;
-  --color-emerald-500: #10b981;
-  --color-emerald-600: #059669;
+  /* 翠绿色系 - 河浴低饱和度绿灰 */
+  --color-emerald-50: #f5f6f4;
+  --color-emerald-100: #e8ebe6;
+  --color-emerald-200: #d0d6cc;
+  --color-emerald-300: #b0c0a8;
+  --color-emerald-400: #8a9e80;
+  --color-emerald-500: #6a8060;
+  --color-emerald-600: #5a6b65;
 
-  /* 琥珀色系 - amber */
-  --color-amber-50: #fffbeb;
-  --color-amber-100: #fef3c7;
-  --color-amber-200: #fde68a;
-  --color-amber-300: #fcd34d;
-  --color-amber-400: #fbbf24;
-  --color-amber-500: #f59e0b;
-  --color-amber-600: #d97706;
+  /* 琥珀色系 - 低饱和度暖灰 */
+  --color-amber-50: #f7f5f0;
+  --color-amber-100: #ece8e0;
+  --color-amber-200: #d8d0c0;
+  --color-amber-300: #c4b8a0;
+  --color-amber-400: #b0a080;
+  --color-amber-500: #9c8868;
+  --color-amber-600: #887050;
 
-  /* 玫瑰色系 - rose */
-  --color-rose-50: #fff1f2;
-  --color-rose-100: #ffe4e6;
-  --color-rose-200: #fecdd3;
-  --color-rose-300: #fda4af;
-  --color-rose-400: #fb7185;
-  --color-rose-500: #f43f5e;
-  --color-rose-600: #e11d48;
+  /* 玫瑰色系 - 低饱和度粉灰 */
+  --color-rose-50: #f7f0f0;
+  --color-rose-100: #ece0e0;
+  --color-rose-200: #d8c0c0;
+  --color-rose-300: #c4a0a0;
+  --color-rose-400: #b08080;
+  --color-rose-500: #9c6868;
+  --color-rose-600: #885050;
 
-  /* 红色系 - red */
-  --color-red-50: #fef2f2;
-  --color-red-100: #fee2e2;
-  --color-red-200: #fecaca;
-  --color-red-300: #fca5a5;
-  --color-red-400: #f87171;
-  --color-red-500: #ef4444;
-  --color-red-600: #dc2626;
+  /* 红色系 - 低饱和度红灰 */
+  --color-red-50: #f7f0f0;
+  --color-red-100: #ece0e0;
+  --color-red-200: #d8c0c0;
+  --color-red-300: #c4a0a0;
+  --color-red-400: #b08080;
+  --color-red-500: #a06060;
+  --color-red-600: #885050;
 
-  /* 绿色系 - green */
-  --color-green-50: #f0fdf4;
-  --color-green-100: #dcfce7;
-  --color-green-200: #bbf7d0;
-  --color-green-300: #86efac;
-  --color-green-400: #4ade80;
-  --color-green-500: #22c55e;
-  --color-green-600: #16a34a;
+  /* 绿色系 - 低饱和度绿灰 */
+  --color-green-50: #f0f4f0;
+  --color-green-100: #dce8dc;
+  --color-green-200: #bbd0bb;
+  --color-green-300: #8ab08a;
+  --color-green-400: #6a906a;
+  --color-green-500: #4a784a;
+  --color-green-600: #3a603a;
 
   /* 灰色系 - gray/slate */
   --color-gray-50: #f8fafc;
@@ -116,6 +117,8 @@ html {
   width: 100%;
   height: 100%;
   overflow: hidden;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
 }
 body {
   margin: 0;
@@ -124,11 +127,52 @@ body {
   height: 100%;
   overflow: hidden;
   background-color: var(--color-surface-base, #f5f0eb);
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: none;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
 }
 #root {
   width: 100%;
   height: 100%;
   overflow: hidden;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+}
+
+/* ===== 移动端适配 ===== */
+@media screen and (max-width: 768px) {
+  html {
+    font-size: 14px;
+  }
+  
+  body {
+    overflow: hidden;
+    position: fixed;
+    width: 100%;
+    height: 100%;
+  }
+  
+  #root {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    overflow: hidden;
+  }
+}
+
+@media screen and (max-width: 480px) {
+  html {
+    font-size: 13px;
+  }
 }
 
 /* flex 子元素防溢出：确保 flex-1 子项可收缩 */
@@ -150,8 +194,9 @@ body {
    ============================================ */
 
 /* ===== CSS 自定义属性 (设计令牌) ===== */
+/* 注意：:root 只定义基础回退值，实际主题色由 [data-theme] 和 [data-theme-mode] 覆盖 */
 :root {
-  /* 主色调 - 墨渊紫 */
+  /* 主色调 - 墨渊紫 (默认回退) */
   --color-primary-50: rgba(167, 139, 250, 0.08);
   --color-primary-100: rgba(167, 139, 250, 0.15);
   --color-primary-200: rgba(167, 139, 250, 0.25);
@@ -159,6 +204,25 @@ body {
   --color-primary-400: #8b5cf6;
   --color-primary-500: #7c3aed;
   --color-primary-600: #6d28d9;
+
+  /* 主题色 alpha 变量 - 必须在这里定义基础值，否则主题切换前会出现 undefined */
+  --color-p-alpha-03: rgba(139, 92, 246, 0.03);
+  --color-p-alpha-04: rgba(139, 92, 246, 0.04);
+  --color-p-alpha-05: rgba(139, 92, 246, 0.05);
+  --color-p-alpha-06: rgba(139, 92, 246, 0.06);
+  --color-p-alpha-08: rgba(139, 92, 246, 0.08);
+  --color-p-alpha-10: rgba(139, 92, 246, 0.10);
+  --color-p-alpha-12: rgba(139, 92, 246, 0.12);
+  --color-p-alpha-15: rgba(139, 92, 246, 0.15);
+  --color-p-alpha-20: rgba(139, 92, 246, 0.20);
+  --color-p-alpha-25: rgba(139, 92, 246, 0.25);
+  --color-p-alpha-30: rgba(139, 92, 246, 0.30);
+  --color-p-alpha-35: rgba(139, 92, 246, 0.35);
+  --color-p-alpha-40: rgba(139, 92, 246, 0.40);
+  --color-p-alpha-45: rgba(139, 92, 246, 0.45);
+  --color-p-alpha-50: rgba(139, 92, 246, 0.50);
+  --color-p-alpha-60: rgba(139, 92, 246, 0.60);
+  --color-p-alpha-65: rgba(139, 92, 246, 0.65);
 
   /* 辅助色 - 星河蓝 */
   --color-accent-blue: #60a5fa;
@@ -181,24 +245,33 @@ body {
   --color-chart-5: #f87171;
   --color-chart-6: #f472b6;
 
-  /* 表面色 */
+  /* 表面色 - 浅色模式默认 */
   --color-surface-base: #f5f0eb;
   --color-surface-elevated: #ffffff;
-  --color-surface-card: rgba(255, 255, 255, 0.8);
+  --color-surface-card: rgba(255, 255, 255, 0.92);
   --color-surface-overlay: rgba(255, 255, 255, 0.95);
   --color-surface-hover: rgba(0, 0, 0, 0.04);
   --color-surface-muted: rgba(0, 0, 0, 0.04);
+
+  /* 浅色模式渐变背景 - 三色渐变覆盖整体 */
+  --gradient-surface-base: linear-gradient(180deg, #fefcf8 0%, #f5f0eb 40%, #f0ebe6 70%, #ede6e1 100%);
+
+  /* 浅色模式按钮阴影 */
+  --shadow-button-light: 0 4px 16px rgba(0, 0, 0, 0.08), 0 2px 8px rgba(0, 0, 0, 0.04);
+
+  /* 暗色模式按钮发光 */
+  --glow-button-dark: 0 0 20px var(--color-p-alpha-40), 0 0 40px var(--color-p-alpha-20), 0 0 60px var(--color-p-alpha-10);
 
   /* 边框色 */
   --color-border-default: var(--color-p-alpha-15);
   --color-border-hover: var(--color-p-alpha-30);
   --color-border-active: var(--color-p-alpha-50);
 
-  /* 文本色 */
+  /* 文本色 - 浅色模式默认 */
   --color-text-primary: #0f172a;
-  --color-text-secondary: #334155;
-  --color-text-tertiary: #475569;
-  --color-text-muted: #64748b;
+  --color-text-secondary: #1e293b;
+  --color-text-tertiary: #334155;
+  --color-text-muted: #475569;
 
   /* 阴影 */
   --shadow-glow-purple: 0 0 20px var(--color-p-alpha-10);
@@ -216,6 +289,23 @@ body {
   --gradient-progress: linear-gradient(90deg, var(--color-primary-500), var(--color-primary-300));
   --gradient-progress-reverse: linear-gradient(90deg, var(--color-primary-300), var(--color-primary-500));
   --gradient-header: linear-gradient(135deg, var(--color-primary-500), var(--color-primary-600));
+  
+  /* 多色渐变 - 更丰富的视觉效果 */
+  --gradient-multi-primary: linear-gradient(135deg, var(--color-primary-300), var(--color-primary-500), var(--color-accent-blue));
+  --gradient-multi-warm: linear-gradient(135deg, #fbbf24, #f97316, #ef4444);
+  --gradient-multi-cool: linear-gradient(135deg, #3b82f6, #8b5cf6, #ec4899);
+  --gradient-multi-nature: linear-gradient(135deg, #10b981, #34d399, #6ee7b7);
+  --gradient-multi-sunset: linear-gradient(135deg, #f59e0b, #ef4444, #ec4899, #8b5cf6);
+  --gradient-multi-ocean: linear-gradient(135deg, #0ea5e9, #06b6d4, #14b8a6, #22c55e);
+  --gradient-multi-purple: linear-gradient(135deg, #8b5cf6, #a855f7, #d946ef, #ec4899);
+  --gradient-multi-gold: linear-gradient(135deg, #fbbf24, #f59e0b, #d97706, #b45309);
+  
+  /* 玻璃态渐变 */
+  --gradient-glass-light: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.6) 50%, rgba(255, 255, 255, 0.8) 100%);
+  --gradient-glass-dark: linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(30, 41, 59, 0.8) 50%, rgba(15, 23, 42, 0.9) 100%);
+  
+  /* 边框发光渐变 */
+  --gradient-border-glow: linear-gradient(135deg, var(--color-primary-300), var(--color-accent-blue), var(--color-primary-500));
 }
 
 /* ===== 自定义滚动条 ===== */
@@ -411,7 +501,7 @@ body {
 
 /* 基础玻璃效果 */
 .glass-effect {
-  background: rgba(15, 23, 42, 0.6);
+  background: var(--color-surface-card);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border: 1px solid var(--color-border-default);
@@ -419,14 +509,14 @@ body {
 
 /* 浅色玻璃 */
 .glass-effect-light {
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--color-surface-muted);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
 }
 
 /* 深色玻璃 - 适合模态框 */
 .glass-effect-dark {
-  background: rgba(3, 7, 18, 0.85);
+  background: var(--color-surface-overlay);
   backdrop-filter: blur(32px);
   -webkit-backdrop-filter: blur(32px);
   border: 1px solid var(--color-border-default);
@@ -443,11 +533,7 @@ body {
   inset: 0;
   border-radius: inherit;
   padding: 1px;
-  background: linear-gradient(135deg, 
-    var(--color-p-alpha-40), 
-    rgba(96, 165, 250, 0.1), 
-    var(--color-p-alpha-40)
-  );
+  background: var(--gradient-border-glow);
   -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   -webkit-mask-composite: xor;
   mask-composite: exclude;
@@ -552,7 +638,7 @@ body {
 }
 
 .gradient-text-rose {
-  background: linear-gradient(135deg, #fb7185, #f43f5e);
+  background: linear-gradient(135deg, var(--color-red-400, #fb7185) 0%, var(--color-red-500, #f43f5e) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -731,9 +817,9 @@ input[type="range"]::-moz-range-thumb {
 .skeleton-pulse {
   background: linear-gradient(
     90deg,
-    rgba(71, 85, 105, 0.15) 0%,
-    rgba(71, 85, 105, 0.25) 50%,
-    rgba(71, 85, 105, 0.15) 100%
+    var(--color-surface-muted, rgba(71, 85, 105, 0.15)) 0%,
+    var(--color-surface-elevated, rgba(71, 85, 105, 0.25)) 50%,
+    var(--color-surface-muted, rgba(71, 85, 105, 0.15)) 100%
   );
   background-size: 200% 100%;
   animation: shimmer 2s infinite;
@@ -801,10 +887,10 @@ input[type="range"]::-moz-range-thumb {
   transform: translateX(-50%) scale(0.9);
   padding: 4px 10px;
   border-radius: 6px;
-  background: rgba(15, 23, 42, 0.95);
+  background: var(--color-surface-overlay);
   backdrop-filter: blur(12px);
-  border: 1px solid var(--color-p-alpha-15);
-  color: #e2e8f0;
+  border: 1px solid var(--color-border-default);
+  color: var(--color-text-secondary);
   font-size: 11px;
   font-weight: 500;
   white-space: nowrap;
@@ -818,257 +904,261 @@ input[type="range"]::-moz-range-thumb {
    覆盖 Tailwind v4 CSS 变量实现动态换色
    ============================================ */
 
-/* 星河蓝 */
+/* 星河蓝 - 蓝鲸低饱和度 */
 [data-theme="blue"] {
-  --color-p-alpha-03: rgba(59, 130, 246, 0.03);
-  --color-p-alpha-04: rgba(59, 130, 246, 0.04);
-  --color-p-alpha-05: rgba(59, 130, 246, 0.05);
-  --color-p-alpha-06: rgba(59, 130, 246, 0.06);
-  --color-p-alpha-08: rgba(59, 130, 246, 0.08);
-  --color-p-alpha-10: rgba(59, 130, 246, 0.1);
-  --color-p-alpha-12: rgba(59, 130, 246, 0.12);
-  --color-p-alpha-15: rgba(59, 130, 246, 0.15);
-  --color-p-alpha-20: rgba(59, 130, 246, 0.2);
-  --color-p-alpha-25: rgba(59, 130, 246, 0.25);
-  --color-p-alpha-30: rgba(59, 130, 246, 0.3);
-  --color-p-alpha-35: rgba(59, 130, 246, 0.35);
-  --color-p-alpha-40: rgba(59, 130, 246, 0.4);
-  --color-p-alpha-45: rgba(59, 130, 246, 0.45);
-  --color-p-alpha-50: rgba(59, 130, 246, 0.5);
-  --color-p-alpha-60: rgba(59, 130, 246, 0.6);
-  --color-p-alpha-65: rgba(59, 130, 246, 0.65);
-  /* 自定义变量 */
-  --color-primary-50: rgba(96, 165, 250, 0.08);
-  --color-primary-100: rgba(96, 165, 250, 0.15);
-  --color-primary-200: rgba(96, 165, 250, 0.25);
-  --color-primary-300: #60a5fa;
-  --color-primary-400: #3b82f6;
-  --color-primary-500: #2563eb;
-  --color-primary-600: #1d4ed8;
-  --color-accent-blue: #93c5fd;
-  --color-accent-cyan: #22d3ee;
-  --color-accent-emerald: #34d399;
-  --color-accent-teal: #14b8a6;
-  --color-accent-amber: #fbbf24;
-  --color-accent-orange: #fb923c;
-  --color-accent-rose: #fb7185;
-  --color-border-default: rgba(59, 130, 246, 0.12);
-  --color-border-hover: rgba(59, 130, 246, 0.25);
-  --color-border-active: rgba(59, 130, 246, 0.4);
-  --shadow-glow-purple: 0 0 20px rgba(59, 130, 246, 0.15);
-  --shadow-glow-blue: 0 0 20px rgba(96, 165, 250, 0.15);
-  --shadow-glow-emerald: 0 0 20px rgba(52, 211, 153, 0.15);
-  /* Tailwind v4 变量覆盖 - 紫色 → 蓝色 */
-  --color-purple-50: #eff6ff;
-  --color-purple-100: #dbeafe;
-  --color-purple-200: #bfdbfe;
-  --color-purple-300: #93c5fd;
-  --color-purple-400: #60a5fa;
-  --color-purple-500: #3b82f6;
-  --color-purple-600: #2563eb;
-  --color-purple-700: #1d4ed8;
-  --color-purple-800: #1e40af;
-  --color-purple-900: #1e3a8a;
-  --color-violet-50: #eef2ff;
-  --color-violet-100: #e0e7ff;
-  --color-violet-200: #c7d2fe;
-  --color-violet-300: #a5b4fc;
-  --color-violet-400: #818cf8;
-  --color-violet-500: #6366f1;
-  --color-violet-600: #4f46e5;
-  --color-violet-700: #4338ca;
-  --color-violet-800: #3730a3;
-  --color-violet-900: #312e81;
+  /* 主题底色 - 蓝鲸 */
+  --color-theme-base: #142830;
+  --color-theme-elevated: #1e3840;
+  --color-p-alpha-03: rgba(67, 113, 136, 0.03);
+  --color-p-alpha-04: rgba(67, 113, 136, 0.04);
+  --color-p-alpha-05: rgba(67, 113, 136, 0.05);
+  --color-p-alpha-06: rgba(67, 113, 136, 0.06);
+  --color-p-alpha-08: rgba(67, 113, 136, 0.08);
+  --color-p-alpha-10: rgba(67, 113, 136, 0.1);
+  --color-p-alpha-12: rgba(67, 113, 136, 0.12);
+  --color-p-alpha-15: rgba(67, 113, 136, 0.15);
+  --color-p-alpha-20: rgba(67, 113, 136, 0.2);
+  --color-p-alpha-25: rgba(67, 113, 136, 0.25);
+  --color-p-alpha-30: rgba(67, 113, 136, 0.3);
+  --color-p-alpha-35: rgba(67, 113, 136, 0.35);
+  --color-p-alpha-40: rgba(67, 113, 136, 0.4);
+  --color-p-alpha-45: rgba(67, 113, 136, 0.45);
+  --color-p-alpha-50: rgba(67, 113, 136, 0.5);
+  --color-p-alpha-60: rgba(67, 113, 136, 0.6);
+  --color-p-alpha-65: rgba(67, 113, 136, 0.65);
+  --color-primary-50: rgba(136, 178, 194, 0.08);
+  --color-primary-100: rgba(136, 178, 194, 0.15);
+  --color-primary-200: rgba(136, 178, 194, 0.25);
+  --color-primary-300: #a0bcc4;
+  --color-primary-400: #88b2c2;
+  --color-primary-500: #588898;
+  --color-primary-600: #437188;
+  --color-accent-blue: #e6f4f5;
+  --color-accent-cyan: #bdd2d7;
+  --color-accent-emerald: #88b2c2;
+  --color-accent-teal: #a0bcc4;
+  --color-accent-amber: #d4e0dc;
+  --color-accent-orange: #c8d8dc;
+  --color-accent-rose: #c4b8c0;
+  --color-border-default: rgba(136, 178, 194, 0.12);
+  --color-border-hover: rgba(136, 178, 194, 0.25);
+  --color-border-active: rgba(136, 178, 194, 0.4);
+  --shadow-glow-primary: 0 0 20px rgba(136, 178, 194, 0.15);
+  --shadow-glow-blue: 0 0 20px rgba(160, 188, 196, 0.12);
+  --shadow-glow-emerald: 0 0 20px rgba(138, 158, 128, 0.12);
+  /* Tailwind v4 变量覆盖 */
+  --color-purple-50: #f0f4f5;
+  --color-purple-100: #e0e8ea;
+  --color-purple-200: #c8d8dc;
+  --color-purple-300: #a0bcc4;
+  --color-purple-400: #88b2c2;
+  --color-purple-500: #588898;
+  --color-purple-600: #437188;
+  --color-purple-700: #274456;
+  --color-purple-800: #1e3840;
+  --color-purple-900: #142830;
+  --color-violet-50: #f0f4f5;
+  --color-violet-100: #e0e8ea;
+  --color-violet-200: #c8d8dc;
+  --color-violet-300: #a0bcc4;
+  --color-violet-400: #88b2c2;
+  --color-violet-500: #588898;
+  --color-violet-600: #437188;
+  --color-violet-700: #274456;
+  --color-violet-800: #1e3840;
+  --color-violet-900: #142830;
 }
 
-/* 灵韵翠 */
+/* 翠竹 - 河浴低饱和度绿灰 */
 [data-theme="emerald"] {
-  --color-p-alpha-03: rgba(16, 185, 129, 0.03);
-  --color-p-alpha-04: rgba(16, 185, 129, 0.04);
-  --color-p-alpha-05: rgba(16, 185, 129, 0.05);
-  --color-p-alpha-06: rgba(16, 185, 129, 0.06);
-  --color-p-alpha-08: rgba(16, 185, 129, 0.08);
-  --color-p-alpha-10: rgba(16, 185, 129, 0.1);
-  --color-p-alpha-12: rgba(16, 185, 129, 0.12);
-  --color-p-alpha-15: rgba(16, 185, 129, 0.15);
-  --color-p-alpha-20: rgba(16, 185, 129, 0.2);
-  --color-p-alpha-25: rgba(16, 185, 129, 0.25);
-  --color-p-alpha-30: rgba(16, 185, 129, 0.3);
-  --color-p-alpha-35: rgba(16, 185, 129, 0.35);
-  --color-p-alpha-40: rgba(16, 185, 129, 0.4);
-  --color-p-alpha-45: rgba(16, 185, 129, 0.45);
-  --color-p-alpha-50: rgba(16, 185, 129, 0.5);
-  --color-p-alpha-60: rgba(16, 185, 129, 0.6);
-  --color-p-alpha-65: rgba(16, 185, 129, 0.65);
-  --color-primary-50: rgba(52, 211, 153, 0.08);
-  --color-primary-100: rgba(52, 211, 153, 0.15);
-  --color-primary-200: rgba(52, 211, 153, 0.25);
-  --color-primary-300: #34d399;
-  --color-primary-400: #10b981;
-  --color-primary-500: #059669;
-  --color-primary-600: #047857;
-  --color-accent-blue: #60a5fa;
-  --color-accent-cyan: #22d3ee;
-  --color-accent-emerald: #6ee7b7;
-  --color-accent-teal: #2dd4bf;
-  --color-accent-amber: #fbbf24;
-  --color-accent-orange: #fb923c;
-  --color-accent-rose: #fb7185;
-  --color-border-default: rgba(16, 185, 129, 0.12);
-  --color-border-hover: rgba(16, 185, 129, 0.25);
-  --color-border-active: rgba(16, 185, 129, 0.4);
-  --shadow-glow-purple: 0 0 20px rgba(16, 185, 129, 0.15);
-  --shadow-glow-blue: 0 0 20px rgba(96, 165, 250, 0.15);
-  --shadow-glow-emerald: 0 0 20px rgba(52, 211, 153, 0.15);
-  /* Tailwind v4 变量覆盖 - 紫色 → 翠色 */
-  --color-purple-50: #ecfdf5;
-  --color-purple-100: #d1fae5;
-  --color-purple-200: #a7f3d0;
-  --color-purple-300: #6ee7b7;
-  --color-purple-400: #34d399;
-  --color-purple-500: #10b981;
-  --color-purple-600: #059669;
-  --color-purple-700: #047857;
-  --color-purple-800: #065f46;
-  --color-purple-900: #064e3b;
-  --color-violet-50: #f0fdf4;
-  --color-violet-100: #dcfce7;
-  --color-violet-200: #bbf7d0;
-  --color-violet-300: #86efac;
-  --color-violet-400: #4ade80;
-  --color-violet-500: #22c55e;
-  --color-violet-600: #16a34a;
-  --color-violet-700: #15803d;
-  --color-violet-800: #166534;
-  --color-violet-900: #14532d;
+  /* 主题底色 - 河浴绿灰 */
+  --color-theme-base: #1a2824;
+  --color-theme-elevated: #243630;
+  --color-p-alpha-03: rgba(67, 93, 90, 0.03);
+  --color-p-alpha-04: rgba(67, 93, 90, 0.04);
+  --color-p-alpha-05: rgba(67, 93, 90, 0.05);
+  --color-p-alpha-06: rgba(67, 93, 90, 0.06);
+  --color-p-alpha-08: rgba(67, 93, 90, 0.08);
+  --color-p-alpha-10: rgba(67, 93, 90, 0.1);
+  --color-p-alpha-12: rgba(67, 93, 90, 0.12);
+  --color-primary-50: rgba(138, 158, 128, 0.08);
+  --color-primary-100: rgba(138, 158, 128, 0.15);
+  --color-primary-200: rgba(138, 158, 128, 0.25);
+  --color-primary-300: #a8b8a0;
+  --color-primary-400: #8a9e80;
+  --color-primary-500: #6a8060;
+  --color-primary-600: #5a6b65;
+  --color-accent-blue: #78a0ac;
+  --color-accent-cyan: #88b2c2;
+  --color-accent-emerald: #c8d0c0;
+  --color-accent-teal: #a0bcc4;
+  --color-accent-amber: #d0d6cc;
+  --color-accent-orange: #c4b8a0;
+  --color-accent-rose: #c4b0a8;
+  --color-border-default: rgba(138, 158, 128, 0.12);
+  --color-border-hover: rgba(138, 158, 128, 0.25);
+  --color-border-active: rgba(138, 158, 128, 0.4);
+  --shadow-glow-primary: 0 0 20px rgba(138, 158, 128, 0.15);
+  --shadow-glow-blue: 0 0 20px rgba(120, 160, 172, 0.12);
+  --shadow-glow-emerald: 0 0 20px rgba(200, 208, 192, 0.15);
+  /* Tailwind v4 变量覆盖 */
+  --color-purple-50: #f0f4f0;
+  --color-purple-100: #dce8dc;
+  --color-purple-200: #bbd0bb;
+  --color-purple-300: #a8b8a0;
+  --color-purple-400: #8a9e80;
+  --color-purple-500: #6a8060;
+  --color-purple-600: #5a6b65;
+  --color-purple-700: #435d5a;
+  --color-purple-800: #243630;
+  --color-purple-900: #1a2824;
+  --color-violet-50: #f0f4f0;
+  --color-violet-100: #dce8dc;
+  --color-violet-200: #bbd0bb;
+  --color-violet-300: #a8b8a0;
+  --color-violet-400: #8a9e80;
+  --color-violet-500: #6a8060;
+  --color-violet-600: #5a6b65;
+  --color-violet-700: #435d5a;
+  --color-violet-800: #243630;
+  --color-violet-900: #1a2824;
 }
 
-/* 暖阳金 */
+/* 暖阳金 - 低饱和度暖棕 */
 [data-theme="amber"] {
-  --color-p-alpha-03: rgba(245, 158, 11, 0.03);
-  --color-p-alpha-04: rgba(245, 158, 11, 0.04);
-  --color-p-alpha-05: rgba(245, 158, 11, 0.05);
-  --color-p-alpha-06: rgba(245, 158, 11, 0.06);
-  --color-p-alpha-08: rgba(245, 158, 11, 0.08);
-  --color-p-alpha-10: rgba(245, 158, 11, 0.1);
-  --color-p-alpha-12: rgba(245, 158, 11, 0.12);
-  --color-p-alpha-15: rgba(245, 158, 11, 0.15);
-  --color-p-alpha-20: rgba(245, 158, 11, 0.2);
-  --color-p-alpha-25: rgba(245, 158, 11, 0.25);
-  --color-p-alpha-30: rgba(245, 158, 11, 0.3);
-  --color-p-alpha-35: rgba(245, 158, 11, 0.35);
-  --color-p-alpha-40: rgba(245, 158, 11, 0.4);
-  --color-p-alpha-45: rgba(245, 158, 11, 0.45);
-  --color-p-alpha-50: rgba(245, 158, 11, 0.5);
-  --color-p-alpha-60: rgba(245, 158, 11, 0.6);
-  --color-p-alpha-65: rgba(245, 158, 11, 0.65);
-  --color-primary-50: rgba(251, 191, 36, 0.08);
-  --color-primary-100: rgba(251, 191, 36, 0.15);
-  --color-primary-200: rgba(251, 191, 36, 0.25);
-  --color-primary-300: #fbbf24;
-  --color-primary-400: #f59e0b;
-  --color-primary-500: #d97706;
-  --color-primary-600: #b45309;
-  --color-accent-blue: #60a5fa;
-  --color-accent-cyan: #22d3ee;
-  --color-accent-emerald: #34d399;
-  --color-accent-teal: #14b8a6;
-  --color-accent-amber: #fcd34d;
-  --color-accent-orange: #fb923c;
-  --color-accent-rose: #fb7185;
-  --color-border-default: rgba(245, 158, 11, 0.12);
-  --color-border-hover: rgba(245, 158, 11, 0.25);
-  --color-border-active: rgba(245, 158, 11, 0.4);
-  --shadow-glow-purple: 0 0 20px rgba(245, 158, 11, 0.15);
-  --shadow-glow-blue: 0 0 20px rgba(96, 165, 250, 0.15);
-  --shadow-glow-emerald: 0 0 20px rgba(52, 211, 153, 0.15);
-  /* Tailwind v4 变量覆盖 - 紫色 → 金色 */
-  --color-purple-50: #fffbeb;
-  --color-purple-100: #fef3c7;
-  --color-purple-200: #fde68a;
-  --color-purple-300: #fcd34d;
-  --color-purple-400: #fbbf24;
-  --color-purple-500: #f59e0b;
-  --color-purple-600: #d97706;
-  --color-purple-700: #b45309;
-  --color-purple-800: #92400e;
-  --color-purple-900: #78350f;
-  --color-violet-50: #fff7ed;
-  --color-violet-100: #ffedd5;
-  --color-violet-200: #fed7aa;
-  --color-violet-300: #fdba74;
-  --color-violet-400: #fb923c;
-  --color-violet-500: #f97316;
-  --color-violet-600: #ea580c;
-  --color-violet-700: #c2410c;
-  --color-violet-800: #9a3412;
-  --color-violet-900: #7c2d12;
+  /* 主题底色 - 暖棕 */
+  --color-theme-base: #1e1810;
+  --color-theme-elevated: #282018;
+  --color-p-alpha-03: rgba(156, 136, 104, 0.03);
+  --color-p-alpha-04: rgba(156, 136, 104, 0.04);
+  --color-p-alpha-05: rgba(156, 136, 104, 0.05);
+  --color-p-alpha-06: rgba(156, 136, 104, 0.06);
+  --color-p-alpha-08: rgba(156, 136, 104, 0.08);
+  --color-p-alpha-10: rgba(156, 136, 104, 0.1);
+  --color-p-alpha-12: rgba(156, 136, 104, 0.12);
+  --color-p-alpha-15: rgba(156, 136, 104, 0.15);
+  --color-p-alpha-20: rgba(156, 136, 104, 0.2);
+  --color-p-alpha-25: rgba(156, 136, 104, 0.25);
+  --color-p-alpha-30: rgba(156, 136, 104, 0.3);
+  --color-p-alpha-35: rgba(156, 136, 104, 0.35);
+  --color-p-alpha-40: rgba(156, 136, 104, 0.4);
+  --color-p-alpha-45: rgba(156, 136, 104, 0.45);
+  --color-p-alpha-50: rgba(156, 136, 104, 0.5);
+  --color-p-alpha-60: rgba(156, 136, 104, 0.6);
+  --color-p-alpha-65: rgba(156, 136, 104, 0.65);
+  --color-primary-50: rgba(196, 184, 160, 0.08);
+  --color-primary-100: rgba(196, 184, 160, 0.15);
+  --color-primary-200: rgba(196, 184, 160, 0.25);
+  --color-primary-300: #c4b8a0;
+  --color-primary-400: #b0a080;
+  --color-primary-500: #9c8868;
+  --color-primary-600: #887050;
+  --color-accent-blue: #a0b0c0;
+  --color-accent-cyan: #90b0b0;
+  --color-accent-emerald: #a0b090;
+  --color-accent-teal: #88a8a0;
+  --color-accent-amber: #d4c8b0;
+  --color-accent-orange: #c8b8a0;
+  --color-accent-rose: #c4a8a0;
+  --color-border-default: rgba(196, 184, 160, 0.12);
+  --color-border-hover: rgba(196, 184, 160, 0.25);
+  --color-border-active: rgba(196, 184, 160, 0.4);
+  --shadow-glow-primary: 0 0 20px rgba(196, 184, 160, 0.15);
+  --shadow-glow-blue: 0 0 20px rgba(160, 176, 192, 0.12);
+  --shadow-glow-emerald: 0 0 20px rgba(160, 176, 144, 0.12);
+  /* Tailwind v4 变量覆盖 */
+  --color-purple-50: #f5f0e8;
+  --color-purple-100: #ece4d8;
+  --color-purple-200: #d8d0c0;
+  --color-purple-300: #c4b8a0;
+  --color-purple-400: #b0a080;
+  --color-purple-500: #9c8868;
+  --color-purple-600: #887050;
+  --color-purple-700: #745c40;
+  --color-purple-800: #604830;
+  --color-purple-900: #1e1810;
+  --color-violet-50: #f5f0e8;
+  --color-violet-100: #ece4d8;
+  --color-violet-200: #d8d0c0;
+  --color-violet-300: #c4b8a0;
+  --color-violet-400: #b0a080;
+  --color-violet-500: #9c8868;
+  --color-violet-600: #887050;
+  --color-violet-700: #745c40;
+  --color-violet-800: #604830;
+  --color-violet-900: #1e1810;
 }
 
-/* 丹霞绯 */
+/* 丹霞绯 - 低饱和度粉灰 */
 [data-theme="rose"] {
-  --color-p-alpha-03: rgba(244, 63, 94, 0.03);
-  --color-p-alpha-04: rgba(244, 63, 94, 0.04);
-  --color-p-alpha-05: rgba(244, 63, 94, 0.05);
-  --color-p-alpha-06: rgba(244, 63, 94, 0.06);
-  --color-p-alpha-08: rgba(244, 63, 94, 0.08);
-  --color-p-alpha-10: rgba(244, 63, 94, 0.1);
-  --color-p-alpha-12: rgba(244, 63, 94, 0.12);
-  --color-p-alpha-15: rgba(244, 63, 94, 0.15);
-  --color-p-alpha-20: rgba(244, 63, 94, 0.2);
-  --color-p-alpha-25: rgba(244, 63, 94, 0.25);
-  --color-p-alpha-30: rgba(244, 63, 94, 0.3);
-  --color-p-alpha-35: rgba(244, 63, 94, 0.35);
-  --color-p-alpha-40: rgba(244, 63, 94, 0.4);
-  --color-p-alpha-45: rgba(244, 63, 94, 0.45);
-  --color-p-alpha-50: rgba(244, 63, 94, 0.5);
-  --color-p-alpha-60: rgba(244, 63, 94, 0.6);
-  --color-p-alpha-65: rgba(244, 63, 94, 0.65);
-  --color-primary-50: rgba(251, 113, 133, 0.08);
-  --color-primary-100: rgba(251, 113, 133, 0.15);
-  --color-primary-200: rgba(251, 113, 133, 0.25);
-  --color-primary-300: #fb7185;
-  --color-primary-400: #f43f5e;
-  --color-primary-500: #e11d48;
-  --color-primary-600: #be123c;
-  --color-accent-blue: #60a5fa;
-  --color-accent-cyan: #22d3ee;
-  --color-accent-emerald: #34d399;
-  --color-accent-teal: #14b8a6;
-  --color-accent-amber: #fbbf24;
-  --color-accent-orange: #fb923c;
-  --color-accent-rose: #fda4af;
-  --color-border-default: rgba(244, 63, 94, 0.12);
-  --color-border-hover: rgba(244, 63, 94, 0.25);
-  --color-border-active: rgba(244, 63, 94, 0.4);
-  --shadow-glow-purple: 0 0 20px rgba(244, 63, 94, 0.15);
-  --shadow-glow-blue: 0 0 20px rgba(96, 165, 250, 0.15);
-  --shadow-glow-emerald: 0 0 20px rgba(52, 211, 153, 0.15);
-  /* Tailwind v4 变量覆盖 - 紫色 → 绯色 */
-  --color-purple-50: #fff1f2;
-  --color-purple-100: #ffe4e6;
-  --color-purple-200: #fecdd3;
-  --color-purple-300: #fda4af;
-  --color-purple-400: #fb7185;
-  --color-purple-500: #f43f5e;
-  --color-purple-600: #e11d48;
-  --color-purple-700: #be123c;
-  --color-purple-800: #9f1239;
-  --color-purple-900: #881337;
-  --color-violet-50: #fdf2f8;
-  --color-violet-100: #fce7f3;
-  --color-violet-200: #fbcfe8;
-  --color-violet-300: #f9a8d4;
-  --color-violet-400: #f472b6;
-  --color-violet-500: #ec4899;
-  --color-violet-600: #db2777;
-  --color-violet-700: #be185d;
-  --color-violet-800: #9d174d;
-  --color-violet-900: #831843;
+  /* 主题底色 - 粉灰 */
+  --color-theme-base: #1e1418;
+  --color-theme-elevated: #281c20;
+  --color-p-alpha-03: rgba(156, 104, 120, 0.03);
+  --color-p-alpha-04: rgba(156, 104, 120, 0.04);
+  --color-p-alpha-05: rgba(156, 104, 120, 0.05);
+  --color-p-alpha-06: rgba(156, 104, 120, 0.06);
+  --color-p-alpha-08: rgba(156, 104, 120, 0.08);
+  --color-p-alpha-10: rgba(156, 104, 120, 0.1);
+  --color-p-alpha-12: rgba(156, 104, 120, 0.12);
+  --color-p-alpha-15: rgba(156, 104, 120, 0.15);
+  --color-p-alpha-20: rgba(156, 104, 120, 0.2);
+  --color-p-alpha-25: rgba(156, 104, 120, 0.25);
+  --color-p-alpha-30: rgba(156, 104, 120, 0.3);
+  --color-p-alpha-35: rgba(156, 104, 120, 0.35);
+  --color-p-alpha-40: rgba(156, 104, 120, 0.4);
+  --color-p-alpha-45: rgba(156, 104, 120, 0.45);
+  --color-p-alpha-50: rgba(156, 104, 120, 0.5);
+  --color-p-alpha-60: rgba(156, 104, 120, 0.6);
+  --color-p-alpha-65: rgba(156, 104, 120, 0.65);
+  --color-primary-50: rgba(196, 160, 168, 0.08);
+  --color-primary-100: rgba(196, 160, 168, 0.15);
+  --color-primary-200: rgba(196, 160, 168, 0.25);
+  --color-primary-300: #c8a8b0;
+  --color-primary-400: #b08090;
+  --color-primary-500: #9c6878;
+  --color-primary-600: #885060;
+  --color-accent-blue: #a0b0c0;
+  --color-accent-cyan: #90b0b8;
+  --color-accent-emerald: #a0b0a0;
+  --color-accent-teal: #88a8a8;
+  --color-accent-amber: #d4c0b0;
+  --color-accent-orange: #c8b0a0;
+  --color-accent-rose: #d4b8b0;
+  --color-border-default: rgba(196, 160, 168, 0.12);
+  --color-border-hover: rgba(196, 160, 168, 0.25);
+  --color-border-active: rgba(196, 160, 168, 0.4);
+  --shadow-glow-primary: 0 0 20px rgba(196, 160, 168, 0.15);
+  --shadow-glow-blue: 0 0 20px rgba(160, 176, 192, 0.12);
+  --shadow-glow-emerald: 0 0 20px rgba(160, 176, 160, 0.12);
+  /* Tailwind v4 变量覆盖 */
+  --color-purple-50: #f5e8ec;
+  --color-purple-100: #ecd8e0;
+  --color-purple-200: #d8c0cc;
+  --color-purple-300: #c8a8b0;
+  --color-purple-400: #b08090;
+  --color-purple-500: #9c6878;
+  --color-purple-600: #885060;
+  --color-purple-700: #744050;
+  --color-purple-800: #603040;
+  --color-purple-900: #1e1418;
+  --color-violet-50: #f5e8ec;
+  --color-violet-100: #ecd8e0;
+  --color-violet-200: #d8c0cc;
+  --color-violet-300: #c8a8b0;
+  --color-violet-400: #b08090;
+  --color-violet-500: #9c6878;
+  --color-violet-600: #885060;
+  --color-violet-700: #744050;
+  --color-violet-800: #603040;
+  --color-violet-900: #1e1418;
 }
 
 /* 霜白灰 - 素雅极简冷淡风 */
 [data-theme="gray"] {
+  /* 主题底色 - 霜白灰 */
+  --color-theme-base: #0f0f12;
+  --color-theme-elevated: #18181c;
   --color-p-alpha-03: rgba(148, 163, 184, 0.03);
   --color-p-alpha-04: rgba(148, 163, 184, 0.04);
   --color-p-alpha-05: rgba(148, 163, 184, 0.05);
@@ -1103,7 +1193,7 @@ input[type="range"]::-moz-range-thumb {
   --color-border-default: rgba(148, 163, 184, 0.15);
   --color-border-hover: rgba(148, 163, 184, 0.28);
   --color-border-active: rgba(148, 163, 184, 0.45);
-  --shadow-glow-purple: 0 0 20px rgba(148, 163, 184, 0.12);
+  --shadow-glow-primary: 0 0 20px rgba(148, 163, 184, 0.15);
   --shadow-glow-blue: 0 0 20px rgba(96, 165, 250, 0.12);
   --shadow-glow-emerald: 0 0 20px rgba(52, 211, 153, 0.12);
   /* Tailwind v4 变量覆盖 */
@@ -1131,30 +1221,33 @@ input[type="range"]::-moz-range-thumb {
 
 /* 檀木褐 - 暖意木质大地色系 */
 [data-theme="brown"] {
-  --color-p-alpha-03: rgba(176, 128, 92, 0.03);
-  --color-p-alpha-04: rgba(176, 128, 92, 0.04);
-  --color-p-alpha-05: rgba(176, 128, 92, 0.05);
-  --color-p-alpha-06: rgba(176, 128, 92, 0.06);
-  --color-p-alpha-08: rgba(176, 128, 92, 0.08);
-  --color-p-alpha-10: rgba(176, 128, 92, 0.1);
-  --color-p-alpha-12: rgba(176, 128, 92, 0.12);
-  --color-p-alpha-15: rgba(176, 128, 92, 0.15);
-  --color-p-alpha-20: rgba(176, 128, 92, 0.2);
-  --color-p-alpha-25: rgba(176, 128, 92, 0.25);
-  --color-p-alpha-30: rgba(176, 128, 92, 0.3);
-  --color-p-alpha-35: rgba(176, 128, 92, 0.35);
-  --color-p-alpha-40: rgba(176, 128, 92, 0.4);
-  --color-p-alpha-45: rgba(176, 128, 92, 0.45);
-  --color-p-alpha-50: rgba(176, 128, 92, 0.5);
-  --color-p-alpha-60: rgba(176, 128, 92, 0.6);
-  --color-p-alpha-65: rgba(176, 128, 92, 0.65);
-  --color-primary-50: rgba(209, 174, 144, 0.10);
-  --color-primary-100: rgba(209, 174, 144, 0.18);
-  --color-primary-200: rgba(209, 174, 144, 0.30);
-  --color-primary-300: #d1ae90;
-  --color-primary-400: #b8946e;
-  --color-primary-500: #a07a56;
-  --color-primary-600: #886343;
+  /* 主题底色 - 檀木褐 */
+  --color-theme-base: #120e08;
+  --color-theme-elevated: #1a1510;
+  --color-p-alpha-03: rgba(141, 110, 99, 0.03);
+  --color-p-alpha-04: rgba(141, 110, 99, 0.04);
+  --color-p-alpha-05: rgba(141, 110, 99, 0.05);
+  --color-p-alpha-06: rgba(141, 110, 99, 0.06);
+  --color-p-alpha-08: rgba(141, 110, 99, 0.08);
+  --color-p-alpha-10: rgba(141, 110, 99, 0.1);
+  --color-p-alpha-12: rgba(141, 110, 99, 0.12);
+  --color-p-alpha-15: rgba(141, 110, 99, 0.15);
+  --color-p-alpha-20: rgba(141, 110, 99, 0.2);
+  --color-p-alpha-25: rgba(141, 110, 99, 0.25);
+  --color-p-alpha-30: rgba(141, 110, 99, 0.3);
+  --color-p-alpha-35: rgba(141, 110, 99, 0.35);
+  --color-p-alpha-40: rgba(141, 110, 99, 0.4);
+  --color-p-alpha-45: rgba(141, 110, 99, 0.45);
+  --color-p-alpha-50: rgba(141, 110, 99, 0.5);
+  --color-p-alpha-60: rgba(141, 110, 99, 0.6);
+  --color-p-alpha-65: rgba(141, 110, 99, 0.65);
+  --color-primary-50: rgba(141, 110, 99, 0.10);
+  --color-primary-100: rgba(141, 110, 99, 0.18);
+  --color-primary-200: rgba(141, 110, 99, 0.30);
+  --color-primary-300: #8d6e63;
+  --color-primary-400: #7d5e53;
+  --color-primary-500: #6d4c41;
+  --color-primary-600: #5d3c31;
   --color-accent-blue: #93c5fd;
   --color-accent-cyan: #22d3ee;
   --color-accent-emerald: #34d399;
@@ -1162,61 +1255,64 @@ input[type="range"]::-moz-range-thumb {
   --color-accent-amber: #fbbf24;
   --color-accent-orange: #fb923c;
   --color-accent-rose: #fb7185;
-  --color-border-default: rgba(176, 128, 92, 0.15);
-  --color-border-hover: rgba(176, 128, 92, 0.28);
-  --color-border-active: rgba(176, 128, 92, 0.45);
-  --shadow-glow-purple: 0 0 20px rgba(176, 128, 92, 0.12);
+  --color-border-default: rgba(141, 110, 99, 0.15);
+  --color-border-hover: rgba(141, 110, 99, 0.28);
+  --color-border-active: rgba(141, 110, 99, 0.45);
+  --shadow-glow-primary: 0 0 20px rgba(141, 110, 99, 0.15);
   --shadow-glow-blue: 0 0 20px rgba(96, 165, 250, 0.12);
   --shadow-glow-emerald: 0 0 20px rgba(52, 211, 153, 0.12);
   /* Tailwind v4 变量覆盖 - warm earth tones */
   --color-purple-50: #faf6f0;
   --color-purple-100: #f5ede3;
   --color-purple-200: #ece0d0;
-  --color-purple-300: #d1ae90;
-  --color-purple-400: #b8946e;
-  --color-purple-500: #a07a56;
-  --color-purple-600: #886343;
-  --color-purple-700: #704f34;
-  --color-purple-800: #583c26;
-  --color-purple-900: #402b1b;
+  --color-purple-300: #8d6e63;
+  --color-purple-400: #7d5e53;
+  --color-purple-500: #6d4c41;
+  --color-purple-600: #5d3c31;
+  --color-purple-700: #4d2c21;
+  --color-purple-800: #3d1c11;
+  --color-purple-900: #2d0c01;
   --color-violet-50: #faf6f0;
   --color-violet-100: #f5ede3;
   --color-violet-200: #ece0d0;
-  --color-violet-300: #d1ae90;
-  --color-violet-400: #b8946e;
-  --color-violet-500: #a07a56;
-  --color-violet-600: #886343;
-  --color-violet-700: #704f34;
-  --color-violet-800: #583c26;
-  --color-violet-900: #402b1b;
+  --color-violet-300: #8d6e63;
+  --color-violet-400: #7d5e53;
+  --color-violet-500: #6d4c41;
+  --color-violet-600: #5d3c31;
+  --color-violet-700: #4d2c21;
+  --color-violet-800: #3d1c11;
+  --color-violet-900: #2d0c01;
 }
 
-/* 墨玉黑 - 沉稳内敛的墨玉文学风 */
-[data-theme="jade"] {
-  --color-p-alpha-03: rgba(16, 185, 129, 0.03);
-  --color-p-alpha-04: rgba(16, 185, 129, 0.04);
-  --color-p-alpha-05: rgba(16, 185, 129, 0.05);
-  --color-p-alpha-06: rgba(16, 185, 129, 0.06);
-  --color-p-alpha-08: rgba(16, 185, 129, 0.08);
-  --color-p-alpha-10: rgba(16, 185, 129, 0.1);
-  --color-p-alpha-12: rgba(16, 185, 129, 0.12);
-  --color-p-alpha-15: rgba(16, 185, 129, 0.15);
-  --color-p-alpha-20: rgba(16, 185, 129, 0.2);
-  --color-p-alpha-25: rgba(16, 185, 129, 0.25);
-  --color-p-alpha-30: rgba(16, 185, 129, 0.3);
-  --color-p-alpha-35: rgba(16, 185, 129, 0.35);
-  --color-p-alpha-40: rgba(16, 185, 129, 0.4);
-  --color-p-alpha-45: rgba(16, 185, 129, 0.45);
-  --color-p-alpha-50: rgba(16, 185, 129, 0.5);
-  --color-p-alpha-60: rgba(16, 185, 129, 0.6);
-  --color-p-alpha-65: rgba(16, 185, 129, 0.65);
-  --color-primary-50: rgba(52, 211, 153, 0.08);
-  --color-primary-100: rgba(52, 211, 153, 0.15);
-  --color-primary-200: rgba(52, 211, 153, 0.25);
-  --color-primary-300: #34d399;
-  --color-primary-400: #10b981;
-  --color-primary-500: #059669;
-  --color-primary-600: #047857;
+/* 青瓷 - 沉静内敛的青瓷意境 */
+[data-theme="teal"] {
+  /* 主题底色 - 青瓷 */
+  --color-theme-base: #051a1a;
+  --color-theme-elevated: #0a2525;
+  --color-p-alpha-03: rgba(45, 212, 191, 0.03);
+  --color-p-alpha-04: rgba(45, 212, 191, 0.04);
+  --color-p-alpha-05: rgba(45, 212, 191, 0.05);
+  --color-p-alpha-06: rgba(45, 212, 191, 0.06);
+  --color-p-alpha-08: rgba(45, 212, 191, 0.08);
+  --color-p-alpha-10: rgba(45, 212, 191, 0.1);
+  --color-p-alpha-12: rgba(45, 212, 191, 0.12);
+  --color-p-alpha-15: rgba(45, 212, 191, 0.15);
+  --color-p-alpha-20: rgba(45, 212, 191, 0.2);
+  --color-p-alpha-25: rgba(45, 212, 191, 0.25);
+  --color-p-alpha-30: rgba(45, 212, 191, 0.3);
+  --color-p-alpha-35: rgba(45, 212, 191, 0.35);
+  --color-p-alpha-40: rgba(45, 212, 191, 0.4);
+  --color-p-alpha-45: rgba(45, 212, 191, 0.45);
+  --color-p-alpha-50: rgba(45, 212, 191, 0.5);
+  --color-p-alpha-60: rgba(45, 212, 191, 0.6);
+  --color-p-alpha-65: rgba(45, 212, 191, 0.65);
+  --color-primary-50: rgba(94, 234, 212, 0.08);
+  --color-primary-100: rgba(94, 234, 212, 0.15);
+  --color-primary-200: rgba(94, 234, 212, 0.25);
+  --color-primary-300: #5eead4;
+  --color-primary-400: #2dd4bf;
+  --color-primary-500: #14b8a6;
+  --color-primary-600: #0d9488;
   --color-accent-blue: #60a5fa;
   --color-accent-cyan: #22d3ee;
   --color-accent-emerald: #34d399;
@@ -1224,123 +1320,177 @@ input[type="range"]::-moz-range-thumb {
   --color-accent-amber: #fbbf24;
   --color-accent-orange: #fb923c;
   --color-accent-rose: #fb7185;
-  --color-border-default: rgba(16, 185, 129, 0.12);
-  --color-border-hover: rgba(16, 185, 129, 0.25);
-  --color-border-active: rgba(16, 185, 129, 0.4);
-  --shadow-glow-purple: 0 0 20px rgba(16, 185, 129, 0.15);
+  --color-border-default: rgba(45, 212, 191, 0.12);
+  --color-border-hover: rgba(45, 212, 191, 0.25);
+  --color-border-active: rgba(45, 212, 191, 0.4);
+  --shadow-glow-primary: 0 0 20px rgba(45, 212, 191, 0.2);
   --shadow-glow-blue: 0 0 20px rgba(96, 165, 250, 0.15);
-  --shadow-glow-emerald: 0 0 20px rgba(52, 211, 153, 0.15);
-  /* Tailwind v4 变量覆盖 - 紫色 → 墨玉色 */
-  --color-purple-50: #ecfdf5;
-  --color-purple-100: #d1fae5;
-  --color-purple-200: #a7f3d0;
-  --color-purple-300: #6ee7b7;
-  --color-purple-400: #34d399;
-  --color-purple-500: #10b981;
-  --color-purple-600: #059669;
-  --color-purple-700: #047857;
-  --color-purple-800: #065f46;
-  --color-purple-900: #064e3b;
-  --color-violet-50: #ecfdf5;
-  --color-violet-100: #d1fae5;
-  --color-violet-200: #a7f3d0;
-  --color-violet-300: #6ee7b7;
-  --color-violet-400: #34d399;
-  --color-violet-500: #10b981;
-  --color-violet-600: #059669;
-  --color-violet-700: #047857;
-  --color-violet-800: #065f46;
-  --color-violet-900: #064e3b;
+  --shadow-glow-emerald: 0 0 20px rgba(45, 212, 191, 0.15);
+  --color-surface-base: var(--color-theme-base);
+  --color-surface-elevated: var(--color-theme-elevated);
+  /* Tailwind v4 变量覆盖 - 紫色 → 青瓷 */
+  --color-purple-50: #f0fdfa;
+  --color-purple-100: #ccfbf1;
+  --color-purple-200: #99f6e4;
+  --color-purple-300: #5eead4;
+  --color-purple-400: #2dd4bf;
+  --color-purple-500: #14b8a6;
+  --color-purple-600: #0d9488;
+  --color-purple-700: #0f766e;
+  --color-purple-800: #115e59;
+  --color-purple-900: #134e4a;
+  --color-violet-50: #f0fdfa;
+  --color-violet-100: #ccfbf1;
+  --color-violet-200: #99f6e4;
+  --color-violet-300: #5eead4;
+  --color-violet-400: #2dd4bf;
+  --color-violet-500: #14b8a6;
+  --color-violet-600: #0d9488;
+  --color-violet-700: #0f766e;
+  --color-violet-800: #115e59;
+  --color-violet-900: #134e4a;
 }
 
-/* 宣纸白 - 古典雅致的宣纸书卷风 */
+/* 银杏黄 - 明亮活泼的黄色系 */
 [data-theme="paper"] {
-  --color-p-alpha-03: rgba(209, 174, 144, 0.03);
-  --color-p-alpha-04: rgba(209, 174, 144, 0.04);
-  --color-p-alpha-05: rgba(209, 174, 144, 0.05);
-  --color-p-alpha-06: rgba(209, 174, 144, 0.06);
-  --color-p-alpha-08: rgba(209, 174, 144, 0.08);
-  --color-p-alpha-10: rgba(209, 174, 144, 0.10);
-  --color-p-alpha-12: rgba(209, 174, 144, 0.12);
-  --color-p-alpha-15: rgba(209, 174, 144, 0.15);
-  --color-p-alpha-20: rgba(209, 174, 144, 0.20);
-  --color-p-alpha-25: rgba(209, 174, 144, 0.25);
-  --color-p-alpha-30: rgba(209, 174, 144, 0.30);
-  --color-p-alpha-35: rgba(209, 174, 144, 0.35);
-  --color-p-alpha-40: rgba(209, 174, 144, 0.40);
-  --color-p-alpha-45: rgba(209, 174, 144, 0.45);
-  --color-p-alpha-50: rgba(209, 174, 144, 0.50);
-  --color-p-alpha-60: rgba(209, 174, 144, 0.60);
-  --color-p-alpha-65: rgba(209, 174, 144, 0.65);
-  --color-primary-50: rgba(209, 174, 144, 0.10);
-  --color-primary-100: rgba(209, 174, 144, 0.18);
-  --color-primary-200: rgba(209, 174, 144, 0.30);
-  --color-primary-300: #d1ae90;
-  --color-primary-400: #b8946e;
-  --color-primary-500: #a07a56;
-  --color-primary-600: #886343;
-  --color-accent-blue: #93c5fd;
+  /* 主题底色 - 明亮黄色系 */
+  --color-theme-base: #1a1605;
+  --color-theme-elevated: #252008;
+  --color-p-alpha-03: rgba(241, 196, 15, 0.03);
+  --color-p-alpha-04: rgba(241, 196, 15, 0.04);
+  --color-p-alpha-05: rgba(241, 196, 15, 0.05);
+  --color-p-alpha-06: rgba(241, 196, 15, 0.06);
+  --color-p-alpha-08: rgba(241, 196, 15, 0.08);
+  --color-p-alpha-10: rgba(241, 196, 15, 0.10);
+  --color-p-alpha-12: rgba(241, 196, 15, 0.12);
+  --color-p-alpha-15: rgba(241, 196, 15, 0.15);
+  --color-p-alpha-20: rgba(241, 196, 15, 0.20);
+  --color-p-alpha-25: rgba(241, 196, 15, 0.25);
+  --color-p-alpha-30: rgba(241, 196, 15, 0.30);
+  --color-p-alpha-35: rgba(241, 196, 15, 0.35);
+  --color-p-alpha-40: rgba(241, 196, 15, 0.40);
+  --color-p-alpha-45: rgba(241, 196, 15, 0.45);
+  --color-p-alpha-50: rgba(241, 196, 15, 0.50);
+  --color-p-alpha-60: rgba(241, 196, 15, 0.60);
+  --color-p-alpha-65: rgba(241, 196, 15, 0.65);
+  --color-primary-50: rgba(241, 196, 15, 0.10);
+  --color-primary-100: rgba(241, 196, 15, 0.18);
+  --color-primary-200: rgba(241, 196, 15, 0.30);
+  --color-primary-300: #f1c40f;
+  --color-primary-400: #d4ac0d;
+  --color-primary-500: #b7950b;
+  --color-primary-600: #9a7d0a;
+  --color-accent-blue: #60a5fa;
   --color-accent-cyan: #22d3ee;
   --color-accent-emerald: #34d399;
   --color-accent-teal: #14b8a6;
-  --color-accent-amber: #fbbf24;
+  --color-accent-amber: #fcd34d;
   --color-accent-orange: #fb923c;
   --color-accent-rose: #fb7185;
-  --color-border-default: rgba(176, 128, 92, 0.15);
-  --color-border-hover: rgba(176, 128, 92, 0.28);
-  --color-border-active: rgba(176, 128, 92, 0.45);
-  --shadow-glow-purple: 0 0 20px rgba(176, 128, 92, 0.12);
-  --shadow-glow-blue: 0 0 20px rgba(96, 165, 250, 0.12);
-  --shadow-glow-emerald: 0 0 20px rgba(52, 211, 153, 0.12);
-  /* Tailwind v4 变量覆盖 - warm paper tones */
-  --color-purple-50: #faf6f0;
-  --color-purple-100: #f5ede3;
-  --color-purple-200: #ece0d0;
-  --color-purple-300: #d1ae90;
-  --color-purple-400: #b8946e;
-  --color-purple-500: #a07a56;
-  --color-purple-600: #886343;
-  --color-purple-700: #704f34;
-  --color-purple-800: #583c26;
-  --color-purple-900: #402b1b;
-  --color-violet-50: #faf6f0;
-  --color-violet-100: #f5ede3;
-  --color-violet-200: #ece0d0;
-  --color-violet-300: #d1ae90;
-  --color-violet-400: #b8946e;
-  --color-violet-500: #a07a56;
-  --color-violet-600: #886343;
-  --color-violet-700: #704f34;
-  --color-violet-800: #583c26;
-  --color-violet-900: #402b1b;
+  --color-border-default: rgba(241, 196, 15, 0.15);
+  --color-border-hover: rgba(241, 196, 15, 0.28);
+  --color-border-active: rgba(241, 196, 15, 0.45);
+  --shadow-glow-primary: 0 0 20px rgba(241, 196, 15, 0.2);
+  --shadow-glow-blue: 0 0 20px rgba(96, 165, 250, 0.15);
+  --shadow-glow-emerald: 0 0 20px rgba(52, 211, 153, 0.15);
+  /* Tailwind v4 变量覆盖 - 明亮黄色 */
+  --color-purple-50: #fefce8;
+  --color-purple-100: #fef9c3;
+  --color-purple-200: #fef08a;
+  --color-purple-300: #fde047;
+  --color-purple-400: #f1c40f;
+  --color-purple-500: #d4ac0d;
+  --color-purple-600: #b7950b;
+  --color-purple-700: #9a7d0a;
+  --color-purple-800: #7d6608;
+  --color-purple-900: #5c4d06;
+  --color-violet-50: #fefce8;
+  --color-violet-100: #fef9c3;
+  --color-violet-200: #fef08a;
+  --color-violet-300: #fde047;
+  --color-violet-400: #f1c40f;
+  --color-violet-500: #d4ac0d;
+  --color-violet-600: #b7950b;
+  --color-violet-700: #9a7d0a;
+  --color-violet-800: #7d6608;
+  --color-violet-900: #5c4d06;
 }
 
-/* 竹青 - 清雅自然的竹林意境 */
+/* 墨渊紫 - 大地深蓝高级感 */
+[data-theme="purple"] {
+  /* 主题底色 - 大地深蓝 */
+  --color-theme-base: #0f1a3a;
+  --color-theme-elevated: #1a2548;
+  --color-p-alpha-03: rgba(66, 84, 132, 0.03);
+  --color-p-alpha-04: rgba(66, 84, 132, 0.04);
+  --color-p-alpha-05: rgba(66, 84, 132, 0.05);
+  --color-p-alpha-06: rgba(66, 84, 132, 0.06);
+  --color-p-alpha-08: rgba(66, 84, 132, 0.08);
+  --color-p-alpha-10: rgba(66, 84, 132, 0.1);
+  --color-p-alpha-12: rgba(66, 84, 132, 0.12);
+  --color-p-alpha-15: rgba(66, 84, 132, 0.15);
+  --color-p-alpha-20: rgba(66, 84, 132, 0.2);
+  --color-p-alpha-25: rgba(66, 84, 132, 0.25);
+  --color-p-alpha-30: rgba(66, 84, 132, 0.3);
+  --color-p-alpha-35: rgba(66, 84, 132, 0.35);
+  --color-p-alpha-40: rgba(66, 84, 132, 0.4);
+  --color-p-alpha-45: rgba(66, 84, 132, 0.45);
+  --color-p-alpha-50: rgba(66, 84, 132, 0.5);
+  --color-p-alpha-60: rgba(66, 84, 132, 0.6);
+  --color-p-alpha-65: rgba(66, 84, 132, 0.65);
+  --color-primary-50: rgba(107, 127, 168, 0.08);
+  --color-primary-100: rgba(107, 127, 168, 0.15);
+  --color-primary-200: rgba(107, 127, 168, 0.25);
+  --color-primary-300: #8a9ab8;
+  --color-primary-400: #6b7fa8;
+  --color-primary-500: #4a5f8a;
+  --color-primary-600: #3a4f7a;
+  --color-accent-blue: #88b2c2;
+  --color-accent-cyan: #a0bcc4;
+  --color-accent-emerald: #8a9e80;
+  --color-accent-teal: #78a0ac;
+  --color-accent-amber: #ada5a2;
+  --color-accent-orange: #bcbcbc;
+  --color-accent-rose: #b08080;
+  --color-border-default: rgba(107, 127, 168, 0.12);
+  --color-border-hover: rgba(107, 127, 168, 0.25);
+  --color-border-active: rgba(107, 127, 168, 0.4);
+  --shadow-glow-primary: 0 0 20px rgba(107, 127, 168, 0.15);
+  --shadow-glow-blue: 0 0 20px rgba(136, 178, 194, 0.12);
+  --shadow-glow-emerald: 0 0 20px rgba(138, 158, 128, 0.12);
+  --color-surface-base: var(--color-theme-base);
+  --color-surface-elevated: var(--color-theme-elevated);
+}
+
+/* 竹青 - 清雅自然的竹林意境（黄绿色调） */
 [data-theme="bamboo"] {
-  --color-p-alpha-03: rgba(34, 197, 94, 0.03);
-  --color-p-alpha-04: rgba(34, 197, 94, 0.04);
-  --color-p-alpha-05: rgba(34, 197, 94, 0.05);
-  --color-p-alpha-06: rgba(34, 197, 94, 0.06);
-  --color-p-alpha-08: rgba(34, 197, 94, 0.08);
-  --color-p-alpha-10: rgba(34, 197, 94, 0.1);
-  --color-p-alpha-12: rgba(34, 197, 94, 0.12);
-  --color-p-alpha-15: rgba(34, 197, 94, 0.15);
-  --color-p-alpha-20: rgba(34, 197, 94, 0.2);
-  --color-p-alpha-25: rgba(34, 197, 94, 0.25);
-  --color-p-alpha-30: rgba(34, 197, 94, 0.3);
-  --color-p-alpha-35: rgba(34, 197, 94, 0.35);
-  --color-p-alpha-40: rgba(34, 197, 94, 0.4);
-  --color-p-alpha-45: rgba(34, 197, 94, 0.45);
-  --color-p-alpha-50: rgba(34, 197, 94, 0.5);
-  --color-p-alpha-60: rgba(34, 197, 94, 0.6);
-  --color-p-alpha-65: rgba(34, 197, 94, 0.65);
-  --color-primary-50: rgba(74, 222, 128, 0.08);
-  --color-primary-100: rgba(74, 222, 128, 0.15);
-  --color-primary-200: rgba(74, 222, 128, 0.25);
-  --color-primary-300: #4ade80;
-  --color-primary-400: #22c55e;
-  --color-primary-500: #16a34a;
-  --color-primary-600: #15803d;
+  /* 主题底色 - 竹青 */
+  --color-theme-base: #0f1a08;
+  --color-theme-elevated: #16250c;
+  --color-p-alpha-03: rgba(163, 184, 37, 0.03);
+  --color-p-alpha-04: rgba(163, 184, 37, 0.04);
+  --color-p-alpha-05: rgba(163, 184, 37, 0.05);
+  --color-p-alpha-06: rgba(163, 184, 37, 0.06);
+  --color-p-alpha-08: rgba(163, 184, 37, 0.08);
+  --color-p-alpha-10: rgba(163, 184, 37, 0.1);
+  --color-p-alpha-12: rgba(163, 184, 37, 0.12);
+  --color-p-alpha-15: rgba(163, 184, 37, 0.15);
+  --color-p-alpha-20: rgba(163, 184, 37, 0.2);
+  --color-p-alpha-25: rgba(163, 184, 37, 0.25);
+  --color-p-alpha-30: rgba(163, 184, 37, 0.3);
+  --color-p-alpha-35: rgba(163, 184, 37, 0.35);
+  --color-p-alpha-40: rgba(163, 184, 37, 0.4);
+  --color-p-alpha-45: rgba(163, 184, 37, 0.45);
+  --color-p-alpha-50: rgba(163, 184, 37, 0.5);
+  --color-p-alpha-60: rgba(163, 184, 37, 0.6);
+  --color-p-alpha-65: rgba(163, 184, 37, 0.65);
+  --color-primary-50: rgba(163, 184, 37, 0.08);
+  --color-primary-100: rgba(163, 184, 37, 0.15);
+  --color-primary-200: rgba(163, 184, 37, 0.25);
+  --color-primary-300: #bef264;
+  --color-primary-400: #a3b824;
+  --color-primary-500: #859e1a;
+  --color-primary-600: #6b8414;
   --color-accent-blue: #60a5fa;
   --color-accent-cyan: #22d3ee;
   --color-accent-emerald: #34d399;
@@ -1351,58 +1501,63 @@ input[type="range"]::-moz-range-thumb {
   --color-border-default: rgba(34, 197, 94, 0.12);
   --color-border-hover: rgba(34, 197, 94, 0.25);
   --color-border-active: rgba(34, 197, 94, 0.4);
-  --shadow-glow-purple: 0 0 20px rgba(34, 197, 94, 0.15);
+  --shadow-glow-primary: 0 0 20px rgba(34, 197, 94, 0.2);
   --shadow-glow-blue: 0 0 20px rgba(96, 165, 250, 0.15);
   --shadow-glow-emerald: 0 0 20px rgba(52, 211, 153, 0.15);
-  /* Tailwind v4 变量覆盖 - 紫色 → 竹青色 */
-  --color-purple-50: #f0fdf4;
-  --color-purple-100: #dcfce7;
-  --color-purple-200: #bbf7d0;
-  --color-purple-300: #86efac;
-  --color-purple-400: #4ade80;
-  --color-purple-500: #22c55e;
-  --color-purple-600: #16a34a;
-  --color-purple-700: #15803d;
-  --color-purple-800: #166534;
-  --color-purple-900: #14532d;
-  --color-violet-50: #f0fdf4;
-  --color-violet-100: #dcfce7;
-  --color-violet-200: #bbf7d0;
-  --color-violet-300: #86efac;
-  --color-violet-400: #4ade80;
-  --color-violet-500: #22c55e;
-  --color-violet-600: #16a34a;
-  --color-violet-700: #15803d;
-  --color-violet-800: #166534;
-  --color-violet-900: #14532d;
+  --color-surface-base: var(--color-theme-base);
+  --color-surface-elevated: var(--color-theme-elevated);
+  /* Tailwind v4 变量覆盖 - 紫色 → 竹青（黄绿色） */
+  --color-purple-50: #fefce8;
+  --color-purple-100: #fef9c3;
+  --color-purple-200: #fef08a;
+  --color-purple-300: #bef264;
+  --color-purple-400: #a3b824;
+  --color-purple-500: #859e1a;
+  --color-purple-600: #6b8414;
+  --color-purple-700: #556a10;
+  --color-purple-800: #45540c;
+  --color-purple-900: #3a470a;
+  --color-violet-50: #fefce8;
+  --color-violet-100: #fef9c3;
+  --color-violet-200: #fef08a;
+  --color-violet-300: #bef264;
+  --color-violet-400: #a3b824;
+  --color-violet-500: #859e1a;
+  --color-violet-600: #6b8414;
+  --color-violet-700: #556a10;
+  --color-violet-800: #45540c;
+  --color-violet-900: #3a470a;
 }
 
 /* 朱砂红 - 端庄华贵的中国传统风 */
 [data-theme="cinnabar"] {
-  --color-p-alpha-03: rgba(239, 68, 68, 0.03);
-  --color-p-alpha-04: rgba(239, 68, 68, 0.04);
-  --color-p-alpha-05: rgba(239, 68, 68, 0.05);
-  --color-p-alpha-06: rgba(239, 68, 68, 0.06);
-  --color-p-alpha-08: rgba(239, 68, 68, 0.08);
-  --color-p-alpha-10: rgba(239, 68, 68, 0.1);
-  --color-p-alpha-12: rgba(239, 68, 68, 0.12);
-  --color-p-alpha-15: rgba(239, 68, 68, 0.15);
-  --color-p-alpha-20: rgba(239, 68, 68, 0.2);
-  --color-p-alpha-25: rgba(239, 68, 68, 0.25);
-  --color-p-alpha-30: rgba(239, 68, 68, 0.3);
-  --color-p-alpha-35: rgba(239, 68, 68, 0.35);
-  --color-p-alpha-40: rgba(239, 68, 68, 0.4);
-  --color-p-alpha-45: rgba(239, 68, 68, 0.45);
-  --color-p-alpha-50: rgba(239, 68, 68, 0.5);
-  --color-p-alpha-60: rgba(239, 68, 68, 0.6);
-  --color-p-alpha-65: rgba(239, 68, 68, 0.65);
-  --color-primary-50: rgba(248, 113, 113, 0.08);
-  --color-primary-100: rgba(248, 113, 113, 0.15);
-  --color-primary-200: rgba(248, 113, 113, 0.25);
-  --color-primary-300: #f87171;
-  --color-primary-400: #ef4444;
-  --color-primary-500: #dc2626;
-  --color-primary-600: #b91c1c;
+  /* 主题底色 - 朱砂红 */
+  --color-theme-base: #1a0808;
+  --color-theme-elevated: #250d0d;
+  --color-p-alpha-03: rgba(231, 76, 60, 0.03);
+  --color-p-alpha-04: rgba(231, 76, 60, 0.04);
+  --color-p-alpha-05: rgba(231, 76, 60, 0.05);
+  --color-p-alpha-06: rgba(231, 76, 60, 0.06);
+  --color-p-alpha-08: rgba(231, 76, 60, 0.08);
+  --color-p-alpha-10: rgba(231, 76, 60, 0.1);
+  --color-p-alpha-12: rgba(231, 76, 60, 0.12);
+  --color-p-alpha-15: rgba(231, 76, 60, 0.15);
+  --color-p-alpha-20: rgba(231, 76, 60, 0.2);
+  --color-p-alpha-25: rgba(231, 76, 60, 0.25);
+  --color-p-alpha-30: rgba(231, 76, 60, 0.3);
+  --color-p-alpha-35: rgba(231, 76, 60, 0.35);
+  --color-p-alpha-40: rgba(231, 76, 60, 0.4);
+  --color-p-alpha-45: rgba(231, 76, 60, 0.45);
+  --color-p-alpha-50: rgba(231, 76, 60, 0.5);
+  --color-p-alpha-60: rgba(231, 76, 60, 0.6);
+  --color-p-alpha-65: rgba(231, 76, 60, 0.65);
+  --color-primary-50: rgba(231, 76, 60, 0.08);
+  --color-primary-100: rgba(231, 76, 60, 0.15);
+  --color-primary-200: rgba(231, 76, 60, 0.25);
+  --color-primary-300: #e74c3c;
+  --color-primary-400: #d62c1a;
+  --color-primary-500: #c0392b;
+  --color-primary-600: #a93226;
   --color-accent-blue: #60a5fa;
   --color-accent-cyan: #22d3ee;
   --color-accent-emerald: #34d399;
@@ -1410,10 +1565,10 @@ input[type="range"]::-moz-range-thumb {
   --color-accent-amber: #fbbf24;
   --color-accent-orange: #fb923c;
   --color-accent-rose: #fda4af;
-  --color-border-default: rgba(239, 68, 68, 0.12);
-  --color-border-hover: rgba(239, 68, 68, 0.25);
-  --color-border-active: rgba(239, 68, 68, 0.4);
-  --shadow-glow-purple: 0 0 20px rgba(239, 68, 68, 0.15);
+  --color-border-default: rgba(231, 76, 60, 0.12);
+  --color-border-hover: rgba(231, 76, 60, 0.25);
+  --color-border-active: rgba(231, 76, 60, 0.4);
+  --shadow-glow-primary: 0 0 20px rgba(231, 76, 60, 0.2);
   --shadow-glow-blue: 0 0 20px rgba(96, 165, 250, 0.15);
   --shadow-glow-emerald: 0 0 20px rgba(52, 211, 153, 0.15);
   /* Tailwind v4 变量覆盖 - 紫色 → 朱砂红 */
@@ -1421,26 +1576,29 @@ input[type="range"]::-moz-range-thumb {
   --color-purple-100: #fee2e2;
   --color-purple-200: #fecaca;
   --color-purple-300: #fca5a5;
-  --color-purple-400: #f87171;
-  --color-purple-500: #ef4444;
-  --color-purple-600: #dc2626;
-  --color-purple-700: #b91c1c;
-  --color-purple-800: #991b1b;
-  --color-purple-900: #7f1d1d;
+  --color-purple-400: #e74c3c;
+  --color-purple-500: #c0392b;
+  --color-purple-600: #a93226;
+  --color-purple-700: #922b21;
+  --color-purple-800: #7b241c;
+  --color-purple-900: #641e17;
   --color-violet-50: #fef2f2;
   --color-violet-100: #fee2e2;
   --color-violet-200: #fecaca;
   --color-violet-300: #fca5a5;
-  --color-violet-400: #f87171;
-  --color-violet-500: #ef4444;
-  --color-violet-600: #dc2626;
-  --color-violet-700: #b91c1c;
-  --color-violet-800: #991b1b;
-  --color-violet-900: #7f1d1d;
+  --color-violet-400: #e74c3c;
+  --color-violet-500: #c0392b;
+  --color-violet-600: #a93226;
+  --color-violet-700: #922b21;
+  --color-violet-800: #7b241c;
+  --color-violet-900: #641e17;
 }
 
 /* 黛蓝 - 典雅沉静的靛蓝风韵 */
 [data-theme="indigo"] {
+  /* 主题底色 - 黛蓝 */
+  --color-theme-base: #0c0c1f;
+  --color-theme-elevated: #101028;
   --color-p-alpha-03: rgba(99, 102, 241, 0.03);
   --color-p-alpha-04: rgba(99, 102, 241, 0.04);
   --color-p-alpha-05: rgba(99, 102, 241, 0.05);
@@ -1475,7 +1633,7 @@ input[type="range"]::-moz-range-thumb {
   --color-border-default: rgba(99, 102, 241, 0.12);
   --color-border-hover: rgba(99, 102, 241, 0.25);
   --color-border-active: rgba(99, 102, 241, 0.4);
-  --shadow-glow-purple: 0 0 20px rgba(99, 102, 241, 0.15);
+  --shadow-glow-primary: 0 0 20px rgba(99, 102, 241, 0.2);
   --shadow-glow-blue: 0 0 20px rgba(96, 165, 250, 0.15);
   --shadow-glow-emerald: 0 0 20px rgba(52, 211, 153, 0.15);
   /* Tailwind v4 变量覆盖 - 紫色 → 黛蓝 */
@@ -1501,16 +1659,209 @@ input[type="range"]::-moz-range-thumb {
   --color-violet-900: #312e81;
 }
 
+/* ===== 主题感知的暗色模式主色 ===== */
+/* 当同时满足主题和暗色模式时，重新定义主色使夜晚模式下主色也有主题变化 */
+
+/* 星河蓝 - 暗色模式 */
+[data-theme="blue"][data-theme-mode="dark"] {
+  --color-surface-base: var(--color-theme-base, #0c1929);
+  --color-surface-elevated: var(--color-theme-elevated, #0f2744);
+  --color-surface-overlay: rgba(12, 25, 41, 0.95);
+  --gradient-surface-base: linear-gradient(180deg, #0f1d32 0%, #0c1929 50%, #091320 100%);
+  --color-primary-300: #93c5fd;
+  --color-primary-400: #60a5fa;
+  --color-primary-500: #3b82f6;
+  --color-primary-600: #2563eb;
+  --color-border-default: rgba(96, 165, 250, 0.2);
+  --color-border-hover: rgba(96, 165, 250, 0.35);
+  --color-border-active: rgba(96, 165, 250, 0.5);
+}
+
+/* 灵韵翠 - 暗色模式 */
+[data-theme="emerald"][data-theme-mode="dark"],
+[data-theme="bamboo"][data-theme-mode="dark"] {
+  --color-surface-base: var(--color-theme-base, #0a1f12);
+  --color-surface-elevated: var(--color-theme-elevated, #0d2a18);
+  --color-surface-overlay: rgba(10, 31, 18, 0.95);
+  --gradient-surface-base: linear-gradient(180deg, #0d2416 0%, #0a1f12 50%, #07160d 100%);
+  --color-primary-300: #6ee7b7;
+  --color-primary-400: #34d399;
+  --color-primary-500: #10b981;
+  --color-primary-600: #059669;
+  --color-border-default: rgba(52, 211, 153, 0.2);
+  --color-border-hover: rgba(52, 211, 153, 0.35);
+  --color-border-active: rgba(52, 211, 153, 0.5);
+}
+
+/* 竹青 - 暗色模式 */
+[data-theme="bamboo"][data-theme-mode="dark"] {
+  --color-surface-base: var(--color-theme-base, #0a1f0f);
+  --color-surface-elevated: var(--color-theme-elevated, #0d2a14);
+  --color-surface-overlay: rgba(10, 31, 15, 0.95);
+  --gradient-surface-base: linear-gradient(180deg, #0d2413 0%, #0a1f0f 50%, #07160b 100%);
+  --color-primary-300: #86efac;
+  --color-primary-400: #4ade80;
+  --color-primary-500: #22c55e;
+  --color-primary-600: #16a34a;
+  --color-border-default: rgba(74, 222, 128, 0.2);
+  --color-border-hover: rgba(74, 222, 128, 0.35);
+  --color-border-active: rgba(74, 222, 128, 0.5);
+}
+
+/* 暖阳金 - 暗色模式 */
+[data-theme="amber"][data-theme-mode="dark"] {
+  --color-surface-base: var(--color-theme-base, #1a1505);
+  --color-surface-elevated: var(--color-theme-elevated, #251f08);
+  --color-surface-overlay: rgba(26, 21, 5, 0.95);
+  --gradient-surface-base: linear-gradient(180deg, #1e1908 0%, #1a1505 50%, #141104 100%);
+  --color-primary-300: #fcd34d;
+  --color-primary-400: #fbbf24;
+  --color-primary-500: #f59e0b;
+  --color-primary-600: #d97706;
+  --color-border-default: rgba(251, 191, 36, 0.2);
+  --color-border-hover: rgba(251, 191, 36, 0.35);
+  --color-border-active: rgba(251, 191, 36, 0.5);
+}
+
+/* 丹霞绯 - 暗色模式 */
+[data-theme="rose"][data-theme-mode="dark"] {
+  --color-surface-base: var(--color-theme-base, #1a0a12);
+  --color-surface-elevated: var(--color-theme-elevated, #250d18);
+  --color-surface-overlay: rgba(26, 10, 18, 0.95);
+  --gradient-surface-base: linear-gradient(180deg, #1f0d15 0%, #1a0a12 50%, #14080e 100%);
+  --color-primary-300: #fda4af;
+  --color-primary-400: #fb7185;
+  --color-primary-500: #f43f5e;
+  --color-primary-600: #e11d48;
+  --color-border-default: rgba(251, 113, 133, 0.2);
+  --color-border-hover: rgba(251, 113, 133, 0.35);
+  --color-border-active: rgba(251, 113, 133, 0.5);
+}
+
+/* 青瓷 - 暗色模式 */
+[data-theme="teal"][data-theme-mode="dark"] {
+  --color-surface-base: var(--color-theme-base, #081a1a);
+  --color-surface-elevated: var(--color-theme-elevated, #0d2525);
+  --color-surface-overlay: rgba(8, 26, 26, 0.95);
+  --gradient-surface-base: linear-gradient(180deg, #0b2020 0%, #081a1a 30%, #0a1c1c 50%, #081a1a 70%, #061414 100%);
+  --color-primary-300: #5eead4;
+  --color-primary-400: #2dd4bf;
+  --color-primary-500: #14b8a6;
+  --color-primary-600: #0d9488;
+  --color-border-default: rgba(45, 212, 191, 0.2);
+  --color-border-hover: rgba(45, 212, 191, 0.35);
+  --color-border-active: rgba(45, 212, 191, 0.5);
+}
+
+/* 银杏黄 - 暗色模式 */
+[data-theme="paper"][data-theme-mode="dark"] {
+  --color-surface-base: var(--color-theme-base, #1a1605);
+  --color-surface-elevated: var(--color-theme-elevated, #252008);
+  --color-surface-overlay: rgba(26, 22, 5, 0.95);
+  --gradient-surface-base: linear-gradient(180deg, #1e1a08 0%, #1a1605 30%, #1c1806 50%, #1a1605 70%, #141104 100%);
+  --color-primary-300: #fde047;
+  --color-primary-400: #f1c40f;
+  --color-primary-500: #d4ac0d;
+  --color-primary-600: #b7950b;
+  --color-border-default: rgba(241, 196, 15, 0.2);
+  --color-border-hover: rgba(241, 196, 15, 0.35);
+  --color-border-active: rgba(241, 196, 15, 0.5);
+}
+
+/* 檀木褐 - 暗色模式 */
+[data-theme="brown"][data-theme-mode="dark"] {
+  --color-surface-base: var(--color-theme-base, #1a1208);
+  --color-surface-elevated: var(--color-theme-elevated, #251a10);
+  --color-surface-overlay: rgba(26, 18, 8, 0.95);
+  --gradient-surface-base: linear-gradient(180deg, #1e150a 0%, #1a1208 30%, #1c1409 50%, #1a1208 70%, #140f06 100%);
+  --color-primary-300: #d7ccc8;
+  --color-primary-400: #bcaaa4;
+  --color-primary-500: #8d6e63;
+  --color-primary-600: #6d4c41;
+  --color-border-default: rgba(188, 170, 164, 0.2);
+  --color-border-hover: rgba(188, 170, 164, 0.35);
+  --color-border-active: rgba(188, 170, 164, 0.5);
+}
+
+/* 墨渊紫 - 暗色模式 */
+[data-theme="purple"][data-theme-mode="dark"] {
+  --color-surface-base: var(--color-theme-base, #0f0a1a);
+  --color-surface-elevated: var(--color-theme-elevated, #1a0f28);
+  --color-surface-overlay: rgba(15, 10, 26, 0.95);
+  --gradient-surface-base: linear-gradient(180deg, #120a1f 0%, #0f0a1a 30%, #110c1f 50%, #0f0a1a 70%, #0c0815 100%);
+  --color-primary-300: #d8b4fe;
+  --color-primary-400: #c084fc;
+  --color-primary-500: #a855f7;
+  --color-primary-600: #9333ea;
+  --color-border-default: rgba(192, 132, 252, 0.2);
+  --color-border-hover: rgba(192, 132, 252, 0.35);
+  --color-border-active: rgba(192, 132, 252, 0.5);
+}
+
+/* 黛蓝 - 暗色模式 */
+[data-theme="indigo"][data-theme-mode="dark"] {
+  --color-surface-base: var(--color-theme-base, #0c0c1f);
+  --color-surface-elevated: var(--color-theme-elevated, #101028);
+  --color-surface-overlay: rgba(12, 12, 31, 0.95);
+  --gradient-surface-base: linear-gradient(180deg, #0f0f25 0%, #0c0c1f 30%, #0e0e23 50%, #0c0c1f 70%, #090918 100%);
+  --color-primary-300: #a5b4fc;
+  --color-primary-400: #818cf8;
+  --color-primary-500: #6366f1;
+  --color-primary-600: #4f46e5;
+  --color-border-default: rgba(129, 140, 248, 0.2);
+  --color-border-hover: rgba(129, 140, 248, 0.35);
+  --color-border-active: rgba(129, 140, 248, 0.5);
+}
+
+/* 朱砂红 - 暗色模式 */
+[data-theme="cinnabar"][data-theme-mode="dark"] {
+  --color-surface-base: var(--color-theme-base, #1a0a0a);
+  --color-surface-elevated: var(--color-theme-elevated, #250d0d);
+  --color-surface-overlay: rgba(26, 10, 10, 0.95);
+  --gradient-surface-base: linear-gradient(180deg, #1f0d0d 0%, #1a0a0a 30%, #1c0c0c 50%, #1a0a0a 70%, #140808 100%);
+  --color-primary-300: #fca5a5;
+  --color-primary-400: #f87171;
+  --color-primary-500: #ef4444;
+  --color-primary-600: #dc2626;
+  --color-border-default: rgba(248, 113, 113, 0.2);
+  --color-border-hover: rgba(248, 113, 113, 0.35);
+  --color-border-active: rgba(248, 113, 113, 0.5);
+}
+
+/* 霜白灰 - 暗色模式 */
+[data-theme="gray"][data-theme-mode="dark"] {
+  --color-surface-base: var(--color-theme-base, #0f1217);
+  --color-surface-elevated: var(--color-theme-elevated, #1a1f28);
+  --color-surface-overlay: rgba(15, 18, 23, 0.95);
+  --gradient-surface-base: linear-gradient(180deg, #12151c 0%, #0f1217 30%, #11141a 50%, #0f1217 70%, #0b0e12 100%);
+  --color-primary-300: #cbd5e1;
+  --color-primary-400: #94a3b8;
+  --color-primary-500: #64748b;
+  --color-primary-600: #475569;
+  --color-border-default: rgba(148, 163, 184, 0.2);
+  --color-border-hover: rgba(148, 163, 184, 0.35);
+  --color-border-active: rgba(148, 163, 184, 0.5);
+}
+
 /* ===== 白天/夜晚模式 (由 data-theme-mode 属性驱动) ===== */
 /* 夜晚模式 (默认) - 所有主题共享 */
+/* 注意：主题主色在各个 [data-theme="xxx"] 选择器中定义，此处只定义通用变量 */
 [data-theme-mode="dark"] {
   --color-surface-base: #030712;
   --color-surface-elevated: #0f172a;
+  --gradient-surface-base: linear-gradient(180deg, #050a15 0%, #030712 30%, #040814 50%, #030712 70%, #02050d 100%);
   --color-surface-card: rgba(15, 23, 42, 0.6);
+  --color-surface-overlay: rgba(15, 23, 42, 0.95);
+  --color-surface-hover: rgba(255, 255, 255, 0.05);
+  --color-surface-muted: rgba(255, 255, 255, 0.03);
   --color-text-primary: #f1f5f9;
   --color-text-secondary: #cbd5e1;
   --color-text-tertiary: #94a3b8;
   --color-text-muted: #64748b;
+  
+  /* 暗色模式按钮发光效果 */
+  --shadow-button-light: 0 0 20px var(--color-p-alpha-40), 0 0 40px var(--color-p-alpha-20), 0 0 60px var(--color-p-alpha-10);
+  --color-text-inverse: #f1f5f9;
   /* Tailwind v4 深色背景变量 */
   --color-gray-950: #030712;
   --color-gray-900: #0f172a;
@@ -1523,20 +1874,30 @@ input[type="range"]::-moz-range-thumb {
   --color-gray-200: #e2e8f0;
   --color-gray-100: #f1f5f9;
   --color-gray-50: #f8fafc;
+  /* 夜晚模式边框 */
+  --color-border-default: rgba(255, 255, 255, 0.08);
+  --color-border-hover: rgba(255, 255, 255, 0.15);
+  --color-border-active: rgba(255, 255, 255, 0.25);
+  
+  /* 夜晚模式发光效果 */
+  --shadow-glow-strong: 0 0 40px var(--color-p-alpha-20), 0 0 80px var(--color-p-alpha-10);
+  --shadow-glow-medium: 0 0 20px var(--color-p-alpha-15), 0 0 40px var(--color-p-alpha-08);
+  --shadow-glow-soft: 0 0 15px var(--color-p-alpha-10), 0 0 30px var(--color-p-alpha-05);
 }
 
 /* 白天模式 */
 [data-theme-mode="light"] {
   --color-surface-base: #f5f0eb;
   --color-surface-elevated: #ffffff;
-  --color-surface-card: rgba(255, 255, 255, 0.8);
+  --color-surface-card: rgba(255, 255, 255, 0.92);
   --color-surface-overlay: rgba(255, 255, 255, 0.95);
   --color-surface-hover: rgba(0, 0, 0, 0.04);
   --color-surface-muted: rgba(0, 0, 0, 0.04);
   --color-text-primary: #0f172a;
-  --color-text-secondary: #334155;
-  --color-text-tertiary: #475569;
-  --color-text-muted: #64748b;
+  --color-text-secondary: #1e293b;
+  --color-text-tertiary: #334155;
+  --color-text-muted: #475569;
+  --color-text-inverse: #0f172a;
   /* Tailwind v4 浅色背景变量 */
   --color-gray-950: #f8fafc;
   --color-gray-900: #ffffff;
@@ -1553,6 +1914,59 @@ input[type="range"]::-moz-range-thumb {
   --color-border-default: var(--color-p-alpha-20);
   --color-border-hover: var(--color-p-alpha-35);
   --color-border-active: var(--color-p-alpha-50);
+  
+/* 白天模式无发光效果 */
+  --shadow-glow-strong: none;
+  --shadow-glow-medium: none;
+  --shadow-glow-soft: none;
+}
+
+/* ===== 主题感知的渐变和发光效果 ===== */
+
+/* 主题渐变背景 - 只在夜晚模式有发光效果 */
+.theme-gradient-bg {
+  background: linear-gradient(135deg, var(--color-p-alpha-15) 0%, var(--color-p-alpha-08) 50%, var(--color-p-alpha-12) 100%);
+  box-shadow: var(--shadow-glow-soft);
+  transition: all 0.3s ease;
+}
+
+/* 主题渐变边框 */
+.theme-gradient-border {
+  position: relative;
+}
+
+.theme-gradient-border::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: var(--gradient-border-glow);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+/* 主题发光效果 - 只在夜晚模式显示 */
+.theme-glow-soft {
+  box-shadow: var(--shadow-glow-soft);
+}
+
+.theme-glow-medium {
+  box-shadow: var(--shadow-glow-medium);
+}
+
+.theme-glow-strong {
+  box-shadow: var(--shadow-glow-strong);
+}
+
+/* 主题渐变文字 */
+.theme-gradient-text {
+  background: var(--gradient-multi-primary);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 /* ===== 主题感知的 CSS 工具类 ===== */
@@ -1871,8 +2285,9 @@ code, .code-inline {
    ============================================ */
 
 /* 高级玻璃卡片 - 适用于所有浮动卡片 */
+/* 使用 CSS 变量替代硬编码颜色，确保主题切换正确 */
 .glass-card {
-  background: rgba(15, 23, 42, 0.5);
+  background: var(--color-surface-card);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   border: 1px solid var(--color-border-default);
@@ -1887,14 +2302,29 @@ code, .code-inline {
   border-color: var(--color-border-hover);
 }
 
+[data-theme-mode="dark"] .glass-card {
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.3), 0 0 30px var(--color-p-alpha-08);
+  border-color: var(--color-border-default);
+}
+
+[data-theme-mode="dark"] .glass-card:hover {
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.4), 0 0 40px var(--color-p-alpha-15);
+  border-color: var(--color-border-hover);
+}
+
 [data-theme-mode="light"] .glass-card {
-  background: rgba(255, 255, 255, 0.6);
-  border: 1px solid rgba(0, 0, 0, 0.08);
+  background: var(--color-surface-card);
+  border: 1px solid var(--color-border-default);
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
 }
 
 [data-theme-mode="light"] .glass-card:hover {
-  background: rgba(255, 255, 255, 0.85);
+  background: var(--color-surface-elevated);
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1), 0 0 20px var(--color-p-alpha-15);
   transform: translateY(-3px);
   border-color: var(--color-p-alpha-30);
@@ -1902,15 +2332,22 @@ code, .code-inline {
 
 /* 玻璃内嵌卡片 (用于卡片内分组) */
 .glass-card-inset {
-  background: rgba(0, 0, 0, 0.15);
+  background: var(--color-surface-muted);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
   border-radius: 12px;
   border: 1px solid var(--color-border-default);
 }
 
+[data-theme-mode="dark"] .glass-card-inset {
+  background: var(--color-surface-muted);
+  box-shadow: inset 0 1px 0 var(--color-p-alpha-05);
+}
+
 [data-theme-mode="light"] .glass-card-inset {
-  background: rgba(0, 0, 0, 0.03);
+  background: var(--color-surface-muted);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
 }
 
 /* ============================================
@@ -1936,15 +2373,15 @@ code, .code-inline {
 
 [data-theme-mode="dark"] .eink-output {
   /* 暗色模式下 e-ink 风格 */
-  background: rgba(248, 245, 240, 0.02);
-  color: #d4d0c8;
+  background: var(--color-surface-elevated, rgba(248, 245, 240, 0.02));
+  color: var(--color-text-primary, #d4d0c8);
 }
 
 [data-theme-mode="light"] .eink-output {
   /* 白天模式下更像纸质书 */
-  background: #faf8f5;
-  color: #2c2c2c;
-  box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.03);
+  background: var(--color-surface-card, #faf8f5);
+  color: var(--color-text-primary, #2c2c2c);
+  box-shadow: inset 0 0 30px var(--color-surface-muted, rgba(0, 0, 0, 0.03));
 }
 
 .eink-output p {
@@ -2033,7 +2470,7 @@ code, .code-inline {
     radial-gradient(ellipse at 40% 80%, rgba(251, 113, 133, 0.03) 0%, transparent 50%);
 }
 
-[data-theme="jade"] .parallax-bg {
+[data-theme="teal"] .parallax-bg {
   background-image:
     radial-gradient(ellipse at 20% 50%, rgba(52, 211, 153, 0.05) 0%, transparent 60%),
     radial-gradient(ellipse at 80% 20%, rgba(16, 185, 129, 0.03) 0%, transparent 50%),
@@ -2269,6 +2706,11 @@ code, .code-inline {
   color: var(--color-text-primary);
 }
 
+/* 暗色模式下 selection 文字颜色需要更亮 */
+[data-theme-mode="dark"] ::selection {
+  color: #f1f5f9;
+}
+
 /* ============================================
    全局圆角与细节优化
    ============================================ */
@@ -2343,15 +2785,15 @@ select {
    ============================================ */
 
 .header-glass {
-  background: rgba(15, 23, 42, 0.3);
+  background: var(--color-surface-card);
   backdrop-filter: blur(20px) saturate(1.2);
   -webkit-backdrop-filter: blur(20px) saturate(1.2);
   border-bottom: 1px solid var(--color-border-default);
 }
 
 [data-theme-mode="light"] .header-glass {
-  background: rgba(255, 255, 255, 0.5);
-  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  background: var(--color-surface-card);
+  border-bottom: 1px solid var(--color-border-default);
 }
 
 /* ============================================
@@ -2446,7 +2888,7 @@ select {
 /* 错误提示框 */
 .error-box {
   background: rgba(239, 68, 68, 0.08);
-  color: #f87171;
+  color: var(--color-accent-rose);
   border: 1px solid rgba(239, 68, 68, 0.2);
 }
 
@@ -2485,7 +2927,7 @@ select {
   /* 莫兰迪柔和背景 */
   --color-surface-base: #f5f0eb;
   --color-surface-elevated: #faf7f2;
-  --color-surface-card: rgba(255, 255, 255, 0.7);
+  --color-surface-card: rgba(255, 255, 255, 0.92);
 
   /* 常用深色背景兼容 */
   --color-bg-subtle: rgba(255, 255, 255, 0.5);
@@ -2639,27 +3081,27 @@ select {
   --color-primary-500: #a07a56;
 }
 
-[data-theme-mode="light"][data-theme="jade"] {
-  --color-p-alpha-03: rgba(16, 185, 129, 0.03);
-  --color-p-alpha-04: rgba(16, 185, 129, 0.04);
-  --color-p-alpha-05: rgba(16, 185, 129, 0.05);
-  --color-p-alpha-06: rgba(16, 185, 129, 0.06);
-  --color-p-alpha-08: rgba(16, 185, 129, 0.08);
-  --color-p-alpha-10: rgba(16, 185, 129, 0.1);
-  --color-p-alpha-12: rgba(16, 185, 129, 0.12);
-  --color-p-alpha-15: rgba(16, 185, 129, 0.15);
-  --color-p-alpha-20: rgba(16, 185, 129, 0.2);
-  --color-p-alpha-25: rgba(16, 185, 129, 0.25);
-  --color-p-alpha-30: rgba(16, 185, 129, 0.3);
-  --color-p-alpha-35: rgba(16, 185, 129, 0.35);
-  --color-p-alpha-40: rgba(16, 185, 129, 0.4);
-  --color-p-alpha-45: rgba(16, 185, 129, 0.45);
-  --color-p-alpha-50: rgba(16, 185, 129, 0.5);
-  --color-p-alpha-60: rgba(16, 185, 129, 0.6);
-  --color-p-alpha-65: rgba(16, 185, 129, 0.65);
-  --color-primary-300: #6ee7b7;
-  --color-primary-400: #34d399;
-  --color-primary-500: #10b981;
+[data-theme-mode="light"][data-theme="teal"] {
+  --color-p-alpha-03: rgba(45, 212, 191, 0.03);
+  --color-p-alpha-04: rgba(45, 212, 191, 0.04);
+  --color-p-alpha-05: rgba(45, 212, 191, 0.05);
+  --color-p-alpha-06: rgba(45, 212, 191, 0.06);
+  --color-p-alpha-08: rgba(45, 212, 191, 0.08);
+  --color-p-alpha-10: rgba(45, 212, 191, 0.1);
+  --color-p-alpha-12: rgba(45, 212, 191, 0.12);
+  --color-p-alpha-15: rgba(45, 212, 191, 0.15);
+  --color-p-alpha-20: rgba(45, 212, 191, 0.2);
+  --color-p-alpha-25: rgba(45, 212, 191, 0.25);
+  --color-p-alpha-30: rgba(45, 212, 191, 0.3);
+  --color-p-alpha-35: rgba(45, 212, 191, 0.35);
+  --color-p-alpha-40: rgba(45, 212, 191, 0.4);
+  --color-p-alpha-45: rgba(45, 212, 191, 0.45);
+  --color-p-alpha-50: rgba(45, 212, 191, 0.5);
+  --color-p-alpha-60: rgba(45, 212, 191, 0.6);
+  --color-p-alpha-65: rgba(45, 212, 191, 0.65);
+  --color-primary-300: #5eead4;
+  --color-primary-400: #2dd4bf;
+  --color-primary-500: #14b8a6;
 }
 
 [data-theme-mode="light"][data-theme="paper"] {
@@ -2735,4 +3177,182 @@ select {
   --color-primary-300: #a5b4fc;
   --color-primary-400: #818cf8;
   --color-primary-500: #6366f1;
+}
+
+/* ============================================
+   渐变主题效果优化
+   ============================================ */
+
+/* 渐变边框效果 - 使用伪元素实现渐变边框 */
+.gradient-border {
+  position: relative;
+  background: var(--color-surface-card);
+}
+
+.gradient-border::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  padding: 1px;
+  border-radius: inherit;
+  background: linear-gradient(135deg, var(--color-primary-400), var(--color-primary-600));
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+/* 渐变边框悬停效果 */
+.gradient-border-hover {
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+.gradient-border-hover::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  padding: 1px;
+  border-radius: inherit;
+  background: linear-gradient(135deg, var(--color-primary-400), var(--color-primary-600));
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+.gradient-border-hover:hover::before {
+  opacity: 1;
+}
+
+/* 渐变文字效果 */
+.gradient-text {
+  background: var(--gradient-multi-primary);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* 多彩渐变文字 */
+.gradient-text-multi {
+  background: var(--gradient-multi-cool);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* 暖色渐变文字 */
+.gradient-text-warm {
+  background: var(--gradient-multi-warm);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* 渐变背景效果 */
+.gradient-bg {
+  background: linear-gradient(135deg, var(--color-p-alpha-20), var(--color-p-alpha-10));
+}
+
+.gradient-bg-active {
+  background: linear-gradient(135deg, var(--color-p-alpha-30), var(--color-p-alpha-15));
+}
+
+/* 主题色图标背景渐变 */
+.icon-gradient-bg {
+  background: linear-gradient(135deg, var(--color-p-alpha-25), var(--color-p-alpha-10));
+}
+
+/* 选中状态渐变边框 */
+.selected-gradient-border {
+  position: relative;
+  border: 1px solid var(--color-border-default);
+  transition: all 0.3s ease;
+}
+
+.selected-gradient-border.selected {
+  border-color: transparent;
+  box-shadow: 0 0 0 1px var(--color-primary-400), 0 0 20px var(--color-p-alpha-30);
+}
+
+/* 渐变进度条 */
+.progress-gradient {
+  background: linear-gradient(90deg, var(--color-primary-400), var(--color-primary-500), var(--color-primary-400));
+  background-size: 200% 100%;
+  animation: progressShimmer 2s linear infinite;
+}
+
+@keyframes progressShimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* Tab按钮悬停渐变效果 */
+.tab-hover-gradient {
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+.tab-hover-gradient::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(135deg, var(--color-p-alpha-20), var(--color-p-alpha-10));
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+
+.tab-hover-gradient:hover::after {
+  opacity: 1;
+}
+
+/* 卡片选中状态渐变效果 */
+.card-selected-glow {
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+.card-selected-glow.selected {
+  box-shadow: 0 0 0 2px var(--color-primary-400), var(--shadow-glow-medium);
+}
+
+/* 按钮渐变悬停效果 */
+.btn-gradient-hover {
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.btn-gradient-hover::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, var(--color-p-alpha-15), transparent);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+
+.btn-gradient-hover:hover::before {
+  opacity: 1;
+}
+
+/* 分割线渐变效果 */
+.gradient-divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--color-primary-400), transparent);
+  opacity: 0.3;
+}
+
+/* 发光效果 - 主题色 */
+.glow-theme {
+  box-shadow: 0 0 20px var(--color-p-alpha-40);
+}
+
+.glow-theme-strong {
+  box-shadow: 0 0 30px var(--color-p-alpha-50), 0 0 60px var(--color-p-alpha-30);
 }

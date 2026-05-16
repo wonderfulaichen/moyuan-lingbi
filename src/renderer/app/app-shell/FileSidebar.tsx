@@ -3,6 +3,7 @@ import { ProjectMeta } from '../../../shared/types/fileSystem';
 import { ModelConfig } from '../../../shared/types';
 import { dataService } from '../../shared/services/DataService';
 import { InputModal } from '../../shared/components/Modal';
+import AppIcon from '../../../assets/icon.png';
 
 interface FileSidebarProps {
   projects: ProjectMeta[];
@@ -127,7 +128,7 @@ const FileSidebar: React.FC<FileSidebarProps> = ({
       <div style={{ padding: '8px 12px', borderBottom: '1px solid var(--color-border-default)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
           <div style={{ width: 24, height: 24, borderRadius: 6, overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <img src="/icon.png" alt="墨渊灵笔" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+            <img src={AppIcon} alt="墨渊灵笔" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
           </div>
           <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--color-text-primary)' }}>墨渊灵笔</span>
         </div>

@@ -7,6 +7,8 @@ import { dataService } from '../../shared/services/DataService';
 import { InputModal, ConfirmModal } from '../../shared/components/Modal';
 import { useAIStatus } from '../../shared/contexts/AIStatusContext';
 import { CHANGELOG } from '../../shared/data/changelog';
+import { PROVIDER_INFO } from '../../../shared/constants';
+import AppIcon from '../../../assets/icon.png';
 
 interface StepSidebarProps {
   steps: { id: StepId; label: string; icon: string; shortLabel: string }[];
@@ -22,18 +24,6 @@ interface StepSidebarProps {
   onRenameProject: (id: string, name: string) => void;
   onOpenSettings: () => void;
 }
-
-const providerColors: Record<string, string> = {
-  'openai-compatible': 'from-[var(--color-primary-400)] to-[var(--color-primary-500)]',
-  'deepseek': 'from-blue-500 to-cyan-600',
-  'ollama': 'from-green-500 to-emerald-600',
-};
-
-const providerIcons: Record<string, string> = {
-  'openai-compatible': 'fa-cloud',
-  'deepseek': 'fa-dragon',
-  'ollama': 'fa-server',
-};
 
 const StepSidebar: React.FC<StepSidebarProps> = ({
   steps, activeStep, onSelectStep,
@@ -52,6 +42,7 @@ const StepSidebar: React.FC<StepSidebarProps> = ({
   });
   const [modelDropdownOpen, setModelDropdownOpen] = useState(false);
   const modelTriggerRef = useRef<HTMLButtonElement>(null);
+  const modelDropdownRef = useRef<HTMLDivElement>(null);
   const toggleCollapse = () => {
     setCollapsed(prev => {
       const next = !prev;
@@ -63,7 +54,12 @@ const StepSidebar: React.FC<StepSidebarProps> = ({
   React.useEffect(() => {
     if (!modelDropdownOpen) return;
     const handler = (e: MouseEvent | KeyboardEvent) => {
-      if (e instanceof MouseEvent && modelTriggerRef.current && !modelTriggerRef.current.contains(e.target as Node)) setModelDropdownOpen(false);
+      if (e instanceof MouseEvent) {
+        const target = e.target as Node;
+        const inTrigger = modelTriggerRef.current?.contains(target);
+        const inDropdown = modelDropdownRef.current?.contains(target);
+        if (!inTrigger && !inDropdown) setModelDropdownOpen(false);
+      }
       if (e instanceof KeyboardEvent && e.key === 'Escape') setModelDropdownOpen(false);
     };
     document.addEventListener('mousedown', handler);
@@ -76,22 +72,42 @@ const StepSidebar: React.FC<StepSidebarProps> = ({
   const { isGenerating, statusMessage, progress, tokenUsage, error } = status;
 
   return (
-    <div className={`${collapsed ? 'w-16' : 'w-56 lg:w-64'} text-gray-100 flex flex-col h-full border-r shrink-0
-      bg-gray-950/70 backdrop-blur-xl border-r-white/5 overflow-hidden transition-all duration-300 ease-in-out`}>
+    <div className={`${collapsed ? 'w-13' : 'w-44 lg:w-48'} text-[var(--color-text-primary)] flex flex-col h-full border-r shrink-0
+      overflow-hidden transition-all duration-300 ease-in-out`}
+      style={{
+        background: 'rgba(255, 255, 255, 0.02)',
+        backdropFilter: 'blur(16px)',
+        borderRight: '1px solid var(--color-border-default)',
+      }}>
 
       {/* Logo区域 */}
-      <div className={`${collapsed ? 'px-3 py-4' : 'p-5'} border-b border-white/5 transition-all duration-300`}>
-        <div className={`flex items-center ${collapsed ? 'justify-center' : 'gap-3'}`}>
-          <div className="w-9 h-9 rounded-xl overflow-hidden flex items-center justify-center shadow-lg animate-float card-float-hover">
-            <img src="/icon.png" alt="墨渊灵笔" className="w-full h-full object-contain" />
+      <div className={`${collapsed ? 'px-3 py-4' : 'px-4 py-4'} transition-all duration-300`}
+        style={{
+          background: 'var(--color-surface-hover)',
+          borderBottom: '1px solid var(--color-border-default)',
+        }}>
+        <div className={`flex items-center ${collapsed ? 'justify-center' : 'gap-2.5'}`}>
+          <div 
+            className="w-8 h-8 rounded-xl overflow-hidden flex items-center justify-center animate-float"
+            style={{
+              background: 'var(--color-p-alpha-15)',
+              boxShadow: '0 4px 15px var(--color-p-alpha-20)',
+              border: '1px solid var(--color-border-default)',
+            }}>
+            <img src={AppIcon} alt="墨渊灵笔" className="w-full h-full object-contain" />
           </div>
           {!collapsed && (
             <div className="flex-1 min-w-0">
-              <h1 className="text-lg font-bold tracking-tight bg-clip-text text-transparent gradient-text-theme"
-                style={{ backgroundImage: 'linear-gradient(to right, var(--color-primary-300), var(--color-primary-400))' }}>
+              <h1 className="text-base font-bold tracking-tight"
+                style={{
+                  background: 'var(--gradient-primary)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  backgroundClip: 'text',
+                }}>
                 墨渊灵笔
               </h1>
-              <p className="text-[10px] text-gray-500 tracking-wider">AI小说创作工坊</p>
+              <p className="text-[9px] tracking-wider" style={{ color: 'var(--color-text-muted)' }}>AI小说创作工坊</p>
             </div>
           )}
         </div>
@@ -155,6 +171,50 @@ const StepSidebar: React.FC<StepSidebarProps> = ({
               <i className="fas fa-plus group-hover:rotate-90 transition-transform duration-300"></i>
               <span>新建作品</span>
             </button>
+
+            {/* 本地模型状态卡片 */}
+            {activeModel && activeModel.provider === 'local' && (
+              <div className="mt-2 mx-1 px-2.5 py-2 rounded-xl border border-amber-500/15 bg-gradient-to-r from-amber-500/5 to-orange-500/5 animate-fade-in-down">
+                <div className="flex items-center gap-1.5 mb-1.5">
+                  <i className="fas fa-microchip text-[8px] text-amber-400"></i>
+                  <span className="text-[9px] font-bold text-amber-400/80 uppercase tracking-wider">本地模型</span>
+                  <div className="ml-auto flex items-center gap-1">
+                    <div className={`w-1.5 h-1.5 rounded-full ${activeModel.gpuAcceleration ? 'bg-emerald-400' : 'bg-gray-500'}`}></div>
+                    <span className={`text-[8px] ${activeModel.gpuAcceleration ? 'text-emerald-400' : 'text-gray-500'}`}>
+                      {activeModel.gpuAcceleration ? 'GPU' : 'CPU'}
+                    </span>
+                  </div>
+                </div>
+                <div className="space-y-1">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[8px] text-gray-500">模型</span>
+                    <span className="text-[9px] text-gray-300 truncate max-w-[140px]" title={activeModel.modelPath || activeModel.modelName}>
+                      {activeModel.modelName || '未选择'}
+                    </span>
+                  </div>
+                  {activeModel.contextSize && (
+                    <div className="flex items-center justify-between">
+                      <span className="text-[8px] text-gray-500">上下文</span>
+                      <span className="text-[9px] text-amber-400/80 font-mono">
+                        {(activeModel.contextSize / 1000).toFixed(0)}K
+                      </span>
+                    </div>
+                  )}
+                  {activeModel.gpuAcceleration && activeModel.gpuLayers !== undefined && (
+                    <div className="flex items-center justify-between">
+                      <span className="text-[8px] text-gray-500">GPU层</span>
+                      <span className="text-[9px] text-emerald-400/80 font-mono">{activeModel.gpuLayers}</span>
+                    </div>
+                  )}
+                </div>
+                <div className="mt-2 pt-1.5 border-t border-amber-500/10 flex items-center gap-1">
+                  <i className="fas fa-hdd text-[7px] text-gray-600"></i>
+                  <span className="text-[8px] text-gray-600 truncate max-w-[160px]">
+                    {activeModel.modelPath ? activeModel.modelPath.split(/[\\/]/).pop() : '未配置路径'}
+                  </span>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -164,10 +224,10 @@ const StepSidebar: React.FC<StepSidebarProps> = ({
         activeModel && (
           <div className="flex justify-center py-1">
             <div
-              className={`w-5 h-5 rounded-md bg-gradient-to-br ${providerColors[activeModel.provider] || 'from-[var(--color-primary-400)] to-[var(--color-primary-500)]'} flex items-center justify-center`}
-              title={activeModel.modelName || '未配置模型'}
+              className={`w-5 h-5 rounded-md bg-gradient-to-br ${PROVIDER_INFO[activeModel.provider]?.bgGradient || 'from-[var(--color-primary-400)] to-[var(--color-primary-500)]'} flex items-center justify-center ${activeModel.provider === 'local' ? 'ring-1 ring-amber-400/30' : ''}`}
+              title={`${activeModel.name}${activeModel.provider === 'local' && activeModel.gpuAcceleration ? ' 🟢 GPU' : ''}`}
             >
-              <i className={`fas ${providerIcons[activeModel.provider] || 'fa-robot'} text-white text-[8px]`}></i>
+              <i className={`fas ${PROVIDER_INFO[activeModel.provider]?.icon || 'fa-robot'} text-white text-[8px]`}></i>
             </div>
           </div>
         )
@@ -183,14 +243,15 @@ const StepSidebar: React.FC<StepSidebarProps> = ({
             >
               {activeModel ? (
                 <>
-                  <div className={`w-5 h-5 rounded-md bg-gradient-to-br ${providerColors[activeModel.provider] || 'from-[var(--color-primary-400)] to-[var(--color-primary-500)]'} flex items-center justify-center shrink-0 shadow-sm`}>
-                    <i className={`fas ${providerIcons[activeModel.provider] || 'fa-robot'} text-white text-[8px]`}></i>
+                  <div className={`w-5 h-5 rounded-md bg-gradient-to-br ${PROVIDER_INFO[activeModel.provider]?.bgGradient || 'from-[var(--color-primary-400)] to-[var(--color-primary-500)]'} flex items-center justify-center shrink-0 shadow-sm`}>
+                    <i className={`fas ${PROVIDER_INFO[activeModel.provider]?.icon || 'fa-robot'} text-white text-[8px]`}></i>
                   </div>
                   <div className="flex-1 min-w-0 text-left">
                     <span className="text-xs font-medium text-gray-200 block truncate">{activeModel.name}</span>
                     <span className="text-[9px] text-gray-500 truncate block">{activeModel.modelName}</span>
                   </div>
                   <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${
+                    activeModel.provider === 'local' ? 'bg-amber-400' :
                     activeModel.provider === 'ollama' ? 'bg-green-400' :
                     activeModel.provider === 'deepseek' ? 'bg-blue-400' : 'bg-[var(--color-primary-400)]'
                   }`} />
@@ -212,10 +273,11 @@ const StepSidebar: React.FC<StepSidebarProps> = ({
       {/* Portal: 模型下拉菜单 */}
       {modelDropdownOpen && modelTriggerRef.current && ReactDOM.createPortal(
         <div
+          ref={modelDropdownRef}
           className="fixed z-[9999] animate-fade-in-down shadow-xl shadow-black/30 rounded-xl overflow-hidden"
           style={{
-            background: 'rgba(20, 20, 28, 0.97)',
-            border: '1px solid rgba(255,255,255,0.08)',
+            background: 'var(--color-surface-overlay)',
+            border: '1px solid var(--color-border-default)',
             backdropFilter: 'blur(12px)',
             minWidth: modelTriggerRef.current.offsetWidth - 16,
             top: modelTriggerRef.current.getBoundingClientRect().bottom + 6,
@@ -231,14 +293,14 @@ const StepSidebar: React.FC<StepSidebarProps> = ({
                   type="button"
                   onClick={() => { dataService.setActiveModel(m.id); setModelDropdownOpen(false); }}
                   className={`w-full flex items-center gap-2.5 px-3 py-2 transition-all duration-150 text-left
-                    ${isActive ? 'bg-[var(--color-primary-500)]/15' : 'hover:bg-white/5'}`}
+                    ${isActive ? 'bg-[var(--color-primary-500)]/15' : 'hover:bg-[var(--color-surface-hover)]'}`}
                 >
-                  <div className={`w-6 h-6 rounded-lg bg-gradient-to-br ${providerColors[m.provider] || 'from-[var(--color-primary-400)] to-[var(--color-primary-500)]'} flex items-center justify-center shrink-0 shadow-sm`}>
-                    <i className={`fas ${providerIcons[m.provider] || 'fa-robot'} text-white text-[9px]`}></i>
+                  <div className={`w-6 h-6 rounded-lg bg-gradient-to-br ${PROVIDER_INFO[m.provider]?.bgGradient || 'from-[var(--color-primary-400)] to-[var(--color-primary-500)]'} flex items-center justify-center shrink-0 shadow-sm`}>
+                    <i className={`fas ${PROVIDER_INFO[m.provider]?.icon || 'fa-robot'} text-white text-[9px]`}></i>
                   </div>
                   <div className="flex-1 min-w-0">
-                    <span className={`text-[11px] font-medium block truncate ${isActive ? 'text-[var(--color-primary-300)]' : 'text-gray-300'}`}>{m.name}</span>
-                    <span className="text-[9px] truncate block text-gray-500">{m.modelName}</span>
+                    <span className={`text-[11px] font-medium block truncate ${isActive ? 'text-[var(--color-primary-300)]' : 'text-[var(--color-text-primary)]'}`}>{m.name}</span>
+                    <span className="text-[9px] truncate block" style={{ color: 'var(--color-text-muted)' }}>{m.modelName}</span>
                   </div>
                   {isActive && (
                     <i className="fas fa-check text-[9px] text-[var(--color-primary-400)] shrink-0"></i>
@@ -252,39 +314,68 @@ const StepSidebar: React.FC<StepSidebarProps> = ({
       )}
 
       {/* 导航步骤 */}
-      <nav className={`${collapsed ? 'mt-2' : 'mt-4'} ${collapsed ? 'px-1' : 'px-2'} flex-1`}>
-        <div className={`${collapsed ? 'flex flex-col items-center gap-1' : 'glass-card-inset p-1.5 space-y-0.5'}`}>
-          {steps.map((step, i) => (
-            <button
-              key={step.id}
-              type="button"
-              disabled={!activeProjectId && step.id !== 'inspiration'}
-              onClick={() => onSelectStep(step.id)}
-              className={`flex items-center rounded-xl transition-all duration-300 ${
-                collapsed ? 'justify-center p-2.5' : 'w-full px-3 py-2.5'
-              } ${
-                activeStep === step.id
-                  ? 'bg-theme-primary-100 text-theme-primary shadow-sm card-float-hover'
-                  : 'text-gray-500 hover:bg-white/5 hover:text-gray-300'
-              } ${!activeProjectId && step.id !== 'inspiration' ? 'opacity-30 cursor-not-allowed' : ''}`}
-              style={{ animationDelay: i * 60 + 'ms' }}
-              title={collapsed ? step.label : undefined}
-            >
-              <div className={`flex items-center justify-center transition-all duration-300 ${
-                activeStep === step.id ? 'scale-110' : ''
-              }`}>
-                <i className={`fas ${step.icon} text-sm`}></i>
+      <nav className={`${collapsed ? 'mt-2' : 'mt-3'} ${collapsed ? 'px-1' : 'px-2'} flex-1`}>
+        <div className={`${collapsed ? 'flex flex-col items-center gap-1' : 'space-y-0.5'}`}>
+          {steps.map((step, i) => {
+            const isActive = activeStep === step.id;
+            const isDisabled = !activeProjectId && step.id !== 'inspiration';
+            return (
+              <button
+                key={step.id}
+                type="button"
+                disabled={isDisabled}
+                onClick={() => onSelectStep(step.id)}
+                className={`flex items-center rounded-lg transition-all duration-200 ${
+                  collapsed ? 'justify-center p-2.5 w-full' : 'w-full px-3 py-2.5'
+                } ${isDisabled ? 'opacity-30 cursor-not-allowed' : ''}`}
+                style={{
+                  animationDelay: `${i * 60}ms`,
+                  background: isActive 
+                    ? 'var(--color-p-alpha-12)' 
+                    : 'transparent',
+                  boxShadow: isActive 
+                    ? '0 2px 8px var(--color-p-alpha-12)' 
+                    : 'none',
+                  borderLeft: isActive ? '2px solid var(--color-primary-400)' : '2px solid transparent',
+                  color: isActive ? 'var(--color-primary-300)' : 'var(--color-text-secondary)',
+                }}
+                onMouseEnter={(e) => {
+                  if (!isDisabled && !isActive) {
+                    e.currentTarget.style.background = 'var(--color-surface-hover)';
+                    e.currentTarget.style.color = 'var(--color-text-primary)';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (!isDisabled && !isActive) {
+                    e.currentTarget.style.background = 'transparent';
+                    e.currentTarget.style.color = 'var(--color-text-secondary)';
+                  }
+                }}
+                title={collapsed ? step.label : undefined}
+              >
+                <div className={`flex items-center justify-center transition-all duration-200 ${isActive ? 'scale-105' : ''}`}>
+                <i className={`fas ${step.icon} text-sm`} style={{ 
+                  filter: isActive ? 'drop-shadow(0 0 4px var(--color-p-alpha-40))' : 'none',
+                  color: isActive ? 'var(--color-primary-400)' : 'var(--color-text-muted)'
+                }}></i>
               </div>
-              {!collapsed && (
-                <>
-                  <span className="ml-3 text-sm font-semibold tracking-wide">{step.label}</span>
-                  {activeStep === step.id && (
-                    <div className="ml-auto w-1.5 h-1.5 rounded-full bg-theme-primary animate-glow-breathing"></div>
-                  )}
-                </>
-              )}
-            </button>
-          ))}
+                {!collapsed && (
+                  <>
+                    <span className="ml-2 text-sm font-medium">{step.label}</span>
+                    {isActive && (
+                      <div 
+                        className="ml-auto w-1 h-1 rounded-full"
+                        style={{ 
+                          background: 'var(--color-primary-400)',
+                          boxShadow: '0 0 6px var(--color-p-alpha-60)',
+                        }}
+                      ></div>
+                    )}
+                  </>
+                )}
+              </button>
+            );
+          })}
         </div>
       </nav>
 
@@ -292,9 +383,20 @@ const StepSidebar: React.FC<StepSidebarProps> = ({
       <div className={collapsed ? 'px-1 mb-1' : 'px-2 mb-1'}>
         <button
           onClick={onOpenSettings}
-          className={`flex items-center rounded-xl text-gray-500 hover:text-gray-300 hover:bg-white/5 transition-all duration-200 text-xs ${
+          className={`flex items-center rounded-xl transition-all duration-200 text-xs ${
             collapsed ? 'w-full justify-center py-2' : 'w-full gap-2 px-3 py-2'
           }`}
+          style={{
+            color: 'var(--color-text-muted)',
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.color = 'var(--color-text-primary)';
+            e.currentTarget.style.background = 'var(--color-surface-hover)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.color = 'var(--color-text-muted)';
+            e.currentTarget.style.background = 'transparent';
+          }}
           title={collapsed ? '设置' : undefined}
         >
           <i className="fas fa-gear text-sm"></i>
@@ -304,41 +406,48 @@ const StepSidebar: React.FC<StepSidebarProps> = ({
 
       {/* 底部状态栏 */}
       {!collapsed && (
-        <div className="border-t border-white/5 animate-fade-in-up delay-500">
+        <div 
+          className="animate-fade-in-up delay-500"
+          style={{
+            borderTop: '1px solid var(--color-border-default)',
+            background: 'var(--color-surface-hover)',
+          }}>
           <div className="px-3 py-2 space-y-1">
             {isGenerating ? (
               <>
                 <div className="flex items-center gap-1.5">
-                  <div className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse"></div>
-                  <span className="text-[9px] text-green-400/80 truncate flex-1">{statusMessage || 'AI 生成中...'}</span>
+                  <div 
+                    className="w-1.5 h-1.5 rounded-full animate-pulse"
+                    style={{ 
+                      background: 'var(--color-accent-emerald)',
+                      boxShadow: '0 0 8px var(--color-accent-emerald)',
+                    }}
+                  ></div>
+                  <span className="text-[9px] truncate flex-1" style={{ color: 'var(--color-accent-emerald)' }}>
+                    {statusMessage || 'AI 生成中...'}
+                  </span>
                 </div>
-                {progress > 0 && (
-                  <div className="w-full h-1 rounded-full overflow-hidden bg-white/5">
-                    <div className="h-full rounded-full transition-all duration-300"
-                      style={{ width: progress + '%', background: 'linear-gradient(90deg, var(--color-primary-500), var(--color-primary-300))' }}
-                    />
-                  </div>
-                )}
                 {tokenUsage && (
-                  <div className="flex items-center gap-2 text-[8px] text-gray-500">
+                  <div className="flex items-center gap-2 text-[8px]" style={{ color: 'var(--color-text-muted)' }}>
                     <span>{'↑' + tokenUsage.prompt}</span>
                     <span>{'↓' + tokenUsage.completion}</span>
-                    <span>{Math.round(progress)}%</span>
                   </div>
                 )}
               </>
             ) : error ? (
               <div className="flex items-center gap-1.5">
-                <i className="fas fa-circle-exclamation text-[9px] text-red-400"></i>
-                <span className="text-[9px] text-red-400/80 truncate">{error}</span>
+                <i className="fas fa-circle-exclamation text-[9px]" style={{ color: 'var(--color-accent-rose)' }}></i>
+                <span className="text-[9px] truncate" style={{ color: 'var(--color-accent-rose)' }}>{error}</span>
               </div>
             ) : (
               <div className="flex items-center justify-between">
-                <span className="text-[10px]" style={{ color: 'var(--color-text-muted)' }}>
+                <span className="text-[9px]" style={{ color: 'var(--color-text-muted)' }}>
                   v{CHANGELOG[0]?.version || '0.0.1'} · wonderful艾晨
                 </span>
                 {tokenUsage && tokenUsage.total > 0 && (
-                  <span className="text-[9px]" style={{ color: 'var(--color-text-muted)' }}>{tokenUsage.total.toLocaleString()} tokens</span>
+                  <span className="text-[9px]" style={{ color: 'var(--color-primary-300)' }}>
+                    {tokenUsage.total.toLocaleString()} tokens
+                  </span>
                 )}
               </div>
             )}
@@ -347,10 +456,21 @@ const StepSidebar: React.FC<StepSidebarProps> = ({
       )}
 
       {/* 展开/收起按钮 */}
-      <div className="border-t border-white/5">
+      <div style={{ borderTop: '1px solid var(--color-border-default)' }}>
         <button
           onClick={toggleCollapse}
-          className="w-full flex items-center justify-center py-2 text-gray-500 hover:text-gray-300 hover:bg-white/5 transition-all duration-200"
+          className="w-full flex items-center justify-center py-2 transition-all duration-200"
+          style={{
+            color: 'var(--color-text-muted)',
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.color = 'var(--color-text-primary)';
+            e.currentTarget.style.background = 'var(--color-surface-hover)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.color = 'var(--color-text-muted)';
+            e.currentTarget.style.background = 'transparent';
+          }}
           title={collapsed ? '展开侧边栏' : '收起侧边栏'}
         >
           <i className={`fas ${collapsed ? 'fa-chevron-right' : 'fa-chevron-left'} text-xs`}></i>

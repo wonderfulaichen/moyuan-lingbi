@@ -399,8 +399,8 @@ const InspirationSchemes: React.FC<InspirationSchemesProps> = ({
           >
             <i className="fas fa-history"></i>
             <span>历史</span>
-            {schemeHistory.length > 0 && (
-              <span className="px-1.5 rounded-full text-[10px]" style={{ backgroundColor: 'var(--color-primary-100)', color: 'var(--color-primary-300)' }}>{schemeHistory.length}</span>
+            {schemeHistory.filter(h => h.schemes.length > 0).length > 0 && (
+              <span className="px-1.5 rounded-full text-[10px]" style={{ backgroundColor: 'var(--color-primary-100)', color: 'var(--color-primary-300)' }}>{schemeHistory.filter(h => h.schemes.length > 0).length}</span>
             )}
           </button>
         </div>
@@ -462,8 +462,8 @@ const InspirationSchemes: React.FC<InspirationSchemesProps> = ({
                   onClick={() => setSchemeCount(n)}
                   className={`w-7 h-7 rounded text-xs font-bold transition-all`}
                   style={{
-                    backgroundColor: schemeCount === n ? 'var(--color-primary-100)' : 'transparent',
-                    color: schemeCount === n ? 'var(--color-primary-300)' : 'var(--color-text-tertiary)',
+                    backgroundColor: schemeCount === n ? 'var(--color-primary-500)' : 'transparent',
+                    color: schemeCount === n ? '#ffffff' : 'var(--color-text-secondary)',
                   }}
                 >
                   {n}
@@ -587,12 +587,13 @@ const InspirationSchemes: React.FC<InspirationSchemesProps> = ({
           <button
             onClick={handleConfirmScheme}
             disabled={!hasSelectedScheme}
-            className={`px-6 py-2.5 text-white rounded-xl disabled:opacity-40 disabled:cursor-not-allowed transition-all font-medium text-sm ${
+            className={`px-6 py-2.5 rounded-xl disabled:opacity-40 disabled:cursor-not-allowed transition-all font-medium text-sm ${
               isGenerating ? 'btn-loading-ring' : 'card-float-hover'
             }`}
             style={{
               background: 'linear-gradient(135deg, var(--color-primary-500), var(--color-primary-600))',
               boxShadow: '0 4px 20px var(--color-primary-100)',
+              color: '#ffffff',
             }}
           >
             <i className="fas fa-check mr-2"></i>确认选择此方案

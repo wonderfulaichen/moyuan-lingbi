@@ -1,5 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import { BubbleFolder as BubbleFolderType } from '../../../shared/types';
+import { useTheme } from '../../shared/contexts/ThemeContext';
+import { useUIStore } from '../../shared/stores/uiStore';
 
 interface BubbleFolderProps {
   folders: BubbleFolderType[];
@@ -57,6 +59,10 @@ const BubbleFolder: React.FC<BubbleFolderProps> = ({
   onCreateSubFolder,
   onCreateCard,
 }) => {
+  const { themeInfo } = useTheme();
+  const { animationLevel } = useUIStore();
+  const hasAnimations = animationLevel !== 'none';
+  
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [newFolderName, setNewFolderName] = useState('');
   const [newFolderType, setNewFolderType] = useState<BubbleFolderType['type']>('custom');
@@ -155,13 +161,18 @@ const BubbleFolder: React.FC<BubbleFolderProps> = ({
                 setContextMenu({ x: e.clientX, y: e.clientY, folderId: folder.id });
               }}
               className={`
-                w-full flex items-center gap-1.5 px-2 py-2 rounded-xl transition-all duration-200 text-left
+                w-full flex items-center gap-1.5 px-3 py-2.5 rounded-xl transition-all duration-200 text-left
                 ${isActive
-                  ? 'bg-[var(--color-primary-100)] text-[var(--color-primary-200)]'
-                  : 'text-gray-400 hover:bg-white/5 hover:text-gray-200'
+                  ? ''
+                  : 'hover:bg-white/5'
                 }
                 ${isSquashing ? 'animate-squash-bounce' : ''}
               `}
+              style={{
+                background: isActive ? themeInfo.gradient : 'transparent',
+                color: isActive ? 'var(--color-text-primary)' : 'var(--color-text-secondary)',
+                boxShadow: isActive ? '0 4px 12px var(--color-primary-100)' : 'none',
+              }}
             >
               {/* 展开箭头 */}
               {hasChildren ? (
@@ -235,12 +246,26 @@ const BubbleFolder: React.FC<BubbleFolderProps> = ({
 
   return (
     <div className="h-full flex flex-col">
-      {/* 头部 */}
-      <div className="flex items-center justify-between px-4 py-2.5 border-b border-[var(--color-border-default)] bg-gray-950/30 shrink-0">
-        <span className="text-xs font-medium text-gray-400">内容文件夹</span>
+      {/* 头部 - 美化版本 */}
+      <div className="flex items-center justify-between px-4 py-3 border-b shrink-0 relative overflow-hidden">
+        {/* 装饰背景 */}
+        <div className="absolute inset-0 opacity-10" style={{ background: themeInfo.gradient }} />
+        
+        <div className="relative flex items-center gap-2">
+          <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: themeInfo.gradient }}>
+            <i className="fas fa-folder-tree text-white text-sm"></i>
+          </div>
+          <span className="text-sm font-semibold" style={{ color: 'var(--color-text-primary)' }}>内容文件夹</span>
+        </div>
+        
         <button
           onClick={() => setShowCreateModal(true)}
-          className="flex items-center gap-1 px-2.5 py-1.5 text-[10px] font-medium text-[var(--color-primary-300)] hover:text-white bg-[var(--color-primary-100)] hover:bg-[var(--color-primary-400)]/25 rounded-lg transition-all"
+          className={`relative flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg transition-all ${hasAnimations ? 'hover:scale-105 active:scale-95' : ''}`}
+          style={{
+            background: themeInfo.gradient,
+            color: 'var(--color-text-primary)',
+            boxShadow: '0 4px 12px var(--color-primary-100)'
+          }}
         >
           <i className="fas fa-plus text-[10px]"></i>
           新建

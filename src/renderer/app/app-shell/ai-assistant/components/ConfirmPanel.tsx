@@ -1,14 +1,21 @@
 import React from 'react';
 import { AgentPhase } from '../../../../../shared/types/fileSystem';
-import { aiAssistant } from '../../../../shared/services/AIAssistantService';
 
 interface ConfirmPanelProps {
   phase: AgentPhase;
   requiredAction: string;
   pendingFiles: Array<{ action: string; name: string; content: string }>;
+  onConfirm?: () => void;
+  onReject?: () => void;
 }
 
-export const ConfirmPanel: React.FC<ConfirmPanelProps> = ({ phase, requiredAction, pendingFiles }) => {
+export const ConfirmPanel: React.FC<ConfirmPanelProps> = ({
+  phase,
+  requiredAction,
+  pendingFiles,
+  onConfirm,
+  onReject
+}) => {
   if (phase !== AgentPhase.WAITING_CONFIRM) return null;
 
   return (
@@ -40,12 +47,12 @@ export const ConfirmPanel: React.FC<ConfirmPanelProps> = ({ phase, requiredActio
         </div>
       )}
       <div className="px-3 py-2 flex gap-2 border-t" style={{ borderColor: 'var(--color-border-default)' }}>
-        <button onClick={() => aiAssistant.confirmPendingFiles()}
+        <button onClick={onConfirm}
           className="flex-1 text-[11px] font-semibold py-1.5 rounded-lg border-none cursor-pointer transition-all"
           style={{ background: 'var(--color-primary-400)', color: '#fff' }}>
           <i className="fas fa-check mr-1" />确认
         </button>
-        <button onClick={() => aiAssistant.rejectPendingFiles()}
+        <button onClick={onReject}
           className="flex-1 text-[11px] font-medium py-1.5 rounded-lg border cursor-pointer transition-all"
           style={{ background: 'transparent', color: 'var(--color-text-secondary)', borderColor: 'var(--color-border-default)' }}>
           取消

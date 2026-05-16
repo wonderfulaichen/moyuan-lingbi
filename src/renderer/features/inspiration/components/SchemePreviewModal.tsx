@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { NovelScheme } from '../../../../shared/types';
 import { ConfirmModal } from '../../../shared/components/Modal';
 
@@ -72,15 +73,15 @@ const SchemePreviewModal: React.FC<SchemePreviewModalProps> = ({ scheme, index, 
 
   const displayScheme = isEditing ? editedScheme : scheme;
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={onClose}>
+  const modalContent = (
+    <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4" onClick={onClose}>
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm animate-fade-in" />
 
       <div
         className="relative w-full max-w-2xl max-h-[88vh] overflow-hidden rounded-2xl border shadow-2xl animate-fade-in-scale flex flex-col"
         onClick={(e) => e.stopPropagation()}
         style={{
-          backgroundColor: 'var(--color-surface-overlay)',
+          background: 'linear-gradient(145deg, var(--color-surface-overlay) 0%, var(--color-surface-elevated) 100%)',
           borderColor: 'var(--color-border-default)',
         }}
       >
@@ -99,7 +100,7 @@ const SchemePreviewModal: React.FC<SchemePreviewModalProps> = ({ scheme, index, 
             )}
             {isEditing && hasChanges && (
               <span className="text-[10px] px-2 py-0.5 rounded-full animate-fade-in"
-                style={{ color: '#f59e0b', backgroundColor: 'rgba(251,191,36,0.1)' }}>
+                style={{ color: 'var(--color-amber-400, #f59e0b)', backgroundColor: 'var(--color-amber-50, rgba(251,191,36,0.1))' }}>
                 <i className="fas fa-circle text-[5px] mr-1" />
                 已修改
               </span>
@@ -143,7 +144,7 @@ const SchemePreviewModal: React.FC<SchemePreviewModalProps> = ({ scheme, index, 
             )}
             <button
               onClick={onClose}
-              className="w-7 h-7 rounded-lg flex items-center justify-center transition-colors hover:bg-black/5 dark:hover:bg-white/5"
+              className="w-7 h-7 rounded-lg flex items-center justify-center transition-colors hover:bg-[var(--color-surface-hover)]"
               style={{ color: 'var(--color-text-tertiary)' }}
             >
               <i className="fas fa-times" />
@@ -350,6 +351,8 @@ const SchemePreviewModal: React.FC<SchemePreviewModalProps> = ({ scheme, index, 
       )}
     </div>
   );
+
+  return createPortal(modalContent, document.body);
 };
 
 export default SchemePreviewModal;

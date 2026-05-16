@@ -1,4 +1,5 @@
 import { dataService } from '../DataService';
+import { memoryBankService } from '../MemoryBankService';
 import { ProjectMeta, VFile } from '../../../../shared/types/fileSystem';
 
 type ContextTarget = 'character' | 'world' | 'timeline' | 'outline' | 'chapter' | 'general';
@@ -42,20 +43,39 @@ export function detectTarget(userText: string): ContextTarget {
 export function buildForTarget(target: ContextTarget, options: Partial<ContextOptions> = {}): string {
   const opts = { ...DEFAULT_OPTIONS, ...options };
   const project = dataService.getActiveProject();
+
+  if (!project) {
+    return buildProjectHeader(null);
+  }
+
   const sections: string[] = [];
 
+  // 基础项目元数据 - 任何时候都必须包含（方案/灵感/进度等）
   sections.push(buildProjectHeader(project));
   sections.push(buildInspiration(project, opts));
   sections.push(buildScheme(project, opts));
 
-  if (target === 'character') {
-    sections.push(buildCharacterContext(project, opts));
-  } else if (target === 'world') {
-    sections.push(buildWorldContext(project, opts));
-  } else if (target === 'timeline') {
-    sections.push(buildTimelineContext(project, opts));
-  } else if (target === 'outline' || target === 'chapter') {
-    sections.push(buildOutlineContext(project, opts));
+  // 目标相关的详细内容（世界观、角色、时间线等）
+  // 优先从记忆体获取（更智能），获取失败则从文件系统读取
+  let memoryContext = '';
+  try {
+    memoryContext = memoryBankService.buildContextFromMemorySync(project.id, target);
+  } catch (error) {
+    console.warn('[ContextBuilder] 从记忆体获取上下文失败:', error);
+  }
+
+  if (memoryContext && memoryContext.length > 0) {
+    sections.push(memoryContext);
+  } else {
+    if (target === 'character') {
+      sections.push(buildCharacterContext(project, opts));
+    } else if (target === 'world') {
+      sections.push(buildWorldContext(project, opts));
+    } else if (target === 'timeline') {
+      sections.push(buildTimelineContext(project, opts));
+    } else if (target === 'outline' || target === 'chapter') {
+      sections.push(buildOutlineContext(project, opts));
+    }
   }
 
   sections.push(buildOutline(project, opts));

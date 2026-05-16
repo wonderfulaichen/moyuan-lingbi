@@ -22,6 +22,11 @@ export function useMessageActions(activeModel: ModelConfig | null) {
     setEditContent(content);
   }, []);
 
+  const handleEditCancel = useCallback(() => {
+    setEditingMsgId(null);
+    setEditContent('');
+  }, []);
+
   const handleEditSubmit = useCallback(() => {
     if (!editingMsgId || !editContent.trim() || !activeModel?.modelName) return;
     setGenerating(activeModel.name, 'AI 助手执行中...', 'ai-assistant');
@@ -48,6 +53,6 @@ export function useMessageActions(activeModel: ModelConfig | null) {
 
   return {
     editingMsgId, editContent, setEditContent, collapsedIds, copyToast,
-    handleCopy, handleEdit, handleEditSubmit, handleRegenerate, toggleCollapse, isLongContent,
+    handleCopy, handleEdit, handleEditCancel, handleEditSubmit, handleRegenerate, toggleCollapse, isLongContent,
   };
 }

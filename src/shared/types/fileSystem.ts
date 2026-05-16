@@ -19,6 +19,7 @@ export interface VFileMetadata {
   aiGenerated: boolean;
   batchId: string | null;
   sortOrder: number;
+  lastIndexedAt?: number;
   [key: string]: unknown;
 }
 
@@ -46,6 +47,8 @@ export interface AIChatMessage {
   actions: AIAction[];
   compressedSummary?: string;
   isCompressed?: boolean;
+  thinking?: string;
+  todoList?: TodoItem[];
 }
 
 export interface AIAction {
@@ -112,6 +115,7 @@ export interface Conversation {
 export enum AgentPhase {
   IDLE = 'idle',
   ANALYZING = 'analyzing',
+  PLANNING = 'planning',
   GENERATING = 'generating',
   VALIDATING = 'validating',
   WAITING_CONFIRM = 'waiting_confirm',
@@ -147,11 +151,21 @@ export interface AgentStateInfo {
   maxIterations: number;
 }
 
+export interface CheckIssue {
+  id: string;
+  description: string;
+  category: 'character' | 'plot' | 'world' | 'consistency' | 'other';
+  selected: boolean;
+  fixed: boolean;
+}
+
 export interface AIAssistantState {
   messages: AIChatMessage[];
   tasks: AITaskItem[];
+  checkIssues: CheckIssue[];
   isProcessing: boolean;
   streamingContent: string | null;
+  streamingThinking: string | null;
   pendingPrompt: AIPendingPrompt | null;
   conversations: Conversation[];
   activeConversationId: string | null;
@@ -159,7 +173,28 @@ export interface AIAssistantState {
   activeAgentId: string;
   tokenUsage: { prompt: number; completion: number; total: number } | null;
   agentState: AgentStateInfo;
+  todoList: TodoItem[];
 }
+
+export interface TodoItem {
+  id: string;
+  content: string;
+  status: 'pending' | 'in_progress' | 'completed' | 'failed';
+  type?: 'system' | 'task';
+  icon?: string;
+  details?: string;
+}
+
+export const SYSTEM_STEPS = {
+  BUILD_CONTEXT: { id: 'system-build-context', content: '构建上下文', icon: 'fa-database' },
+  COMPOSE_PROMPT: { id: 'system-compose-prompt', content: '组合提示词', icon: 'fa-scroll' },
+  CALL_AI: { id: 'system-call-ai', content: '调用 AI', icon: 'fa-robot' },
+  PARSE_RESPONSE: { id: 'system-parse-response', content: '解析响应', icon: 'fa-code' },
+  EXECUTE_OPERATIONS: { id: 'system-execute-operations', content: '执行操作', icon: 'fa-play' },
+  CHECK_COMPLETION: { id: 'system-check-completion', content: '检查完成', icon: 'fa-check-double' },
+} as const;
+
+export type SystemStepId = keyof typeof SYSTEM_STEPS;
 
 export interface InspirationData {
   text: string;
@@ -211,6 +246,7 @@ export interface ProjectMeta {
   schemePromptHistory: string[];
   outline: string;
   folders?: import('./index').BubbleFolder[];
+  memoryBankEnabled?: boolean;
 }
 
 export interface AppData {
@@ -220,4 +256,5 @@ export interface AppData {
   prompts: import('./index').PromptTemplate[];
   activeModelId: string;
   fileSystems: Record<string, VFileSystem>;
+  modelRouting?: Record<string, string>;
 }

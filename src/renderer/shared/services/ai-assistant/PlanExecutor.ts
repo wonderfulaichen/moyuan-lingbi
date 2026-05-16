@@ -1,7 +1,7 @@
 import { AIPlanStep } from '../../../../shared/types/fileSystem';
 import { ModelConfig } from '../../../../shared/types';
 import { aiService } from '../aiService';
-import { SYSTEM_PROMPT } from './systemPrompt';
+import { PromptComposer } from '../../../../shared/prompts';
 import { ToolParser } from './ToolParser';
 import { unifiedExecutor } from './UnifiedExecutor';
 import { detectTarget, buildForTarget, buildFileTreeDescription, summarizeTask } from './contextBuilder';
@@ -62,7 +62,10 @@ export async function executePlan(
       const fs = dataService.getFS();
       const fileTree = buildFileTreeDescription();
       const projectContext = buildForTarget(detectTarget(step.description));
-      const stepSystemPrompt = `${SYSTEM_PROMPT}\n\n${projectContext}\n\n## 文件结构\n${fileTree}\n\n## 已有设定内容（正典）\n${context || '（暂无内容）'}`;
+      const stepSystemPrompt = PromptComposer.composeForAssistant({
+        projectContext: `${projectContext}\n\n## 已有设定内容（正典）\n${context || '（暂无内容）'}`,
+        fileTreeDescription: fileTree,
+      }).fullPrompt;
 
       const stepPrompt = `你正在执行创作计划的第 ${i + 1} 步（共 ${steps.length} 步）。
 

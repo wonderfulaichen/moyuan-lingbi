@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useMemo } from 'react';
+import React, { createContext, useContext, useMemo, useSyncExternalStore } from 'react';
 import { useAIStatusStore, TokenUsage, AITaskRecord } from '../stores/aiStatusStore';
 
 export type { TokenUsage, AITaskRecord as AITask };
@@ -32,10 +32,12 @@ interface AIStatusContextType {
 
 const AIStatusContext = createContext<AIStatusContextType | null>(null);
 
-export const AIStatusProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const store = useAIStatusStore() as any;
+const subscribeNoop = () => () => {};
 
-  const contextValue: AIStatusContextType = useMemo(() => ({
+export const AIStatusProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const store = useAIStatusStore();
+
+  const contextValue = useMemo<AIStatusContextType>(() => ({
     status: {
       isGenerating: store.isGenerating,
       statusMessage: store.statusMessage,
@@ -58,7 +60,28 @@ export const AIStatusProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     addTask: store.addTask,
     setActiveTask: store.setActiveTask,
     clearCompletedTasks: store.clearCompletedTasks,
-  }), [store.isGenerating, store.statusMessage, store.progress, store.tokenUsage, store.modelName, store.lastDuration, store.error, store.currentTask, store.tasks, store.activeTaskId]);
+  }), [
+    store.isGenerating,
+    store.statusMessage,
+    store.progress,
+    store.tokenUsage,
+    store.modelName,
+    store.lastDuration,
+    store.error,
+    store.currentTask,
+    store.tasks,
+    store.activeTaskId,
+    store.setGenerating,
+    store.setProgress,
+    store.setStatusMessage,
+    store.setTokenUsage,
+    store.setError,
+    store.setComplete,
+    store.resetStatus,
+    store.addTask,
+    store.setActiveTask,
+    store.clearCompletedTasks,
+  ]);
 
   return (
     <AIStatusContext.Provider value={contextValue}>

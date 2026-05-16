@@ -1,6 +1,9 @@
 import { VFile, VFileSystem, VFileMetadata, ProjectMeta, AppData } from '../../../shared/types/fileSystem';
 import { ModelConfig, PromptTemplate } from '../../../shared/types';
-import { INITIAL_MODELS, DEFAULT_PROMPTS } from '../../../shared/constants';
+import { INITIAL_MODELS } from '../../../shared/constants';
+import { getPromptLibrary } from '../../../shared/prompts';
+import { memoryBankService } from './MemoryBankService';
+import { accumulateTodayWords } from '../stores/uiStore';
 
 const STORAGE_KEY = 'moyuan-v2-data';
 
@@ -152,7 +155,8 @@ class DataService {
   }
 
   getActiveModel(): ModelConfig {
-    return this.data.models.find(m => m.id === this.data.activeModelId) || this.data.models[0];
+    const model = this.data.models.find(m => m.id === this.data.activeModelId) || this.data.models[0];
+    return model ? { ...model, apiKey: model.apiKey ? this.decryptApiKey(model.apiKey) : undefined } : model;
   }
 
   getFile(fileId: string, projectId?: string): VFile | undefined {
@@ -244,6 +248,11 @@ class DataService {
     this.data.fileSystems[meta.id] = fs;
     this.data.activeProjectId = meta.id;
     this.emit();
+
+    memoryBankService.ensureMemoryBankInitialized(meta.id).catch(err => {
+      console.error('[DataService] 自动初始化记忆体失败:', err);
+    });
+
     return meta;
   }
 
@@ -252,6 +261,13 @@ class DataService {
     delete this.data.fileSystems[projectId];
     if (this.data.activeProjectId === projectId) {
       this.data.activeProjectId = this.data.projects[0]?.id || null;
+    }
+    // 清理该项目的回收站数据
+    try {
+      localStorage.removeItem(getRecycleBinKey(projectId));
+      localStorage.removeItem(getRecycleFolderKey(projectId));
+    } catch (e) {
+      console.error('[DataService] 清理回收站数据失败:', e);
     }
     this.emit();
   }
@@ -307,6 +323,26 @@ class DataService {
     if (meta) meta.updatedAt = now;
 
     this.emit();
+
+    if (file.type === 'file' && params.content && params.content.trim().length >= 10) {
+      accumulateTodayWords(params.content.length);
+      const folderTags = parentId ? (fs.files[parentId]?.metadata?.tags || []) : [];
+      const pid = projectId || this.data.activeProjectId;
+      if (pid && folderTags.length > 0) {
+        memoryBankService.lightweightIndexContent(pid, id, params.name, params.content, folderTags)
+          .then(() => {
+            const f = fs.files[id];
+            if (f) {
+              f.metadata.lastIndexedAt = Date.now();
+              this.emit();
+            }
+          })
+          .catch(err => {
+            console.error('[DataService] 自动索引记忆体失败:', err);
+          });
+      }
+    }
+
     return file;
   }
 
@@ -316,7 +352,12 @@ class DataService {
     if (!file) return null;
 
     if (updates.name !== undefined) file.name = updates.name;
-    if (updates.content !== undefined) file.content = updates.content;
+    if (updates.content !== undefined) {
+      const oldLen = file.content.length;
+      file.content = updates.content;
+      const delta = file.content.length - oldLen;
+      if (delta > 0) accumulateTodayWords(delta);
+    }
     if (updates.metadata) {
       file.metadata = { ...file.metadata, ...updates.metadata };
     }
@@ -327,6 +368,22 @@ class DataService {
     if (meta) meta.updatedAt = file.updatedAt;
 
     this.emit();
+
+    if (updates.content !== undefined && file.type === 'file' && updates.content.trim().length >= 10) {
+      const folderTags = file.parentId ? (fs.files[file.parentId]?.metadata?.tags || []) : [];
+      const pid = projectId || this.data.activeProjectId;
+      if (pid && folderTags.length > 0) {
+        memoryBankService.lightweightIndexContent(pid, fileId, file.name, updates.content, folderTags)
+          .then(() => {
+            file.metadata.lastIndexedAt = Date.now();
+            this.emit();
+          })
+          .catch(err => {
+            console.error('[DataService] 自动更新记忆体失败:', err);
+          });
+      }
+    }
+
     return file;
   }
 
@@ -410,8 +467,40 @@ class DataService {
   }
 
   updateModels(models: ModelConfig[]): void {
-    this.data.models = models;
+    // 加密存储 API 密钥
+    this.data.models = models.map(m => ({
+      ...m,
+      apiKey: m.apiKey ? this.encryptApiKey(m.apiKey) : undefined,
+    }));
     this.emit();
+  }
+
+  private encryptApiKey(key: string): string {
+    // 简单 XOR 加密，防止明文存储
+    const secret = 'moyuan-lingbi-v1';
+    let result = '';
+    for (let i = 0; i < key.length; i++) {
+      result += String.fromCharCode(key.charCodeAt(i) ^ secret.charCodeAt(i % secret.length));
+    }
+    return 'enc:' + btoa(result);
+  }
+
+  private decryptApiKey(encrypted: string): string {
+    if (!encrypted.startsWith('enc:')) return encrypted;
+    const secret = 'moyuan-lingbi-v1';
+    const data = atob(encrypted.slice(4));
+    let result = '';
+    for (let i = 0; i < data.length; i++) {
+      result += String.fromCharCode(data.charCodeAt(i) ^ secret.charCodeAt(i % secret.length));
+    }
+    return result;
+  }
+
+  getModels(): ModelConfig[] {
+    return this.data.models.map(m => ({
+      ...m,
+      apiKey: m.apiKey ? this.decryptApiKey(m.apiKey) : undefined,
+    }));
   }
 
   setActiveModel(modelId: string): void {
@@ -421,6 +510,11 @@ class DataService {
 
   updatePrompts(prompts: PromptTemplate[]): void {
     this.data.prompts = prompts;
+    this.emit();
+  }
+
+  updateModelRouting(routing: Record<string, string>): void {
+    this.data.modelRouting = routing;
     this.emit();
   }
 
@@ -516,7 +610,12 @@ class DataService {
       projects: [],
       activeProjectId: null,
       models: INITIAL_MODELS,
-      prompts: DEFAULT_PROMPTS,
+      prompts: getPromptLibrary().map(p => ({
+        id: p.id,
+        category: (p.category ?? p.layer) as any,
+        name: p.name,
+        content: p.content,
+      })),
       activeModelId: 'default-openai',
       fileSystems: {},
     };
@@ -524,10 +623,34 @@ class DataService {
 
   private saveToStorage(): void {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(this.data));
+      const data = JSON.stringify(this.data);
+      // 检查 localStorage 容量（约 5MB 限制）
+      const sizeMB = new Blob([data]).size / 1024 / 1024;
+      if (sizeMB > 4.5) {
+        console.warn(`[DataService] 数据量接近上限 (${sizeMB.toFixed(2)}MB)，建议清理或导出`);
+        // 触发容量警告事件
+        this.emitStorageWarning(`存储空间不足 (${sizeMB.toFixed(1)}MB/5MB)，请导出备份或清理旧项目`);
+      }
+      localStorage.setItem(STORAGE_KEY, data);
     } catch (e) {
-      console.error('[DataService] save failed:', e);
+      if (e instanceof DOMException && e.name === 'QuotaExceededError') {
+        console.error('[DataService] 存储空间已满，请导出数据后清理');
+        this.emitStorageWarning('存储空间已满！请立即导出数据，然后删除旧项目释放空间');
+      } else {
+        console.error('[DataService] save failed:', e);
+      }
     }
+  }
+
+  private storageWarningListeners: Set<(msg: string) => void> = new Set();
+
+  onStorageWarning(listener: (msg: string) => void): () => void {
+    this.storageWarningListeners.add(listener);
+    return () => this.storageWarningListeners.delete(listener);
+  }
+
+  private emitStorageWarning(msg: string): void {
+    for (const fn of this.storageWarningListeners) fn(msg);
   }
 
   private loadFromStorage(): AppData | null {

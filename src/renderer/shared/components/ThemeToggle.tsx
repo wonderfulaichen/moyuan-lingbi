@@ -31,10 +31,11 @@ const ThemeToggle: React.FC = () => {
           border: '1px solid var(--color-border-default)',
         }}
         title={mode === 'dark' ? '切换到白天模式' : '切换到夜晚模式'}
+        aria-label={mode === 'dark' ? '切换到白天模式' : '切换到夜晚模式'}
       >
-        <i className={`fas ${mode === 'dark' ? 'fa-moon' : 'fa-sun'} text-xs ${
-          mode === 'dark' ? 'text-blue-300' : 'text-amber-400'
-        }`}></i>
+        <i className={`fas ${mode === 'dark' ? 'fa-moon' : 'fa-sun'} text-xs`}
+          style={{ color: mode === 'dark' ? 'var(--color-blue-300)' : 'var(--color-amber-400)' }}
+        ></i>
       </button>
 
       {/* 当前主题色 + 弹出选择器 */}
@@ -102,18 +103,18 @@ const ThemeToggle: React.FC = () => {
 
 function getColorGradient(themeId: string): string {
   const map: Record<string, string> = {
-    purple: 'linear-gradient(135deg, #a855f7, #7c3aed)',
-    blue: 'linear-gradient(135deg, #60a5fa, #3b82f6)',
-    emerald: 'linear-gradient(135deg, #34d399, #059669)',
-    amber: 'linear-gradient(135deg, #fbbf24, #d97706)',
-    rose: 'linear-gradient(135deg, #fb7185, #e11d48)',
-    gray: 'linear-gradient(135deg, #cbd5e1, #64748b)',
-    brown: 'linear-gradient(135deg, #d1ae90, #a07a56)',
-    jade: 'linear-gradient(135deg, #6ee7b7, #065f46)',
-    paper: 'linear-gradient(135deg, #fef3c7, #d4a574)',
-    bamboo: 'linear-gradient(135deg, #4ade80, #166534)',
-    cinnabar: 'linear-gradient(135deg, #f87171, #b91c1c)',
-    indigo: 'linear-gradient(135deg, #818cf8, #4338ca)',
+    purple: 'linear-gradient(135deg, #9b59b6, #7d3c98)',
+    blue: 'linear-gradient(135deg, #3498db, #2980b9)',
+    emerald: 'linear-gradient(135deg, #27ae60, #1e8449)',
+    amber: 'linear-gradient(135deg, #e67e22, #d35400)',
+    rose: 'linear-gradient(135deg, #e91e63, #c2185b)',
+    gray: 'linear-gradient(135deg, #95a5a6, #7f8c8d)',
+    brown: 'linear-gradient(135deg, #8d6e63, #6d4c41)',
+    teal: 'linear-gradient(135deg, #16a085, #117a65)',
+    paper: 'linear-gradient(135deg, #f1c40f, #d4ac0d)',
+    bamboo: 'linear-gradient(135deg, #7cb342, #558b2f)',
+    cinnabar: 'linear-gradient(135deg, #e74c3c, #c0392b)',
+    indigo: 'linear-gradient(135deg, #5d6d7e, #34495e)',
   };
   return map[themeId] || map.purple;
 }

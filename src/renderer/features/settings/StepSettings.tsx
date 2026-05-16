@@ -1,8 +1,12 @@
+
 import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import { Project, ModelConfig, PromptTemplate, BubbleFolder as BubbleFolderType } from '../../../shared/types';
 import { dataService } from '../../shared/services/DataService';
+import { useTheme } from '../../shared/contexts/ThemeContext';
+import { useUIStore } from '../../shared/stores/uiStore';
 import BubbleFolder from './BubbleFolder';
 import BubbleFolderContent from './BubbleFolderContent';
+
 
 interface StepSettingsProps {
   project: Project;
@@ -16,33 +20,66 @@ const DEFAULT_FOLDERS: { name: string; icon: string; color: string; type: Bubble
   { name: '世界观', icon: 'fa-globe', color: 'emerald', type: 'world' },
   { name: '角色', icon: 'fa-users', color: 'blue', type: 'characters' },
   { name: '时间线', icon: 'fa-timeline', color: 'amber', type: 'timeline' },
+  { name: '大纲', icon: 'fa-sitemap', color: 'violet', type: 'outline' },
+  { name: '细纲', icon: 'fa-list-check', color: 'cyan', type: 'detailed_outline' },
+  { name: '章节', icon: 'fa-book', color: 'pink', type: 'chapters' },
 ];
 
-/**
- * 确保默认文件夹存在
- */
 function ensureDefaultFolders(project: Project): BubbleFolderType[] {
-  const filtered = (project.folders || []).filter(f => !['outline', 'detailed_outline', 'chapters'].includes(f.type));
+  const existing = project.folders || [];
 
-  if (filtered.length > 0) {
-    return filtered.map(f => {
-      if (f.vfileId) return f;
-      const vfId = dataService.getRootFolderIdByType(f.type);
-      return vfId ? { ...f, vfileId: vfId } : f;
-    });
+  // 如果已有文件夹，确保所有预设文件夹都有 vfileId
+  if (existing.length > 0) {
+    const updated = [...existing];
+    for (const def of DEFAULT_FOLDERS) {
+      const found = updated.find(f => f.type === def.type);
+      if (!found) {
+        const vfId = dataService.getRootFolderIdByType(def.type);
+        updated.push({
+          id: `folder-${def.type}-${Date.now()}`,
+          name: def.name,
+          icon: def.icon,
+          color: def.color,
+          parentId: null,
+          type: def.type,
+          vfileId: vfId || undefined,
+          prompt: '',
+          generatedTags: [],
+          selectedTags: [],
+          schemes: [],
+          charts: [],
+          contentCards: [],
+          knowledgeInputs: [],
+          children: [],
+          createdAt: Date.now(),
+        });
+      } else if (!found.vfileId) {
+        const vfId = dataService.getRootFolderIdByType(def.type);
+        if (vfId) found.vfileId = vfId;
+      }
+    }
+    return updated;
   }
 
   const now = Date.now();
   return DEFAULT_FOLDERS.map((def, idx) => {
     const vfId = dataService.getRootFolderIdByType(def.type);
     return {
-      id: `folder-${idx}`,
+      id: `folder-${def.type}-${now}`,
       name: def.name,
       icon: def.icon,
       color: def.color,
       parentId: null,
       type: def.type,
       vfileId: vfId || undefined,
+      prompt: '',
+      generatedTags: [],
+      selectedTags: [],
+      schemes: [],
+      charts: [],
+      contentCards: [],
+      knowledgeInputs: [],
+      children: [],
       createdAt: now + idx,
     };
   });
@@ -55,10 +92,12 @@ const StepSettings: React.FC<StepSettingsProps> = ({
   onUpdate,
   onOpenSettings,
 }) => {
-  // 确保默认文件夹存在
+  const { themeInfo, mode } = useTheme();
+  const { animationLevel } = useUIStore();
+  const hasAnimations = animationLevel !== 'none';
+
   const folders = useMemo(() => ensureDefaultFolders(project), [project]);
 
-  // 同步默认文件夹到project（首次渲染后通过 useEffect 执行）
   const initDoneRef = useRef(false);
   useEffect(() => {
     if (!initDoneRef.current && (!project.folders || project.folders.length === 0)) {
@@ -67,11 +106,10 @@ const StepSettings: React.FC<StepSettingsProps> = ({
     initDoneRef.current = true;
   }, []);
 
-  const [activeFolderId, setActiveFolderId] = useState<string>(() => {
-    return folders[0]?.id || '';
-  });
+  const [subTab, setSubTab] = useState<string>('world');
+  const [showHistory, setShowHistory] = useState(false);
+  const [activeFolderId, setActiveFolderId] = useState<string | null>(null);
 
-  // 递归查找文件夹（必须先定义，后面 useMemo 中会调用）
   const findFolderInList = (folders: BubbleFolderType[], folderId: string): BubbleFolderType | undefined => {
     for (const f of folders) {
       if (f.id === folderId) return f;
@@ -83,35 +121,41 @@ const StepSettings: React.FC<StepSettingsProps> = ({
     return undefined;
   };
 
-  // 当前活跃文件夹（支持嵌套查找）
-  const activeFolder = useMemo(
-    () => findFolderInList(folders, activeFolderId) || folders[0],
-    [folders, activeFolderId]
-  );
-
-  // 选择文件夹
-  const handleSelectFolder = useCallback((id: string) => {
-    setActiveFolderId(id);
-  }, []);
-
-  // 递归更新文件夹（支持嵌套子文件夹）
-  const updateFolderInList = (folders: BubbleFolderType[], folderId: string, updates: Partial<BubbleFolderType>): BubbleFolderType[] => {
-    return folders.map(f => {
-      if (f.id === folderId) {
-        return { ...f, ...updates };
-      }
-      // 递归检查子文件夹
-      if (f.children && f.children.length > 0) {
-        const updatedChildren = updateFolderInList(f.children, folderId, updates);
-        if (updatedChildren !== f.children) {
-          return { ...f, children: updatedChildren };
+  const getFolderPath = useCallback((targetId: string): BubbleFolderType[] => {
+    const path: BubbleFolderType[] = [];
+    const findPath = (folderList: BubbleFolderType[], id: string, currentPath: BubbleFolderType[]): boolean => {
+      for (const f of folderList) {
+        if (f.id === id) {
+          currentPath.push(f);
+          return true;
+        }
+        if (f.children && f.children.length > 0) {
+          currentPath.push(f);
+          if (findPath(f.children, id, currentPath)) return true;
+          currentPath.pop();
         }
       }
-      return f;
-    });
-  };
+      return false;
+    };
+    findPath(folders, targetId, path);
+    return path;
+  }, [folders]);
 
-  // 创建文件夹
+  const activeFolder = useMemo(() => {
+    const folder = folders.find(f => f.type === subTab);
+    if (activeFolderId) {
+      const found = findFolderInList(folders, activeFolderId);
+      if (found) return found;
+    }
+    return folder || folders[0];
+  }, [folders, subTab, activeFolderId]);
+
+  const folderPath = useMemo(() => {
+    if (activeFolderId) return getFolderPath(activeFolderId);
+    if (activeFolder) return [activeFolder];
+    return [];
+  }, [activeFolderId, activeFolder, getFolderPath]);
+
   const handleCreateFolder = useCallback((name: string, type: BubbleFolderType['type']) => {
     const vf = dataService.createFile(null, { name, type: 'folder', metadata: { tags: [type], cardType: 'folder' } });
     const newFolder: BubbleFolderType = {
@@ -127,38 +171,45 @@ const StepSettings: React.FC<StepSettingsProps> = ({
       selectedTags: [],
       schemes: [],
       charts: [],
+      contentCards: [],
       knowledgeInputs: [],
       children: [],
       createdAt: Date.now(),
     };
     onUpdate({ folders: [...folders, newFolder] });
-    setActiveFolderId(newFolder.id);
   }, [folders, onUpdate]);
 
-  // 在指定文件夹中创建卡片（右键菜单"创建文件"）
-  const handleCreateCard = useCallback((folderId: string, title?: string) => {
-    const cardTitle = title || `新文件_${Date.now()}`;
-    const targetFolder = folders.find(f => f.id === folderId);
-    const parentVfId = targetFolder?.vfileId || null;
-    dataService.createFile(parentVfId, {
-      name: cardTitle,
-      type: 'file',
-      content: '',
-      metadata: { favorited: true, batchId: `batch-${Date.now()}` },
-    });
-    setActiveFolderId(folderId);
-  }, [folders]);
+  const handleUpdateFolder = useCallback((folderId: string, updates: Partial<BubbleFolderType>) => {
+    const updateFolderInList = (folders: BubbleFolderType[], fid: string, ups: Partial<BubbleFolderType>): BubbleFolderType[] => {
+      return folders.map(f => {
+        if (f.id === fid) return { ...f, ...ups };
+        if (f.children && f.children.length > 0) {
+          const updatedChildren = updateFolderInList(f.children, fid, ups);
+          if (updatedChildren !== f.children) return { ...f, children: updatedChildren };
+        }
+        return f;
+      });
+    };
+    onUpdate({ folders: updateFolderInList(folders, folderId, updates) });
+  }, [folders, onUpdate]);
 
-  // 创建子文件夹（在指定父文件夹内）
   const handleCreateSubFolder = useCallback((parentId: string, name: string, type: BubbleFolderType['type']) => {
-    const parentFolder = folders.find(f => f.id === parentId);
-    const parentVfId = parentFolder?.vfileId || null;
-    const vf = dataService.createFile(parentVfId, { name, type: 'folder', metadata: { tags: [type], cardType: 'folder' } });
+    const parentFolder = findFolderInList(folders, parentId);
+    if (!parentFolder) return;
+
+    // 在 VFile 系统中创建对应的文件夹节点
+    const parentVfileId = parentFolder.vfileId || null;
+    const vf = dataService.createFile(parentVfileId, {
+      name,
+      type: 'folder',
+      metadata: { tags: [type], cardType: 'folder' }
+    });
+
     const newSubFolder: BubbleFolderType = {
       id: `folder-${Date.now()}`,
       name,
-      icon: type === 'custom' ? 'fa-folder' : DEFAULT_FOLDERS.find(f => f.type === type)?.icon || 'fa-folder',
-      color: type === 'custom' ? 'rose' : DEFAULT_FOLDERS.find(f => f.type === type)?.color || 'purple',
+      icon: 'fa-folder',
+      color: 'custom',
       parentId,
       type,
       vfileId: vf.id,
@@ -167,88 +218,81 @@ const StepSettings: React.FC<StepSettingsProps> = ({
       selectedTags: [],
       schemes: [],
       charts: [],
+      contentCards: [],
       knowledgeInputs: [],
       children: [],
       createdAt: Date.now(),
     };
+    handleUpdateFolder(parentId, { children: [...(parentFolder.children || []), newSubFolder] });
+  }, [folders, handleUpdateFolder]);
 
-    const addSubFolderToParent = (list: BubbleFolderType[]): BubbleFolderType[] => {
-      return list.map(f => {
-        if (f.id === parentId) {
-          return { ...f, children: [...(f.children || []), newSubFolder] };
-        }
-        if (f.children && f.children.length > 0) {
-          return { ...f, children: addSubFolderToParent(f.children) };
-        }
-        return f;
-      });
-    };
-    onUpdate({ folders: addSubFolderToParent(folders) });
-  }, [folders, onUpdate]);
+  const folderItems = folders.filter(f => ['world', 'characters', 'timeline'].includes(f.type));
 
-  // 删除文件夹
-  const handleDeleteFolder = useCallback((id: string) => {
-    // 内置文件夹不可删除
-    const target = findFolderInList(folders, id);
-    if (target && target.type !== 'custom') return;
-
-    // 递归删除
-    const removeFolder = (list: BubbleFolderType[]): BubbleFolderType[] => {
-      return list
-        .filter(f => f.id !== id)
-        .map(f => ({
-          ...f,
-          children: f.children ? removeFolder(f.children) : undefined,
-        }));
-    };
-
-    const updatedFolders = removeFolder(folders);
-    onUpdate({ folders: updatedFolders });
-
-    // 如果删除的是当前文件夹，切换到第一个
-    if (activeFolderId === id) {
-      setActiveFolderId(updatedFolders[0]?.id || '');
-    }
-  }, [folders, activeFolderId, onUpdate]);
-
-  // 重命名文件夹
-  const handleRenameFolder = useCallback((id: string, name: string) => {
-    const target = findFolderInList(folders, id);
-    if (target && target.type !== 'custom') return; // 内置文件夹不可重命名
-
-    onUpdate({
-      folders: updateFolderInList(folders, id, { name }),
-    });
-  }, [folders, onUpdate]);
-
-  // 更新文件夹内容（支持嵌套）
-  const handleUpdateFolder = useCallback((folderId: string, updates: Partial<BubbleFolderType>) => {
-    onUpdate({
-      folders: updateFolderInList(folders, folderId, updates),
-    });
-  }, [folders, onUpdate]);
+  const handleSelectFolder = useCallback((folderId: string) => {
+    setActiveFolderId(folderId);
+  }, []);
 
   return (
-    <div className="h-full flex overflow-hidden">
-      {/* 左侧：气泡文件夹浏览器 */}
-      <div className="w-56 lg:w-64 border-r border-purple-900/20 bg-gray-950/20 shrink-0 overflow-hidden">
-        <BubbleFolder
-          folders={folders}
-          activeFolderId={activeFolderId}
-          onSelectFolder={handleSelectFolder}
-          onCreateFolder={handleCreateFolder}
-          onDeleteFolder={handleDeleteFolder}
-          onRenameFolder={handleRenameFolder}
-          onCreateSubFolder={handleCreateSubFolder}
-          onCreateCard={handleCreateCard}
-        />
+    <div className="flex flex-col h-full animate-fade-in">
+      {/* 顶部 Tab 切换器 */}
+      <div className="px-4 pt-4 pb-2 shrink-0">
+        <div className="relative">
+          <div className="absolute inset-0 rounded-full" style={{ background: 'var(--color-surface-muted)', opacity: 0.5 }} />
+          <div className="relative flex gap-1 p-1 rounded-full" style={{ background: 'var(--color-surface-muted)', border: '1px solid var(--color-border-default)' }}>
+            {folderItems.map((folder) => (
+              <button 
+                key={folder.type} 
+                onClick={() => { setSubTab(folder.type); setActiveFolderId(null); }}
+                className={`relative px-5 py-2 rounded-full text-sm font-medium transition-all duration-300 flex items-center gap-2 tab-hover-gradient ${hasAnimations ? 'hover:scale-105' : ''}`}
+                style={{
+                  background: subTab === folder.type ? themeInfo.gradient : 'transparent',
+                  color: subTab === folder.type ? 'var(--color-text-inverse, #ffffff)' : 'var(--color-text-secondary)',
+                  boxShadow: subTab === folder.type ? 'var(--shadow-button-light, 0 4px 16px rgba(0, 0, 0, 0.1))' : 'none',
+                }}>
+                {subTab === folder.type && hasAnimations && (
+                  <span className="absolute inset-0 rounded-full animate-pulse opacity-40" style={{ background: themeInfo.gradient }} />
+                )}
+                <i className={`fas ${folder.icon}`} style={{ position: 'relative', zIndex: 1 }} />
+                <span style={{ position: 'relative', zIndex: 1 }}>{folder.name}</span>
+              </button>
+            ))}
+          </div>
+        </div>
       </div>
 
-      {/* 右侧：文件夹内容 */}
-      <div className="flex-1 overflow-hidden min-w-0">
-        {activeFolder ? (
+      {/* 主内容区域 */}
+      <div className="flex-1 overflow-hidden">
+        {/* 面包屑路径导航 - 标签页下方 */}
+        {folderPath.length > 1 && (
+          <div className="px-5 pb-2 shrink-0">
+            <div className="flex items-center gap-1 text-xs flex-wrap">
+              {folderPath.map((f, idx) => {
+                const isLast = idx === folderPath.length - 1;
+                return (
+                  <React.Fragment key={f.id}>
+                    {idx > 0 && (
+                      <i className="fas fa-chevron-right" style={{ color: 'var(--color-text-muted)', fontSize: '8px' }}></i>
+                    )}
+                    <button
+                      onClick={() => !isLast && handleSelectFolder(f.id)}
+                      disabled={isLast}
+                      className={`transition-all ${isLast ? 'cursor-default' : 'hover:opacity-80'}`}
+                      style={{
+                        color: isLast ? 'var(--color-text-primary)' : 'var(--color-text-muted)',
+                        fontWeight: isLast ? 600 : 400,
+                      }}
+                    >
+                      {isLast && <i className={`fas ${f.icon || 'fa-folder'} mr-1`} style={{ color: 'var(--color-primary-400)' }}></i>}
+                      {f.name}
+                    </button>
+                  </React.Fragment>
+                );
+              })}
+            </div>
+          </div>
+        )}
+        {activeFolder && (
           <BubbleFolderContent
-            key={activeFolder.id}
             folder={activeFolder}
             project={project}
             prompts={prompts}
@@ -258,14 +302,9 @@ const StepSettings: React.FC<StepSettingsProps> = ({
             onUpdateFolder={handleUpdateFolder}
             onCreateSubFolder={handleCreateSubFolder}
             onSelectFolder={handleSelectFolder}
+            showHistory={showHistory}
+            onToggleHistory={() => setShowHistory(!showHistory)}
           />
-        ) : (
-          <div className="h-full flex items-center justify-center text-gray-600">
-            <div className="text-center">
-              <i className="fas fa-folder-open text-4xl mb-3 opacity-30"></i>
-              <p className="text-sm">选择一个文件夹</p>
-            </div>
-          </div>
         )}
       </div>
     </div>

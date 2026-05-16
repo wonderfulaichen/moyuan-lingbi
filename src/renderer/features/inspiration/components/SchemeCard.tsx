@@ -1,5 +1,7 @@
 import React from 'react';
 import { NovelScheme, SchemeGroup } from '../../../../shared/types';
+import { useTheme } from '../../../shared/contexts/ThemeContext';
+import { useUIStore } from '../../../shared/stores/uiStore';
 
 interface SchemeCardProps {
   scheme: NovelScheme;
@@ -22,13 +24,31 @@ const SchemeCard: React.FC<SchemeCardProps> = ({
   onAssignGroup,
   onView,
 }) => {
+  const { themeInfo } = useTheme();
+  const { animationLevel } = useUIStore();
+  const hasAnimations = animationLevel !== 'none';
+
+  // 为不同方案分配装饰性颜色
+  const getAccentColor = () => {
+    const colors = [
+      { bg: 'rgba(168, 85, 247, 0.12)', color: 'rgb(168, 85, 247)' },
+      { bg: 'rgba(59, 130, 246, 0.12)', color: 'rgb(59, 130, 246)' },
+      { bg: 'rgba(16, 185, 129, 0.12)', color: 'rgb(16, 185, 129)' },
+      { bg: 'rgba(245, 158, 11, 0.12)', color: 'rgb(245, 158, 11)' },
+      { bg: 'rgba(239, 68, 68, 0.12)', color: 'rgb(239, 68, 68)' },
+    ];
+    return colors[index % colors.length];
+  };
+
+  const accentColor = getAccentColor();
+
   if (layout === 'grid') {
     return (
       <div
         key={scheme.id}
         className={`scheme-card relative rounded-2xl border-2 transition-all duration-300 group animate-card-enter overflow-hidden ${
           scheme.selected ? 'shadow-lg' : 'shadow-sm'
-        }`}
+        } ${hasAnimations ? 'hover:-translate-y-1' : ''}`}
         style={{
           animationDelay: `${index * 80}ms`,
           backgroundColor: scheme.selected ? 'var(--color-primary-100)' : 'var(--color-surface-elevated)',
@@ -36,6 +56,15 @@ const SchemeCard: React.FC<SchemeCardProps> = ({
           boxShadow: scheme.selected ? '0 8px 32px var(--color-primary-100)' : undefined,
         }}
       >
+        {/* ═══ 顶部装饰条 ═══ */}
+        <div
+          className="h-1 w-full"
+          style={{
+            background: scheme.selected ? themeInfo.gradient : accentColor.bg,
+            transition: 'height 0.3s ease',
+          }}
+        />
+
         {/* ═══ 顶部：勾选区域 ═══ */}
         <div
           onClick={() => onSelect(scheme.id)}
@@ -64,7 +93,11 @@ const SchemeCard: React.FC<SchemeCardProps> = ({
                 )}
               </div>
 
-              <span className="text-xs font-bold px-2 py-0.5 rounded" style={{ color: 'var(--color-primary-400)', backgroundColor: 'var(--color-primary-100)' }}>
+              <span className="text-xs font-bold px-2 py-0.5 rounded" 
+                style={{ 
+                  color: scheme.selected ? 'var(--color-primary-400)' : accentColor.color,
+                  backgroundColor: scheme.selected ? 'var(--color-primary-100)' : accentColor.bg,
+                }}>
                 方案 {index + 1}
               </span>
             </div>
@@ -76,8 +109,8 @@ const SchemeCard: React.FC<SchemeCardProps> = ({
                 scheme.favorited ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
               }`}
               style={{
-                backgroundColor: scheme.favorited ? 'rgba(251,191,36,0.15)' : 'var(--color-surface-muted)',
-                color: scheme.favorited ? '#f59e0b' : 'var(--color-text-tertiary)',
+                backgroundColor: scheme.favorited ? 'var(--color-amber-50, rgba(251,191,36,0.15))' : 'var(--color-surface-muted)',
+                color: scheme.favorited ? 'var(--color-amber-400, #f59e0b)' : 'var(--color-text-tertiary)',
               }}
               title={scheme.favorited ? '取消收藏' : '收藏'}
             >
@@ -87,12 +120,12 @@ const SchemeCard: React.FC<SchemeCardProps> = ({
 
           <div className="flex items-center gap-2 mb-2 flex-wrap">
             {scheme.genre && (
-              <span className="text-[10px] px-2 py-0.5 rounded" style={{ color: 'var(--color-text-secondary)', backgroundColor: 'var(--color-surface-muted)' }}>
+              <span className="text-[10px] px-2 py-0.5 rounded font-medium" style={{ color: 'var(--color-text-primary)', backgroundColor: 'var(--color-surface-hover)' }}>
                 {scheme.genre}
               </span>
             )}
             {scheme.groupId && (
-              <span className="text-[10px] px-2 py-0.5 rounded" style={{ color: 'var(--color-text-secondary)', backgroundColor: 'var(--color-surface-muted)' }}>
+              <span className="text-[10px] px-2 py-0.5 rounded font-medium" style={{ color: 'var(--color-text-primary)', backgroundColor: 'var(--color-surface-hover)' }}>
                 {schemeGroups.find(g => g.id === scheme.groupId)?.name || '未分组'}
               </span>
             )}
@@ -105,8 +138,8 @@ const SchemeCard: React.FC<SchemeCardProps> = ({
 
           {scheme.tone && (
             <div className="mb-1">
-              <span className="text-[10px] uppercase tracking-wider" style={{ color: 'var(--color-text-tertiary)' }}>基调</span>
-              <p className="text-sm" style={{ color: 'var(--color-primary-300)' }}>{scheme.tone}</p>
+              <span className="text-[10px] uppercase tracking-wider font-semibold" style={{ color: 'var(--color-text-secondary)' }}>基调</span>
+              <p className="text-sm font-medium" style={{ color: 'var(--color-primary-500)' }}>{scheme.tone}</p>
             </div>
           )}
         </div>
@@ -220,7 +253,7 @@ const SchemeCard: React.FC<SchemeCardProps> = ({
                   <i className="fas fa-star text-amber-400 text-xs shrink-0 animate-float" />
                 )}
                 {scheme.genre && (
-                  <span className="text-[10px] px-2 py-0.5 rounded shrink-0" style={{ color: 'var(--color-text-secondary)', backgroundColor: 'var(--color-surface-muted)' }}>{scheme.genre}</span>
+                  <span className="text-[10px] px-2 py-0.5 rounded shrink-0 font-medium" style={{ color: 'var(--color-text-primary)', backgroundColor: 'var(--color-surface-hover)' }}>{scheme.genre}</span>
                 )}
               </div>
             </div>
@@ -230,8 +263,8 @@ const SchemeCard: React.FC<SchemeCardProps> = ({
                 onClick={(e) => { e.stopPropagation(); onToggleFavorite(scheme.id, e); }}
                 className="w-7 h-7 rounded-lg flex items-center justify-center transition-all duration-200 hover:scale-110"
                 style={{
-                  backgroundColor: scheme.favorited ? 'rgba(251,191,36,0.15)' : 'var(--color-surface-muted)',
-                  color: scheme.favorited ? '#f59e0b' : 'var(--color-text-tertiary)',
+                  backgroundColor: scheme.favorited ? 'var(--color-amber-50, rgba(251,191,36,0.15))' : 'var(--color-surface-muted)',
+                  color: scheme.favorited ? 'var(--color-amber-400, #f59e0b)' : 'var(--color-text-tertiary)',
                 }}
               >
                 <i className="fas fa-star text-xs" />
@@ -254,8 +287,8 @@ const SchemeCard: React.FC<SchemeCardProps> = ({
         <p className="text-sm line-clamp-2 mb-2" style={{ color: 'var(--color-text-secondary)' }}>{scheme.intro}</p>
         <div className="flex items-center justify-between gap-3">
           <div className="flex gap-3 text-xs">
-            {scheme.tone && <span style={{ color: 'var(--color-primary-300)' }}><i className="fas fa-music mr-1" />{scheme.tone}</span>}
-            {scheme.coreConflict && <span style={{ color: 'rgba(248,113,113,0.7)' }}><i className="fas fa-bolt mr-1" />{scheme.coreConflict.slice(0, 30)}...</span>}
+            {scheme.tone && <span style={{ color: 'var(--color-primary-500)' }}><i className="fas fa-music mr-1" />{scheme.tone}</span>}
+            {scheme.coreConflict && <span style={{ color: 'var(--color-red-500, #ef4444)' }}><i className="fas fa-bolt mr-1" />{scheme.coreConflict.slice(0, 30)}...</span>}
           </div>
           <span className="inline-flex items-center gap-1 text-[10px] opacity-0 group-hover:opacity-100 transition-all duration-200 translate-x-1 group-hover:translate-x-0"
             style={{ color: 'var(--color-primary-400)' }}>

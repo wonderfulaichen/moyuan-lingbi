@@ -1,20 +1,25 @@
 import { ModelConfig } from '../../../../shared/types';
-import { AIChatMessage, AgentPhase } from '../../../../shared/types/fileSystem';
+import { AIChatMessage, AgentPhase, AIAgent, TodoItem, SYSTEM_STEPS } from '../../../../shared/types/fileSystem';
 import { aiService } from '../aiService';
 import { dataService } from '../DataService';
-import { SYSTEM_PROMPT } from './systemPrompt';
-import { ToolParser } from './ToolParser';
+import { memoryBankService } from '../MemoryBankService';
+import { PromptComposer, BUILT_IN_AGENTS, AgentId } from '../../../../shared/prompts';
+import { ToolParser, ParsedTodoItem } from './ToolParser';
 import { unifiedExecutor } from './UnifiedExecutor';
 import { detectTarget, buildForTarget, buildFileTreeDescription, summarizeTask, detectCreateIntent, estimateTokenCount } from './contextBuilder';
 import { compressHistoryIfNeeded } from './contextCompress';
 
 export interface ProcessCallbacks {
-  addMessage: (msg: { role: 'user' | 'assistant'; content: string }) => AIChatMessage;
+  addMessage: (msg: { role: 'user' | 'assistant'; content: string; thinking?: string }) => AIChatMessage;
   setStreamingContent: (content: string | null) => void;
+  setStreamingThinking: (thinking: string | null) => void;
   setAgentPhase: (phase: AgentPhase, task: string, progress: number, extra?: Record<string, unknown>) => void;
   showPrompt: (toolCall: Record<string, any>, model: ModelConfig) => void;
   setIsProcessing: (processing: boolean) => void;
   setTokenUsage: (usage: { prompt: number; completion: number; total: number }) => void;
+  setTodoList: (todos: TodoItem[]) => void;
+  updateSystemStep: (stepId: string, status: TodoItem['status'], details?: string) => void;
+  initSystemSteps: () => void;
   getActiveAgent: () => { systemPrompt: string; name: string };
   getMessages: () => AIChatMessage[];
   getCurrentMessageId: () => string | null;
@@ -39,6 +44,27 @@ interface PlannedOperation {
   status?: 'pending' | 'completed';
 }
 
+interface AIState {
+  projectStatus: string;
+  completedWork: string[];
+  pendingWork: string[];
+  suggestions: string[];
+}
+
+interface AIDecision {
+  thought: string;
+  action: 'create_file' | 'update_file' | 'read_file' | 'read_folder' | 'complete' | 'ask_user';
+  target?: {
+    folder?: string;
+    name?: string;
+    content?: string;
+    fileId?: string;
+    parentId?: string;
+  };
+  reason: string;
+  confidence: number;
+}
+
 export async function processWithAI(text: string, model: ModelConfig, cb: ProcessCallbacks): Promise<{ waitingForUser: boolean }> {
   const MAX_ITERATIONS = 20;
   const MAX_NO_TOOL_RETRIES = 3;
@@ -51,19 +77,52 @@ export async function processWithAI(text: string, model: ModelConfig, cb: Proces
   let completedOps = 0;
   let toolResults: string[] = [];
   let currentPrompt = text;
+  let accumulatedContext = '';
+  let lastAction: string | null = null;
+  let accumulatedThinking = '';
+
+  cb.initSystemSteps();
 
   try {
+    // 在开始处理前，先从文件系统同步数据到记忆体图书馆
+    const project = dataService.getActiveProject();
+    if (project) {
+      console.log('[AI] 正在同步记忆体图书馆...');
+      try {
+        await memoryBankService.syncFromFileSystem(project.id);
+        console.log('[AI] 记忆体图书馆同步完成!');
+      } catch (e) {
+        console.warn('[AI] 记忆体同步失败，不影响使用:', e);
+      }
+    }
+
     while (iteration < MAX_ITERATIONS && cb.getActiveAgent() !== null) {
       iteration++;
 
+      cb.updateSystemStep(SYSTEM_STEPS.BUILD_CONTEXT.id, 'completed', `目标: ${detectTarget(currentPrompt)}`);
+      cb.updateSystemStep(SYSTEM_STEPS.COMPOSE_PROMPT.id, 'in_progress');
       const target = detectTarget(currentPrompt);
       const projectContext = buildForTarget(target);
       const context = dataService.buildAIContext(12000);
       const fileTree = buildFileTreeDescription();
       const activeAgent = cb.getActiveAgent();
-      const agentPrompt = activeAgent.systemPrompt ? `\n\n## 当前角色：${activeAgent.name}\n${activeAgent.systemPrompt}` : '';
 
-      let fullSystemPrompt = `${SYSTEM_PROMPT}${agentPrompt}\n\n${projectContext}\n\n## 文件结构\n${fileTree}\n\n## 已有设定内容（正典）\n${context || '（暂无内容）'}`;
+      const agentMap: Record<string, AgentId> = {
+        '通用助手': 'agent-general',
+        '世界观架构师': 'agent-worldbuilder',
+        '角色设计师': 'agent-character',
+        '剧情策划师': 'agent-plotter',
+        '文字润色师': 'agent-editor',
+      };
+      const agentId = agentMap[activeAgent?.name] || 'agent-general';
+
+      const composed = PromptComposer.composeForAssistant({
+        agentId,
+        projectContext: `${projectContext}\n\n## 已有设定内容（正典）\n${context || '（暂无内容）'}`,
+        fileTreeDescription: fileTree,
+      });
+
+      let fullSystemPrompt = composed.fullPrompt;
 
       if (taskPlan && taskPlan.operations.length > 0) {
         fullSystemPrompt += `\n\n## 当前进度\n${formatPlanContext(taskPlan, completedOps)}`;
@@ -96,16 +155,26 @@ export async function processWithAI(text: string, model: ModelConfig, cb: Proces
         toolResults = [];
       }
 
-      const phase = determinePhase(iteration, taskPlan, completedOps);
+      if (accumulatedContext) {
+        historyStr += `\n\n[已累积的上下文]\n${accumulatedContext}`;
+      }
+
+      const phase = determinePhase(iteration, taskPlan, completedOps, lastAction);
       cb.setAgentPhase(phase, summarizeTask(text), calculateProgress(iteration, taskPlan, completedOps), {
         iteration,
         totalOperations: taskPlan?.operations.length || 0,
         completedOperations: completedOps,
+        lastAction,
       });
+
+      cb.updateSystemStep(SYSTEM_STEPS.COMPOSE_PROMPT.id, 'completed', `Agent: ${agentId}`);
+      cb.updateSystemStep(SYSTEM_STEPS.CALL_AI.id, 'in_progress', `Token 预算: ${budgetForHistory}`);
 
       const prompt = `${historyStr}\n\n用户：${currentPrompt}`;
 
       cb.setStreamingContent('');
+      cb.setStreamingThinking(null);
+      accumulatedThinking = '';
 
       const result = await aiService.generateStream(
         {
@@ -118,6 +187,13 @@ export async function processWithAI(text: string, model: ModelConfig, cb: Proces
         (streamResp) => {
           if (streamResp.isStreaming) {
             cb.setStreamingContent(streamResp.content || '');
+            if (streamResp.reasoningContent !== undefined) {
+              accumulatedThinking = streamResp.reasoningContent;
+              cb.setStreamingThinking(accumulatedThinking);
+            }
+            if (streamResp.content) {
+              cb.setAgentPhase(phase, `${summarizeTask(text)} (${streamResp.content.length} 字符)`, calculateProgress(iteration, taskPlan, completedOps));
+            }
           }
         }
       );
@@ -127,19 +203,56 @@ export async function processWithAI(text: string, model: ModelConfig, cb: Proces
       }
 
       if (result.error) {
+        cb.updateSystemStep(SYSTEM_STEPS.CALL_AI.id, 'failed', result.error);
         cb.setStreamingContent(null);
+        cb.setStreamingThinking(null);
         cb.setAgentPhase(AgentPhase.ERROR, summarizeTask(text), 0, { error: result.error });
         cb.addMessage({ role: 'assistant', content: `❌ 错误：${result.error}` });
         return { waitingForUser: false };
       }
 
+      cb.updateSystemStep(SYSTEM_STEPS.CALL_AI.id, 'completed', `输出 ${result.content?.length || 0} 字符`);
+      cb.updateSystemStep(SYSTEM_STEPS.PARSE_RESPONSE.id, 'in_progress');
+
       const content = result.content || '';
       const { toolCalls, textParts } = ToolParser.parse(content);
+
+      const toolSummary = toolCalls.length > 0
+        ? `工具调用: ${toolCalls.map(tc => tc.action).join(', ')}`
+        : '纯文本回复';
+      cb.updateSystemStep(SYSTEM_STEPS.PARSE_RESPONSE.id, 'completed', toolSummary);
+
+      const todoCall = toolCalls.find(tc => tc.action === 'update_todo_list');
+      if (todoCall) {
+        const todosParam = todoCall.todos;
+        let todos: ParsedTodoItem[] = [];
+
+        if (typeof todosParam === 'string') {
+          todos = ToolParser.parseMarkdownChecklist(todosParam);
+        } else if (Array.isArray(todosParam)) {
+          todos = todosParam as ParsedTodoItem[];
+        }
+
+        if (todos.length > 0) {
+          const normalizedTodos: TodoItem[] = todos.map((t, idx) => ({
+            id: t.id || `todo-${Date.now()}-${idx}`,
+            content: t.content,
+            status: t.status || 'pending',
+            type: 'task',
+          }));
+
+          cb.setTodoList(normalizedTodos);
+          console.log('[AI] TodoList updated:', normalizedTodos.length, 'items');
+        }
+      }
 
       if (toolCalls.length > 0) {
         consecutiveNoToolCount = 0;
         selfCorrectionAttempts = 0;
         cb.setStreamingContent(null);
+        cb.setStreamingThinking(null);
+
+        cb.updateSystemStep(SYSTEM_STEPS.EXECUTE_OPERATIONS.id, 'in_progress', `待执行: ${toolCalls.length} 个操作`);
 
         const planTool = toolCalls.find(tc => tc.action === 'plan');
         if (planTool && !taskPlan) {
@@ -150,12 +263,86 @@ export async function processWithAI(text: string, model: ModelConfig, cb: Proces
             cb.addMessage({
               role: 'assistant',
               content: `📋 任务规划完成！共 ${taskPlan.operations.length} 个操作：\n\n${formatPlanForUser(taskPlan)}\n\n开始逐步执行…`,
+              thinking: accumulatedThinking || undefined,
             });
+            accumulatedThinking = '';
 
             currentPrompt = buildAutonomousPrompt(taskPlan, completedOps);
             toolResults = [`[系统] 计划已确认，共 ${taskPlan.operations.length} 个操作待执行。请开始逐个执行，每完成一个立即继续下一个，不要停下来询问。`];
             continue;
           }
+        }
+
+        const analyzeTool = toolCalls.find(tc => tc.action === 'analyze-state');
+        const decideTool = toolCalls.find(tc => tc.action === 'decide-next');
+        const hasMetaTool = !!(analyzeTool || decideTool);
+
+        if (analyzeTool) {
+          const state = parseAnalyzeTool(analyzeTool);
+          if (state) {
+            accumulatedContext += `\n[状态分析]\n项目状态：${state.projectStatus}\n已完成：${state.completedWork.join(', ')}\n待完成：${state.pendingWork.join(', ')}\n建议：${state.suggestions.join(', ')}`;
+            lastAction = 'analyze-state';
+          }
+        }
+
+        if (decideTool) {
+          const decision = parseDecideTool(decideTool);
+          if (decision) {
+            lastAction = decision.action;
+            if (decision.action === 'complete') {
+              if (textParts && textParts.length > 10) {
+                cb.addMessage({ role: 'assistant', content: textParts, thinking: accumulatedThinking || undefined });
+                accumulatedThinking = '';
+              }
+              cb.setAgentPhase(AgentPhase.COMPLETED, summarizeTask(text), 100);
+              cb.addMessage({ role: 'assistant', content: `✅ ${decision.reason}\n\n思考过程：${decision.thought}` });
+              break;
+            }
+            if (decision.action === 'ask_user') {
+              if (textParts && textParts.length > 10) {
+                cb.addMessage({ role: 'assistant', content: textParts, thinking: accumulatedThinking || undefined });
+                accumulatedThinking = '';
+              }
+              waitingForUser = true;
+              cb.addMessage({ role: 'assistant', content: `🤔 ${decision.reason}\n\n${decision.thought}` });
+              return { waitingForUser: true };
+            }
+          }
+        }
+
+        if (hasMetaTool) {
+          if (textParts && textParts.length > 10) {
+            cb.addMessage({ role: 'assistant', content: textParts, thinking: accumulatedThinking || undefined });
+            accumulatedThinking = '';
+          }
+
+          const actionableTools = toolCalls.filter(tc =>
+            tc.action !== 'plan' && tc.action !== 'analyze-state' && tc.action !== 'decide-next'
+          );
+
+          if (actionableTools.length > 0) {
+            const loopResult = await handleToolCalls(actionableTools, textParts, text, model, cb, taskPlan, completedOps);
+            if (loopResult.accumulatedResults) {
+              accumulatedContext += `\n${loopResult.accumulatedResults}`;
+            }
+            if (taskPlan && loopResult.opsProcessed) {
+              completedOps += loopResult.opsProcessed;
+            }
+          }
+
+          if (analyzeTool && !decideTool) {
+            if (actionableTools.length === 0) {
+              currentPrompt = '请直接使用 decide-next 工具决定下一步操作。不需要再次分析状态。';
+            } else {
+              currentPrompt = '基于以上状态分析，请决定下一步操作。使用 decide-next 工具输出你的决策。';
+            }
+          } else if (decideTool) {
+            const decision = parseDecideTool(decideTool);
+            if (decision) {
+              currentPrompt = buildDecisionPrompt(decision);
+            }
+          }
+          continue;
         }
 
         if (!taskPlan && textParts && textParts.length > 20) {
@@ -174,6 +361,8 @@ export async function processWithAI(text: string, model: ModelConfig, cb: Proces
         }
 
         if (loopResult.type === 'done') {
+          cb.updateSystemStep(SYSTEM_STEPS.EXECUTE_OPERATIONS.id, 'completed', '操作执行完成');
+          
           if (taskPlan) {
             completedOps += loopResult.opsProcessed || 1;
             if (completedOps < taskPlan.operations.length) {
@@ -190,7 +379,7 @@ export async function processWithAI(text: string, model: ModelConfig, cb: Proces
               const implicitPlan = extractImplicitPlan(textParts, text);
               if (implicitPlan && implicitPlan.operations.length > 1) {
                 taskPlan = implicitPlan;
-                completedOps = 1;
+                completedOps = Math.min(loopResult.opsProcessed || 1, taskPlan.operations.length);
                 if (completedOps < taskPlan.operations.length) {
                   toolResults = [loopResult.accumulatedResults || '', buildContinuePrompt(taskPlan, completedOps)];
                   currentPrompt = buildAutonomousPrompt(taskPlan, completedOps);
@@ -198,13 +387,33 @@ export async function processWithAI(text: string, model: ModelConfig, cb: Proces
                 }
               }
             }
+            if (taskPlan && completedOps < taskPlan.operations.length) {
+              toolResults = [loopResult.accumulatedResults || '', buildContinuePrompt(taskPlan, completedOps)];
+              currentPrompt = buildAutonomousPrompt(taskPlan, completedOps);
+              continue;
+            }
+            if (loopResult.accumulatedResults && loopResult.accumulatedResults.includes('read_folder')) {
+              accumulatedContext += `\n${loopResult.accumulatedResults}`;
+              currentPrompt = buildAnalyzeStatePrompt(text, accumulatedContext);
+              continue;
+            }
+            if (loopResult.accumulatedResults && (loopResult.accumulatedResults.includes('create_file') || loopResult.accumulatedResults.includes('update_file'))) {
+              accumulatedContext += `\n${loopResult.accumulatedResults}`;
+              currentPrompt = buildAnalyzeStatePrompt(text, accumulatedContext);
+              continue;
+            }
             break;
           }
         }
 
         if (loopResult.type === 'continue') {
           toolResults = [loopResult.accumulatedResults || '', loopResult.nextPrompt || '请继续完成任务'];
-          currentPrompt = taskPlan ? buildAutonomousPrompt(taskPlan, completedOps) : text;
+          if (taskPlan) {
+            currentPrompt = buildAutonomousPrompt(taskPlan, completedOps);
+          } else {
+            accumulatedContext += `\n${loopResult.accumulatedResults || ''}`;
+            currentPrompt = buildAnalyzeStatePrompt(text, accumulatedContext);
+          }
           continue;
         }
 
@@ -216,19 +425,25 @@ export async function processWithAI(text: string, model: ModelConfig, cb: Proces
           selfCorrectionAttempts++;
           consecutiveNoToolCount = 0;
           cb.setStreamingContent(null);
+          cb.setStreamingThinking(null);
           cb.setAgentPhase(AgentPhase.SELF_CORRECTING, summarizeTask(text), 60, { iteration });
           currentPrompt = getSelfCorrectionPrompt(selfCorrectionAttempts);
           toolResults = [`[AI上一轮输出]\n${textParts}\n\n[系统提醒：以上内容未使用 tool 格式创建文件]`];
-          cb.addMessage({ role: 'assistant', content: textParts });
+          cb.addMessage({ role: 'assistant', content: textParts, thinking: accumulatedThinking || undefined });
+          accumulatedThinking = '';
           continue;
         } else {
           cb.setStreamingContent(null);
+          cb.setStreamingThinking(null);
           await handleSmartExtraction(textParts, text, cb);
-          return { waitingForUser: false };
+          accumulatedContext += '\n已智能提取并创建文件';
+          currentPrompt = buildAnalyzeStatePrompt(text, accumulatedContext);
+          continue;
         }
       }
 
       cb.setStreamingContent(null);
+      cb.setStreamingThinking(null);
 
       if (!taskPlan && textParts.length > 20) {
         const implicitPlan = extractImplicitPlan(textParts, text);
@@ -238,7 +453,9 @@ export async function processWithAI(text: string, model: ModelConfig, cb: Proces
           cb.addMessage({
             role: 'assistant',
             content: `📋 检测到多文件任务，已自动规划 ${taskPlan.operations.length} 个操作。开始执行…`,
+            thinking: accumulatedThinking || undefined,
           });
+          accumulatedThinking = '';
           currentPrompt = buildAutonomousPrompt(taskPlan, completedOps);
           toolResults = [`[系统] 已自动规划 ${taskPlan.operations.length} 个操作。请开始逐个执行，不要停下来。`];
           continue;
@@ -266,8 +483,19 @@ export async function processWithAI(text: string, model: ModelConfig, cb: Proces
         continue;
       }
 
+      if (accumulatedContext) {
+        currentPrompt = buildAnalyzeStatePrompt(text, accumulatedContext);
+        continue;
+      }
+
       cb.setAgentPhase(AgentPhase.COMPLETED, summarizeTask(text), 100);
-      cb.addMessage({ role: 'assistant', content: textParts || '(无内容)' });
+      cb.addMessage({ 
+        role: 'assistant', 
+        content: textParts || '(无内容)',
+        thinking: accumulatedThinking || undefined,
+      });
+      cb.updateSystemStep(SYSTEM_STEPS.EXECUTE_OPERATIONS.id, 'completed', '任务完成');
+      cb.updateSystemStep(SYSTEM_STEPS.CHECK_COMPLETION.id, 'completed', 'AI 回复完成');
       break;
     }
 
@@ -287,12 +515,87 @@ export async function processWithAI(text: string, model: ModelConfig, cb: Proces
   } finally {
     if (!waitingForUser && cb.isCurrentTask()) {
       cb.setIsProcessing(false);
+      cb.setStreamingContent(null);
+      cb.setStreamingThinking(null);
       setTimeout(() => {
         if (cb.isCurrentTask()) {
           cb.setAgentPhase(AgentPhase.IDLE, '', 0);
         }
       }, 2000);
     }
+  }
+}
+
+function buildAnalyzeStatePrompt(originalText: string, accumulatedContext: string): string {
+  return `请分析当前项目状态并决定下一步操作。
+
+**原始指令**：${originalText}
+
+**已执行的操作**：
+${accumulatedContext}
+
+请使用 analyze-state 工具分析当前状态，然后使用 decide-next 工具决定下一步操作。
+
+**analyze-state 格式**：
+\`\`\`tool
+{"action": "analyze-state", "content": "分析当前项目状态：已创建/修改了哪些内容，还需要做什么"}
+\`\`\`
+
+**decide-next 格式**：
+\`\`\`tool
+{"action": "decide-next", "thought": "详细思考过程...", "decision": "create_file|update_file|read_file|read_folder|complete|ask_user", "target": {"folder": "characters|world|timeline|outline", "name": "文件名"}, "reason": "为什么选择这个操作", "confidence": 0.85}
+\`\`\``;
+}
+
+function buildDecisionPrompt(decision: AIDecision): string {
+  const actionMap: Record<string, string> = {
+    'create_file': '创建文件',
+    'update_file': '更新文件',
+    'read_file': '读取文件',
+    'read_folder': '读取文件夹',
+    'complete': '完成任务',
+    'ask_user': '询问用户',
+  };
+
+  const actionDesc = actionMap[decision.action] || decision.action;
+  const targetInfo = decision.target
+    ? `目标：${decision.target.folder || ''}/${decision.target.name || ''}`
+    : '';
+
+  return `**AI 决策**：${actionDesc}
+**原因**：${decision.reason}
+**信心度**：${Math.round(decision.confidence * 100)}%
+
+${targetInfo}
+
+请立即执行此决策，使用相应的 tool 格式。`;
+}
+
+function parseAnalyzeTool(tool: any): AIState | null {
+  try {
+    const content = tool.content || tool.analysis || '';
+    return {
+      projectStatus: content,
+      completedWork: [],
+      pendingWork: [],
+      suggestions: [],
+    };
+  } catch (e) {
+    return null;
+  }
+}
+
+function parseDecideTool(tool: any): AIDecision | null {
+  try {
+    return {
+      thought: tool.thought || '',
+      action: tool.decision || tool.action || 'complete',
+      target: tool.target,
+      reason: tool.reason || '',
+      confidence: tool.confidence || 0.5,
+    };
+  } catch (e) {
+    return null;
   }
 }
 
@@ -334,7 +637,13 @@ function buildContinuePrompt(plan: TaskPlan, completedOps: number): string {
   return `[系统] 已完成 ${completedOps}/${plan.operations.length} 个操作。下一个：${actionLabel}「${nextOp.description || nextOp.action}」（还剩 ${remaining} 个）。${nameHint}${detailHint}\n请立即输出内容并跟 tool 继续执行，不要停下来。`;
 }
 
-function determinePhase(iteration: number, plan: TaskPlan | null, completedOps: number): AgentPhase {
+function determinePhase(iteration: number, plan: TaskPlan | null, completedOps: number, lastAction: string | null): AgentPhase {
+  if (lastAction === 'analyze-state') {
+    return AgentPhase.ANALYZING;
+  }
+  if (lastAction === 'decide-next') {
+    return AgentPhase.PLANNING;
+  }
   if (!plan || completedOps === 0) {
     return iteration === 1 ? AgentPhase.ANALYZING : AgentPhase.GENERATING;
   }
@@ -385,7 +694,7 @@ async function handleToolCalls(
     if (tc.action === 'ask_input' || tc.action === 'ask_choice') {
       needsUserInput = true;
       cb.showPrompt(tc, model);
-    } else if (tc.action === 'plan') {
+    } else if (tc.action === 'plan' || tc.action === 'analyze-state' || tc.action === 'decide-next') {
     } else {
       const actionResult = await unifiedExecutor.executeAction(tc, cb.getCurrentMessageId());
       actionResults += `\n[工具执行结果] ${tc.action}: ${actionResult}\n`;
@@ -552,7 +861,7 @@ function extractImplicitPlan(text: string, originalText: string): TaskPlan | nul
 }
 
 function extractFileName(description: string): string {
-  const match = description.match(/[\""'""「」『』]([^\""'""「」『』]+)[\""'""「」『』]|[\w\u4e00-\u9fff]{2,10}/);
+  const match = description.match(/[""""「」『』]([^""""「」『』]+)[""""「」『』]|[\w\u4e00-\u9fff]{2,10}/);
   return match ? match[1] || match[0] : '未命名文件';
 }
 

@@ -5,6 +5,8 @@ import { dataService } from '../../shared/services/DataService';
 import { generateTags, generateSchemesStreaming } from './inspirationService';
 import { aiService } from '../../shared/services/aiService';
 import { useAIStatus } from '../../shared/contexts/AIStatusContext';
+import { useTheme } from '../../shared/contexts/ThemeContext';
+import { useUIStore } from '../../shared/stores/uiStore';
 import { InputModal } from '../../shared/components/Modal';
 import AIProgressButton from '../../shared/components/AIProgressButton';
 import SchemeCard from './components/SchemeCard';
@@ -21,6 +23,10 @@ interface StepInspirationProps {
 }
 
 const StepInspiration: React.FC<StepInspirationProps> = ({ activeModel, prompts, onConfirmScheme, onOpenSettings }) => {
+  const { themeInfo, mode } = useTheme();
+  const { animationLevel } = useUIStore();
+  const hasAnimations = animationLevel !== 'none';
+  
   const project = dataService.getActiveProject();
   const [subTab, setSubTab] = useState<SubTab>(() => {
     if (project?.selectedSchemeId) return 'schemes';
@@ -41,6 +47,13 @@ const StepInspiration: React.FC<StepInspirationProps> = ({ activeModel, prompts,
   const [viewingScheme, setViewingScheme] = useState<NovelScheme | null>(null);
   const [showHistory, setShowHistory] = useState(false);
   const [showTagHistory, setShowTagHistory] = useState(false);
+
+  const [selectedGenre, setSelectedGenre] = useState<string | null>(() => {
+    try { return localStorage.getItem('moyuan-selected-genre'); } catch { return null; }
+  });
+  const [styleValue, setStyleValue] = useState<number>(() => {
+    try { return parseInt(localStorage.getItem('moyuan-style-value') || '50', 10); } catch { return 50; }
+  });
   const schemeHistory = project?.schemeHistory || [];
   const tagHistory = schemeHistory.filter(h => h.tags.length > 0 && h.schemes.length === 0);
   const streamEndRef = useRef<HTMLDivElement>(null);
@@ -51,6 +64,25 @@ const StepInspiration: React.FC<StepInspirationProps> = ({ activeModel, prompts,
   useEffect(() => { try { localStorage.setItem('moyuan-tag-count', String(tagCount)); } catch {} }, [tagCount]);
   useEffect(() => { try { localStorage.setItem('moyuan-scheme-count', String(schemeCount)); } catch {} }, [schemeCount]);
   useEffect(() => { if (streamContent && streamEndRef.current) streamEndRef.current.scrollIntoView({ behavior: 'smooth' }); }, [streamContent]);
+  useEffect(() => { try { localStorage.setItem('moyuan-selected-genre', selectedGenre || ''); } catch {} }, [selectedGenre]);
+  useEffect(() => { try { localStorage.setItem('moyuan-style-value', String(styleValue)); } catch {} }, [styleValue]);
+
+  const GENRE_OPTIONS = [
+    { id: 'fantasy', label: '玄幻', icon: 'fa-hat-wizard' },
+    { id: 'scifi', label: '科幻', icon: 'fa-rocket' },
+    { id: 'romance', label: '言情', icon: 'fa-heart' },
+    { id: 'suspense', label: '悬疑', icon: 'fa-magnifying-glass' },
+    { id: 'urban', label: '都市', icon: 'fa-city' },
+    { id: 'historical', label: '历史', icon: 'fa-landmark' },
+  ];
+
+  const getStyleLabel = (value: number) => {
+    if (value <= 20) return '轻松';
+    if (value <= 40) return '温馨';
+    if (value <= 60) return '平衡';
+    if (value <= 80) return '深沉';
+    return '暗黑';
+  };
 
   const tagPrompt = prompts.find(p => p.category === 'inspiration' && p.id.includes('tag'))?.content || '请根据以下灵感，发散出{count}个创作标签：\n\n{inspiration}';
   const schemePrompt = prompts.find(p => p.category === 'inspiration' && p.id.includes('scheme'))?.content || '请根据以下灵感和标签，构思{count}个小说方案。每个方案必须包含：书名、题材、基调、核心冲突、简介、亮点。用 --- 分隔不同方案。\n\n灵感：{inspiration}\n\n标签：{tags}';
@@ -86,7 +118,15 @@ const StepInspiration: React.FC<StepInspirationProps> = ({ activeModel, prompts,
     if (!activeModel?.modelName) { onOpenSettings(); return; }
     setIsGeneratingSchemes(true); setErrorMsg(null); setStreamContent('');
     setGenerating(activeModel.name, '构思方案中...');
-    const enriched = supplementaryPrompt.trim() ? `${inspiration}\n\n补充要求：${supplementaryPrompt}` : inspiration;
+
+    let enriched = supplementaryPrompt.trim() ? `${inspiration}\n\n补充要求：${supplementaryPrompt}` : inspiration;
+
+    if (selectedGenre) {
+      const genreLabel = GENRE_OPTIONS.find(g => g.id === selectedGenre)?.label || selectedGenre;
+      const styleLabel = getStyleLabel(styleValue);
+      enriched += `\n\n【创作方向设定】\n- 故事类型：${genreLabel}\n- 风格基调：${styleLabel}（${styleValue}/100）`;
+    }
+
     try {
       await generateSchemesStreaming(enriched, selected, activeModel, schemePrompt, schemeCount, {
         onToken: text => { setStreamContent(text); setProgress(Math.min(95, Math.floor(text.length / 20))); },
@@ -153,15 +193,31 @@ const StepInspiration: React.FC<StepInspirationProps> = ({ activeModel, prompts,
   const isGenerating = isGeneratingTags || isGeneratingSchemes;
 
   return (
-    <div className="animate-fade-in p-6 mx-auto" style={{ maxWidth: 900 }}>
-      {/* Tab switcher */}
-      <div className="segmented-control text-xs mb-5 w-fit">
-        {(['incubation', 'schemes'] as SubTab[]).map(tab => (
-          <button key={tab} className={subTab === tab ? 'active' : ''} onClick={() => setSubTab(tab)}>
-            <i className={`fas ${tab === 'incubation' ? 'fa-lightbulb' : 'fa-scroll'} mr-1.5`} />
-            {tab === 'incubation' ? '灵感萌发' : '灵感方案'}
-          </button>
-        ))}
+    <div className="animate-fade-in px-4 pt-4 mx-auto" style={{ maxWidth: 900 }}>
+      {/* Tab switcher - 美化版本 */}
+      <div className="mb-4 relative">
+        {/* 装饰性背景 */}
+        <div className="absolute inset-0 rounded-full" style={{ background: 'var(--color-surface-muted)', opacity: 0.5 }} />
+        
+        <div className="relative flex gap-1 p-1 rounded-full" style={{ background: 'var(--color-surface-muted)', border: '1px solid var(--color-border-default)' }}>
+          {(['incubation', 'schemes'] as SubTab[]).map((tab, tabIndex) => (
+            <button 
+              key={tab} 
+              onClick={() => setSubTab(tab)}
+              className={`relative px-5 py-2 rounded-full text-sm font-medium transition-all duration-300 flex items-center gap-2 ${hasAnimations ? 'hover:scale-105' : ''}`}
+              style={{
+                background: subTab === tab ? themeInfo.gradient : 'transparent',
+                color: subTab === tab ? 'var(--color-text-inverse, #ffffff)' : 'var(--color-text-secondary)',
+                boxShadow: subTab === tab ? 'var(--shadow-button-light, 0 4px 16px rgba(0, 0, 0, 0.1))' : 'none',
+              }}>
+              {subTab === tab && hasAnimations && (
+                <span className="absolute inset-0 rounded-full animate-pulse opacity-30" style={{ background: themeInfo.gradient }} />
+              )}
+              <i className={`fas ${tab === 'incubation' ? 'fa-lightbulb' : 'fa-scroll'}`} style={{ position: 'relative', zIndex: 1 }} />
+              <span style={{ position: 'relative', zIndex: 1 }}>{tab === 'incubation' ? '灵感萌发' : '灵感方案'}</span>
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Confirmed scheme banner */}
@@ -177,13 +233,16 @@ const StepInspiration: React.FC<StepInspirationProps> = ({ activeModel, prompts,
       {/* ====== 灵感萌发 Tab ====== */}
       {subTab === 'incubation' && (
         <>
-          <div className="glass-card p-6 mb-4 rounded-2xl">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: 'var(--color-primary-100)' }}>
-                <i className="fas fa-lightbulb" style={{ color: 'var(--color-primary-400)' }} />
+          <div className="glass-card p-6 mb-4 rounded-2xl" style={{ position: 'relative', overflow: 'hidden' }}>
+            {/* 装饰背景 */}
+            <div className="absolute top-0 right-0 w-40 h-40 rounded-full opacity-10" style={{ background: themeInfo.gradient, transform: 'translate(40%, -40%)' }} />
+            
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{ background: themeInfo.gradient, boxShadow: '0 4px 16px var(--color-primary-100)' }}>
+                <i className="fas fa-lightbulb text-white text-lg" />
               </div>
               <div>
-                <h3 className="text-base font-bold" style={{ color: 'var(--color-text-primary)' }}>灵感萌发</h3>
+                <h3 className="text-lg font-bold" style={{ color: 'var(--color-text-primary)' }}>灵感萌发</h3>
                 <p className="text-[11px]" style={{ color: 'var(--color-text-tertiary)' }}>写下你的灵感，AI 帮你发散构思</p>
               </div>
             </div>
@@ -191,15 +250,30 @@ const StepInspiration: React.FC<StepInspirationProps> = ({ activeModel, prompts,
               value={inspiration}
               onChange={e => setInspiration(e.target.value)}
               placeholder="输入你的小说灵感……&#10;例如：一个古代刺客穿越到现代都市，意外卷入一场阴谋……"
-              className="w-full h-28 rounded-xl outline-none border resize-none p-3 text-[13px] leading-relaxed"
-              style={{ color: 'var(--color-text-secondary)', backgroundColor: 'var(--color-surface-muted)', borderColor: 'var(--color-border-default)', fontFamily: 'inherit' }}
+              className="w-full h-32 rounded-2xl outline-none border resize-none p-4 text-[14px] leading-relaxed transition-all duration-200 focus:border-transparent"
+              style={{ 
+                color: 'var(--color-text-secondary)', 
+                backgroundColor: 'var(--color-surface-muted)', 
+                borderColor: 'var(--color-border-default)', 
+                fontFamily: 'inherit',
+                boxShadow: 'inset 0 1px 3px rgba(0,0,0,0.1)',
+              }}
             />
-            <div className="flex items-center justify-between mt-3">
-              <div className="flex items-center gap-2">
+            <div className="flex items-center justify-between mt-4">
+              <div className="flex items-center gap-3">
                 <span className="text-[11px]" style={{ color: 'var(--color-text-tertiary)' }}>标签数量</span>
                 <div className="segmented-control text-[10px]">
                   {[3, 5, 8, 10, 15].map(n => (
-                    <button key={n} className={tagCount === n ? 'active' : ''} onClick={() => setTagCount(n)}>{n}</button>
+                    <button 
+                      key={n} 
+                      className={`${tagCount === n ? 'active' : ''}`} 
+                      onClick={() => setTagCount(n)}
+                      style={{
+                        transition: hasAnimations ? 'all 0.2s ease' : 'none',
+                      }}
+                    >
+                      {n}
+                    </button>
                   ))}
                 </div>
               </div>
@@ -220,7 +294,7 @@ const StepInspiration: React.FC<StepInspirationProps> = ({ activeModel, prompts,
             <div className="glass-card p-4 mb-4 rounded-xl">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-xs font-semibold" style={{ color: 'var(--color-text-primary)' }}>
-                  <span className="pulse-dot mr-1.5" style={{ display: 'inline-block', width: 6, height: 6, borderRadius: '50%', backgroundColor: '#34d399', animation: 'pulseGlow 1.5s infinite' }} />
+                  <span className="pulse-dot mr-1.5" style={{ display: 'inline-block', width: 6, height: 6, borderRadius: '50%', backgroundColor: 'var(--color-green-400, #34d399)', animation: 'pulseGlow 1.5s infinite' }} />
                   AI 正在生成…
                 </span>
                 <button onClick={handleAbort} className="btn-outline-danger text-[10px] px-2 py-0.5">
@@ -284,28 +358,37 @@ const StepInspiration: React.FC<StepInspirationProps> = ({ activeModel, prompts,
           {tags.length > 0 && (
             <>
               <div className="glass-card p-4 mb-3 rounded-xl">
-                <h4 className="text-[13px] font-semibold mb-2 flex items-center gap-1.5" style={{ color: 'var(--color-text-primary)' }}>
-                  <i className="fas fa-tags" style={{ color: 'var(--color-primary-400)' }} />标签池
+                <h4 className="text-[13px] font-semibold mb-3 flex items-center justify-between gap-1.5" style={{ color: 'var(--color-text-primary)' }}>
+                  <div className="flex items-center gap-1.5">
+                    <div className="w-6 h-6 rounded-lg flex items-center justify-center" style={{ background: themeInfo.gradient }}>
+                      <i className="fas fa-tags text-white text-[10px]" />
+                    </div>
+                    标签池
+                  </div>
+                  <span className="text-[10px]" style={{ color: 'var(--color-text-muted)' }}>
+                    已选 <strong style={{ color: 'var(--color-primary-400)' }}>{tags.filter(t => t.selected).length}</strong> / {tags.length}
+                  </span>
                 </h4>
                 <div className="flex flex-wrap gap-2">
-                  {tags.map(tag => (
+                  {tags.map((tag, tagIndex) => (
                     <button
                       key={tag.id}
                       onClick={() => handleToggleTag(tag.id)}
-                      className="rounded-full text-[11px] font-medium cursor-pointer transition-all px-2.5 py-1 border"
+                      className={`rounded-full text-[11px] font-medium cursor-pointer transition-all px-3 py-1.5 border ${hasAnimations ? 'hover:scale-105 active:scale-95' : ''}`}
                       style={{
-                        background: tag.selected ? 'var(--color-primary-100)' : 'var(--color-surface-muted)',
-                        color: tag.selected ? 'var(--color-primary-300)' : 'var(--color-text-secondary)',
-                        borderColor: tag.selected ? 'var(--color-primary-200)' : 'var(--color-border-default)',
-                      }}
-                    >
-                      {tag.source === 'user' && <i className="fas fa-pen text-[7px] mr-1" style={{ color: '#f59e0b' }} />}
+                        background: tag.selected ? themeInfo.gradient : 'var(--color-surface-muted)',
+                        color: tag.selected ? 'var(--color-text-primary)' : 'var(--color-text-secondary)',
+                        borderColor: tag.selected ? 'transparent' : 'var(--color-border-default)',
+                        animation: hasAnimations && tag.selected ? 'pulseGlow 2s infinite' : undefined,
+                        animationDelay: hasAnimations ? `${tagIndex * 50}ms` : '0ms',
+                      }}>
+                      {tag.source === 'user' && <i className="fas fa-pen text-[7px] mr-1" style={{ color: tag.selected ? 'var(--color-text-inverse, #fff)' : 'var(--color-amber-400, #f59e0b)' }} />}
                       {tag.text}
                     </button>
                   ))}
                   <button
                     onClick={() => setCustomTagModal(true)}
-                    className="rounded-full text-[11px] cursor-pointer px-2.5 py-1 border-dashed border"
+                    className={`rounded-full text-[11px] cursor-pointer px-3 py-1.5 border-dashed border transition-all ${hasAnimations ? 'hover:scale-105' : ''}`}
                     style={{ color: 'var(--color-text-muted)', borderColor: 'var(--color-border-default)', background: 'transparent' }}
                   >
                     <i className="fas fa-plus mr-1" />自定义
@@ -339,6 +422,80 @@ const StepInspiration: React.FC<StepInspirationProps> = ({ activeModel, prompts,
               </div>
             </div>
           )}
+
+          {/* 参数化配置面板 */}
+          <div className="glass-card p-4 mb-4 rounded-xl">
+            <h4 className="text-[12px] font-semibold mb-3 flex items-center gap-1.5" style={{ color: 'var(--color-text-primary)' }}>
+              <i className="fas fa-sliders" style={{ color: 'var(--color-primary-400)' }} />
+              创作方向设定
+              <span className="text-[10px] font-normal ml-1" style={{ color: 'var(--color-text-muted)' }}>(可选)</span>
+            </h4>
+
+            {/* 故事类型选择器 */}
+            <div className="mb-4">
+              <label className="text-[11px] font-medium mb-2 block" style={{ color: 'var(--color-text-secondary)' }}>
+                <i className="fas fa-book-open mr-1" style={{ color: 'var(--color-text-muted)', fontSize: '9px' }} />
+                故事类型
+              </label>
+              <div className="flex gap-2 flex-wrap">
+                <button
+                  onClick={() => setSelectedGenre(null)}
+                  className={`px-3 py-1.5 rounded-full text-[11px] font-medium transition-all border ${
+                    !selectedGenre
+                      ? 'bg-[var(--color-primary-100)] text-[var(--color-primary-300)] border-[var(--color-primary-200)]'
+                      : 'bg-transparent text-[var(--color-text-muted)] border-[var(--color-border-default)] hover:border-[var(--color-text-tertiary)]'
+                  }`}
+                >
+                  不限
+                </button>
+                {GENRE_OPTIONS.map(genre => (
+                  <button
+                    key={genre.id}
+                    onClick={() => setSelectedGenre(genre.id)}
+                    className={`px-3 py-1.5 rounded-full text-[11px] font-medium transition-all border ${
+                      selectedGenre === genre.id
+                        ? 'bg-[var(--color-primary-100)] text-[var(--color-primary-300)] border-[var(--color-primary-200)]'
+                        : 'bg-transparent text-[var(--color-text-secondary)] border-[var(--color-border-default)] hover:border-[var(--color-text-tertiary)]'
+                    }`}
+                  >
+                    <i className={`fas ${genre.icon} mr-1`} style={{ fontSize: '9px' }} />
+                    {genre.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* 风格滑块 */}
+            <div>
+              <label className="text-[11px] font-medium mb-2 flex items-center justify-between block" style={{ color: 'var(--color-text-secondary)' }}>
+                <span>
+                  <i className="fas fa-palette mr-1" style={{ color: 'var(--color-text-muted)', fontSize: '9px' }} />
+                  风格基调
+                </span>
+                <span className="px-2 py-0.5 rounded-md text-[10px]" style={{
+                  backgroundColor: 'var(--color-surface-muted)',
+                  color: styleValue <= 40 ? 'var(--color-green-400, #34d399)' : styleValue <= 60 ? 'var(--color-amber-400, #f59e0b)' : 'var(--color-red-400, #f87171)',
+                }}>
+                  {getStyleLabel(styleValue)}
+                </span>
+              </label>
+              <input
+                type="range"
+                min="0"
+                max="100"
+                value={styleValue}
+                onChange={e => setStyleValue(+e.target.value)}
+                className="w-full h-1.5 rounded-full appearance-none cursor-pointer"
+                style={{
+                  background: `linear-gradient(to right, var(--color-green-400, #34d399) 0%, var(--color-amber-400, #f59e0b) ${styleValue}%, var(--color-amber-400, #f59e0b) ${styleValue}%, var(--color-red-400, #f87171) 100%)`,
+                }}
+              />
+              <div className="flex justify-between mt-1">
+                <span className="text-[9px]" style={{ color: 'var(--color-green-400, #34d399)' }}>轻松愉快</span>
+                <span className="text-[9px]" style={{ color: 'var(--color-red-400, #f87171)' }}>暗黑深沉</span>
+              </div>
+            </div>
+          </div>
 
           <div className="glass-card p-4 mb-4 rounded-xl">
             <textarea
@@ -374,7 +531,7 @@ const StepInspiration: React.FC<StepInspirationProps> = ({ activeModel, prompts,
             <div className="glass-card p-4 mb-4 rounded-xl">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-xs font-semibold flex items-center gap-1.5" style={{ color: 'var(--color-text-primary)' }}>
-                  <span className="pulse-dot" style={{ width: 6, height: 6, borderRadius: '50%', backgroundColor: '#34d399', animation: 'pulseGlow 1.5s infinite' }} />
+                  <span className="pulse-dot" style={{ width: 6, height: 6, borderRadius: '50%', backgroundColor: 'var(--color-green-400, #34d399)', animation: 'pulseGlow 1.5s infinite' }} />
                   AI 正在构思方案…
                 </span>
                 <button onClick={handleAbort} className="btn-outline-danger text-[10px] px-2 py-0.5"><i className="fas fa-stop mr-1" />停止</button>
@@ -406,9 +563,9 @@ const StepInspiration: React.FC<StepInspirationProps> = ({ activeModel, prompts,
             >
               <i className="fas fa-history"></i>
               生成历史
-              {schemeHistory.length > 0 && (
+              {schemeHistory.filter(h => h.schemes.length > 0).length > 0 && (
                 <span className="px-1.5 rounded-full text-[10px]" style={{ backgroundColor: showHistory ? 'var(--color-primary-200)' : 'var(--color-primary-100)', color: 'var(--color-primary-400)' }}>
-                  {schemeHistory.length}
+                  {schemeHistory.filter(h => h.schemes.length > 0).length}
                 </span>
               )}
             </button>
@@ -449,12 +606,12 @@ const StepInspiration: React.FC<StepInspirationProps> = ({ activeModel, prompts,
               <button
                 onClick={handleConfirmScheme}
                 disabled={!schemes.some(s => s.selected)}
-                className="px-6 py-2.5 text-white rounded-xl disabled:opacity-40 disabled:cursor-not-allowed font-medium text-sm"
+                className="px-6 py-2.5 rounded-xl disabled:opacity-40 disabled:cursor-not-allowed font-medium text-sm"
                 style={{
                   background: schemes.some(s => s.selected)
                     ? 'linear-gradient(135deg, var(--color-primary-500), var(--color-primary-600))'
                     : 'var(--color-surface-muted)',
-                  color: schemes.some(s => s.selected) ? '#fff' : 'var(--color-text-tertiary)',
+                  color: schemes.some(s => s.selected) ? 'var(--color-text-primary)' : 'var(--color-text-tertiary)',
                   boxShadow: '0 4px 20px var(--color-primary-100)',
                 }}>
                 <i className="fas fa-check mr-1.5" />确认选择此方案

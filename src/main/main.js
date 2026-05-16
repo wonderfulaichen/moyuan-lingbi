@@ -41,13 +41,20 @@ async function createWindow() {
     autoHideMenuBar: true
   });
 
-  if (app.isPackaged) {
-    const indexPath = path.join(__dirname, '../renderer/index.html');
-    mainWindow.loadFile(indexPath).catch(err => {
+  // 优先加载构建好的文件，无论是否打包
+  const builtPath = path.join(__dirname, '../renderer/index.html');
+  const devUrl = 'http://localhost:5180';
+
+  if (app.isPackaged || fs.existsSync(builtPath)) {
+    mainWindow.loadFile(builtPath).catch(err => {
       console.error('Failed to load index.html:', err);
+      // 回退到 dev server
+      mainWindow.loadURL(devUrl).catch(err2 => {
+        console.error('Failed to load dev server:', err2);
+      });
     });
   } else {
-    mainWindow.loadURL('http://localhost:3000').catch(err => {
+    mainWindow.loadURL(devUrl).catch(err => {
       console.error('Failed to load dev server:', err);
     });
   }

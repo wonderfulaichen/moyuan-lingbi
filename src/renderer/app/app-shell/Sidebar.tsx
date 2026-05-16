@@ -4,6 +4,8 @@ import { Project, ModelConfig } from '../../../shared/types';
 import { CHANGELOG } from '../../shared/data/changelog';
 import { InputModal, ConfirmModal } from '../../shared/components/Modal';
 import { useAIStatus } from '../../shared/contexts/AIStatusContext';
+import { PROVIDER_INFO } from '../../../shared/constants';
+import AppIcon from '../../../assets/icon.png';
 
 interface SidebarProps {
   currentStep: number;
@@ -20,18 +22,6 @@ interface SidebarProps {
   onQuickSwitchModel: (modelId: string) => void;
   onOpenSettings?: () => void;
 }
-
-const providerColors: Record<string, string> = {
-  'openai-compatible': 'from-[var(--color-primary-400)] to-[var(--color-primary-400)]',
-  'deepseek': 'from-blue-500 to-cyan-600',
-  'ollama': 'from-green-500 to-emerald-600',
-};
-
-const providerIcons: Record<string, string> = {
-  'openai-compatible': 'fa-cloud',
-  'deepseek': 'fa-dragon',
-  'ollama': 'fa-server',
-};
 
 const Sidebar: React.FC<SidebarProps> = ({
   currentStep,
@@ -66,6 +56,7 @@ const Sidebar: React.FC<SidebarProps> = ({
   });
   const [modelDropdownOpen, setModelDropdownOpen] = useState(false);
   const modelTriggerRef = useRef<HTMLButtonElement>(null);
+  const modelDropdownRef = useRef<HTMLDivElement>(null);
   const toggleCollapse = () => {
     setCollapsed(prev => {
       const next = !prev;
@@ -77,7 +68,12 @@ const Sidebar: React.FC<SidebarProps> = ({
   React.useEffect(() => {
     if (!modelDropdownOpen) return;
     const handler = (e: MouseEvent | KeyboardEvent) => {
-      if (e instanceof MouseEvent && modelTriggerRef.current && !modelTriggerRef.current.contains(e.target as Node)) setModelDropdownOpen(false);
+      if (e instanceof MouseEvent) {
+        const target = e.target as Node;
+        const inTrigger = modelTriggerRef.current?.contains(target);
+        const inDropdown = modelDropdownRef.current?.contains(target);
+        if (!inTrigger && !inDropdown) setModelDropdownOpen(false);
+      }
       if (e instanceof KeyboardEvent && e.key === 'Escape') setModelDropdownOpen(false);
     };
     document.addEventListener('mousedown', handler);
@@ -97,20 +93,25 @@ const Sidebar: React.FC<SidebarProps> = ({
   const { isGenerating, statusMessage, progress, tokenUsage, error } = status;
 
   return (
-    <div className={`${collapsed ? 'w-16' : 'w-56 lg:w-64'} text-gray-100 flex flex-col h-full border-r shrink-0
-      bg-gray-950/70 backdrop-blur-xl border-r-white/5 overflow-hidden transition-all duration-300 ease-in-out`}>
+    <div className={`${collapsed ? 'w-16' : 'w-56 lg:w-64'} flex flex-col h-full border-r shrink-0
+      overflow-hidden transition-all duration-300 ease-in-out`}
+      style={{
+        backgroundColor: 'var(--color-surface-base)',
+        borderColor: 'var(--color-border-default)',
+        color: 'var(--color-text-primary)',
+      }}>
       {/* Logo区域 */}
-      <div className={`${collapsed ? 'px-3 py-4' : 'p-5'} border-b border-white/5 transition-all duration-300`}>
+      <div className={`${collapsed ? 'px-3 py-4' : 'p-5'} border-b transition-all duration-300`} style={{ borderColor: 'var(--color-border-default)' }}>
         <div className={`flex items-center ${collapsed ? 'justify-center' : 'gap-3'}`}>
           <div className="w-9 h-9 rounded-xl overflow-hidden flex items-center justify-center shadow-lg animate-float card-float-hover">
-            <img src="/icon.png" alt="墨渊灵笔" className="w-full h-full object-contain" />
+            <img src={AppIcon} alt="墨渊灵笔" className="w-full h-full object-contain" />
           </div>
           {!collapsed && (
             <div className="flex-1 min-w-0">
               <h1 className="text-lg font-bold tracking-tight bg-gradient-to-r from-[var(--color-primary-300)] to-[var(--color-primary-300)] bg-clip-text text-transparent gradient-text-theme">
                 墨渊灵笔
               </h1>
-              <p className="text-[10px] text-gray-500 tracking-wider">AI小说创作工坊</p>
+              <p className="text-[10px] tracking-wider" style={{ color: 'var(--color-text-muted)' }}>AI小说创作工坊</p>
             </div>
           )}
         </div>
@@ -120,7 +121,7 @@ const Sidebar: React.FC<SidebarProps> = ({
       {collapsed ? (
         <div className="flex flex-col items-center py-3 gap-2">
           <div className="relative" title={`${books.length} 个作品`}>
-            <i className="fas fa-book text-sm text-gray-400"></i>
+            <i className="fas fa-book text-sm" style={{ color: 'var(--color-text-secondary)' }}></i>
             {books.length > 0 && (
               <span className="absolute -top-2 -right-2 min-w-[14px] h-[14px] rounded-full bg-[var(--color-primary-400)] text-[7px] flex items-center justify-center text-white font-bold px-0.5">
                 {books.length}
@@ -129,7 +130,8 @@ const Sidebar: React.FC<SidebarProps> = ({
           </div>
           <button
             onClick={onBookCreate}
-            className="text-gray-500 hover:text-[var(--color-primary-400)] transition-colors"
+            className="transition-colors"
+            style={{ color: 'var(--color-text-muted)' }}
             title="新建作品"
           >
             <i className="fas fa-plus text-xs"></i>
@@ -137,7 +139,7 @@ const Sidebar: React.FC<SidebarProps> = ({
         </div>
       ) : (
       <div className="px-4 pt-4 animate-fade-in-up delay-100">
-        <div className="text-[10px] text-gray-500 font-bold uppercase tracking-widest px-2 mb-2">作品管理</div>
+        <div className="text-[10px] font-bold uppercase tracking-widest px-2 mb-2" style={{ color: 'var(--color-text-muted)' }}>作品管理</div>
         <div className="glass-card-inset p-2 card-float-hover">
           <div className="max-h-40 overflow-y-auto space-y-1 theme-scrollbar">
             {books.map((book, i) => (
@@ -146,9 +148,12 @@ const Sidebar: React.FC<SidebarProps> = ({
                 className={`group flex items-center gap-2 px-2 py-1.5 rounded-lg cursor-pointer transition-all duration-200 ${
                   activeBookId === book.id
                     ? 'bg-theme-primary-100 text-theme-primary shadow-sm'
-                    : 'text-gray-400 hover:bg-white/5 hover:text-gray-200'
+                    : ''
                 }`}
-                style={{ animationDelay: `${i * 30}ms` }}
+                style={{
+                  animationDelay: `${i * 30}ms`,
+                  color: activeBookId === book.id ? undefined : 'var(--color-text-secondary)',
+                }}
                 onClick={() => onBookSelect(book.id)}
               >
                 <i className={`fas fa-book text-xs ${activeBookId === book.id ? 'animate-glow-breathing' : ''}`}></i>
@@ -159,7 +164,8 @@ const Sidebar: React.FC<SidebarProps> = ({
                       e.stopPropagation();
                       setRenameModal({ isOpen: true, bookId: book.id, currentTitle: book.title });
                     }}
-                    className="text-gray-500 hover:text-theme-primary p-0.5 transition-colors"
+                    className="p-0.5 transition-colors"
+                    style={{ color: 'var(--color-text-muted)' }}
                   >
                     <i className="fas fa-edit text-[10px]"></i>
                   </button>
@@ -168,7 +174,8 @@ const Sidebar: React.FC<SidebarProps> = ({
                       e.stopPropagation();
                       setDeleteModal({ isOpen: true, bookId: book.id, bookTitle: book.title });
                     }}
-                    className="text-gray-500 hover:text-red-400 p-0.5 transition-colors"
+                    className="p-0.5 transition-colors hover:text-red-400"
+                    style={{ color: 'var(--color-text-muted)' }}
                   >
                     <i className="fas fa-trash text-[10px]"></i>
                   </button>
@@ -178,7 +185,8 @@ const Sidebar: React.FC<SidebarProps> = ({
           </div>
           <button
             onClick={onBookCreate}
-            className="w-full mt-2 px-2 py-1.5 text-xs text-theme-primary hover:bg-theme-primary-50 rounded-lg transition-all duration-200 flex items-center gap-2 group"
+            className="w-full mt-2 px-2 py-1.5 text-xs rounded-lg transition-all duration-200 flex items-center gap-2 group"
+            style={{ color: 'var(--color-primary-400)' }}
           >
             <i className="fas fa-plus group-hover:rotate-90 transition-transform duration-300"></i>
             <span>新建作品</span>
@@ -192,31 +200,32 @@ const Sidebar: React.FC<SidebarProps> = ({
         activeModel && (
           <div className="flex justify-center py-1">
             <div
-              className={`w-5 h-5 rounded-md bg-gradient-to-br ${providerColors[activeModel.provider] || 'from-[var(--color-primary-400)] to-[var(--color-primary-400)]'} flex items-center justify-center`}
+              className={`w-5 h-5 rounded-md bg-gradient-to-br ${PROVIDER_INFO[activeModel.provider]?.bgGradient || 'from-[var(--color-primary-400)] to-[var(--color-primary-400)]'} flex items-center justify-center`}
               title={activeModel.modelName || '未配置模型'}
             >
-              <i className={`fas ${providerIcons[activeModel.provider] || 'fa-robot'} text-white text-[8px]`}></i>
+              <i className={`fas ${PROVIDER_INFO[activeModel.provider]?.icon || 'fa-robot'} text-white text-[8px]`}></i>
             </div>
           </div>
         )
       ) : (
       <div className="px-4 pt-3 animate-fade-in-up delay-200">
-        <div className="text-[10px] text-gray-500 font-bold uppercase tracking-widest px-2 mb-2">当前模型</div>
+        <div className="text-[10px] font-bold uppercase tracking-widest px-2 mb-2" style={{ color: 'var(--color-text-muted)' }}>当前模型</div>
         <div className="glass-card-inset p-2 card-float-hover">
           <button
             type="button"
             ref={modelTriggerRef}
             onClick={() => setModelDropdownOpen(v => !v)}
-            className="w-full flex items-center gap-2 px-2.5 py-2 rounded-lg cursor-pointer transition-all duration-200 hover:bg-white/5"
+            className="w-full flex items-center gap-2 px-2.5 py-2 rounded-lg cursor-pointer transition-all duration-200"
+            style={{ color: 'var(--color-text-secondary)' }}
           >
             {activeModel ? (
               <>
-                <div className={`w-5 h-5 rounded-md bg-gradient-to-br ${providerColors[activeModel.provider] || 'from-[var(--color-primary-400)] to-[var(--color-primary-400)]'} flex items-center justify-center shrink-0 shadow-sm`}>
-                  <i className={`fas ${providerIcons[activeModel.provider] || 'fa-robot'} text-white text-[8px]`}></i>
+                <div className={`w-5 h-5 rounded-md bg-gradient-to-br ${PROVIDER_INFO[activeModel.provider]?.bgGradient || 'from-[var(--color-primary-400)] to-[var(--color-primary-400)]'} flex items-center justify-center shrink-0 shadow-sm`}>
+                  <i className={`fas ${PROVIDER_INFO[activeModel.provider]?.icon || 'fa-robot'} text-white text-[8px]`}></i>
                 </div>
                 <div className="flex-1 min-w-0 text-left">
-                  <span className="text-xs font-medium text-gray-200 block truncate">{activeModel.name}</span>
-                  <span className="text-[9px] text-gray-500 truncate block">{activeModel.modelName}</span>
+                  <span className="text-xs font-medium block truncate" style={{ color: 'var(--color-text-primary)' }}>{activeModel.name}</span>
+                  <span className="text-[9px] truncate block" style={{ color: 'var(--color-text-muted)' }}>{activeModel.modelName}</span>
                 </div>
                 <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${
                   activeModel.provider === 'ollama' ? 'bg-green-400' :
@@ -228,10 +237,10 @@ const Sidebar: React.FC<SidebarProps> = ({
                 <div className="w-5 h-5 rounded-md bg-gradient-to-br from-gray-600 to-gray-700 flex items-center justify-center shrink-0">
                   <i className="fas fa-plug text-white text-[8px]"></i>
                 </div>
-                <span className="text-xs text-gray-500 flex-1">未配置模型</span>
+                <span className="text-xs flex-1" style={{ color: 'var(--color-text-muted)' }}>未配置模型</span>
               </>
             )}
-            <i className={`fas fa-chevron-down text-[9px] text-gray-500 transition-transform duration-200 ${modelDropdownOpen ? 'rotate-180' : ''}`}></i>
+            <i className={`fas fa-chevron-down text-[9px] transition-transform duration-200 ${modelDropdownOpen ? 'rotate-180' : ''}`} style={{ color: 'var(--color-text-muted)' }}></i>
           </button>
         </div>
       </div>
@@ -240,10 +249,11 @@ const Sidebar: React.FC<SidebarProps> = ({
       {/* Portal: 模型下拉菜单 */}
       {modelDropdownOpen && modelTriggerRef.current && ReactDOM.createPortal(
         <div
-          className="fixed z-[9999] animate-fade-in-down shadow-xl shadow-black/30 rounded-xl overflow-hidden"
+          ref={modelDropdownRef}
+          className="fixed z-[9999] animate-fade-in-down shadow-xl rounded-xl overflow-hidden"
           style={{
-            background: 'rgba(20, 20, 28, 0.97)',
-            border: '1px solid rgba(255,255,255,0.08)',
+            backgroundColor: 'var(--color-surface-overlay)',
+            border: '1px solid var(--color-border-default)',
             backdropFilter: 'blur(12px)',
             minWidth: modelTriggerRef.current.offsetWidth - 16,
             top: modelTriggerRef.current.getBoundingClientRect().bottom + 6,
@@ -259,14 +269,15 @@ const Sidebar: React.FC<SidebarProps> = ({
                   type="button"
                   onClick={() => { onQuickSwitchModel(m.id); setModelDropdownOpen(false); }}
                   className={`w-full flex items-center gap-2.5 px-3 py-2 transition-all duration-150 text-left
-                    ${isActive ? 'bg-[var(--color-primary-500)]/15' : 'hover:bg-white/5'}`}
+                    ${isActive ? 'bg-[var(--color-primary-500)]/15' : ''}`}
+                  style={isActive ? {} : { backgroundColor: 'transparent' }}
                 >
-                  <div className={`w-6 h-6 rounded-lg bg-gradient-to-br ${providerColors[m.provider] || 'from-[var(--color-primary-400)] to-[var(--color-primary-500)]'} flex items-center justify-center shrink-0 shadow-sm`}>
-                    <i className={`fas ${providerIcons[m.provider] || 'fa-robot'} text-white text-[9px]`}></i>
+                  <div className={`w-6 h-6 rounded-lg bg-gradient-to-br ${PROVIDER_INFO[m.provider]?.bgGradient || 'from-[var(--color-primary-400)] to-[var(--color-primary-500)]'} flex items-center justify-center shrink-0 shadow-sm`}>
+                    <i className={`fas ${PROVIDER_INFO[m.provider]?.icon || 'fa-robot'} text-white text-[9px]`}></i>
                   </div>
                   <div className="flex-1 min-w-0">
-                    <span className={`text-[11px] font-medium block truncate ${isActive ? 'text-[var(--color-primary-300)]' : 'text-gray-300'}`}>{m.name}</span>
-                    <span className="text-[9px] truncate block text-gray-500">{m.modelName}</span>
+                    <span className={`text-[11px] font-medium block truncate ${isActive ? 'text-[var(--color-primary-300)]' : ''}`} style={isActive ? {} : { color: 'var(--color-text-primary)' }}>{m.name}</span>
+                    <span className="text-[9px] truncate block" style={{ color: 'var(--color-text-muted)' }}>{m.modelName}</span>
                   </div>
                   {isActive && (
                     <i className="fas fa-check text-[9px] text-[var(--color-primary-400)] shrink-0"></i>
@@ -295,9 +306,12 @@ const Sidebar: React.FC<SidebarProps> = ({
               } ${
                 currentStep === step.id
                   ? 'bg-theme-primary-100 text-theme-primary shadow-sm card-float-hover'
-                  : 'text-gray-500 hover:bg-white/5 hover:text-gray-300'
+                  : ''
               } ${!activeProject && step.id !== 0 ? 'opacity-30 cursor-not-allowed' : ''}`}
-              style={{ animationDelay: `${i * 60}ms` }}
+              style={{
+                animationDelay: `${i * 60}ms`,
+                color: currentStep === step.id ? undefined : 'var(--color-text-secondary)',
+              }}
               title={collapsed ? step.label : undefined}
             >
               <div className={`flex items-center justify-center transition-all duration-300 ${
@@ -322,9 +336,10 @@ const Sidebar: React.FC<SidebarProps> = ({
       <div className={collapsed ? 'px-1 mb-1' : 'px-2 mb-1'}>
         <button
           onClick={onOpenSettings}
-          className={`flex items-center rounded-xl text-gray-500 hover:text-gray-300 hover:bg-white/5 transition-all duration-200 text-xs ${
+          className={`flex items-center rounded-xl transition-all duration-200 text-xs ${
             collapsed ? 'w-full justify-center py-2' : 'w-full gap-2 px-3 py-2'
           }`}
+          style={{ color: 'var(--color-text-secondary)' }}
           title={collapsed ? '设置' : undefined}
         >
           <i className="fas fa-gear text-sm"></i>
@@ -334,23 +349,23 @@ const Sidebar: React.FC<SidebarProps> = ({
 
       {/* 底部状态栏 */}
       {!collapsed && (
-        <div className="border-t border-white/5 animate-fade-in-up delay-500">
+        <div className="border-t animate-fade-in-up delay-500" style={{ borderColor: 'var(--color-border-default)' }}>
           <div className="px-3 py-2 space-y-1">
             {isGenerating ? (
               <>
                 <div className="flex items-center gap-1.5">
                   <div className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse"></div>
-                  <span className="text-[9px] text-green-400/80 truncate flex-1">{statusMessage || 'AI 生成中...'}</span>
+                  <span className="text-[9px] truncate flex-1" style={{ color: 'var(--color-emerald-400, #34d399)' }}>{statusMessage || 'AI 生成中...'}</span>
                 </div>
                 {progress > 0 && (
-                  <div className="w-full h-1 rounded-full overflow-hidden bg-white/5">
+                  <div className="w-full h-1 rounded-full overflow-hidden" style={{ backgroundColor: 'var(--color-surface-hover)' }}>
                     <div className="h-full rounded-full transition-all duration-300"
                       style={{ width: `${progress}%`, background: 'linear-gradient(90deg, var(--color-primary-500), var(--color-primary-300))' }}
                     />
                   </div>
                 )}
                 {tokenUsage && (
-                  <div className="flex items-center gap-2 text-[8px] text-gray-500">
+                  <div className="flex items-center gap-2 text-[8px]" style={{ color: 'var(--color-text-muted)' }}>
                     <span>↑{tokenUsage.prompt}</span>
                     <span>↓{tokenUsage.completion}</span>
                     <span>{Math.round(progress)}%</span>
@@ -360,7 +375,7 @@ const Sidebar: React.FC<SidebarProps> = ({
             ) : error ? (
               <div className="flex items-center gap-1.5">
                 <i className="fas fa-circle-exclamation text-[9px] text-red-400"></i>
-                <span className="text-[9px] text-red-400/80 truncate">{error}</span>
+                <span className="text-[9px] truncate" style={{ color: 'var(--color-red-400, #f87171)' }}>{error}</span>
               </div>
             ) : (
               <div className="flex items-center justify-between">
@@ -377,10 +392,11 @@ const Sidebar: React.FC<SidebarProps> = ({
       )}
 
       {/* 展开/收起按钮 */}
-      <div className="border-t border-white/5">
+      <div className="border-t" style={{ borderColor: 'var(--color-border-default)' }}>
         <button
           onClick={toggleCollapse}
-          className="w-full flex items-center justify-center py-2 text-gray-500 hover:text-gray-300 hover:bg-white/5 transition-all duration-200"
+          className="w-full flex items-center justify-center py-2 transition-all duration-200"
+          style={{ color: 'var(--color-text-muted)' }}
           title={collapsed ? '展开侧边栏' : '收起侧边栏'}
         >
           <i className={`fas ${collapsed ? 'fa-chevron-right' : 'fa-chevron-left'} text-xs`}></i>

@@ -1,7 +1,20 @@
-import React, { useState, useCallback, useRef } from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { ModelConfig, PromptTemplate } from '../../../shared/types';
-import { DEFAULT_PROMPTS, getKnownModelSpec } from '../../../shared/constants';
+import { DEFAULT_PROMPTS, getKnownModelSpec, PROVIDER_INFO } from '../../../shared/constants';
+import ModelRoutingPanel from '../../shared/components/ModelRoutingPanel';
+import { ModuleManagerPanel } from './ModuleManagerPanel';
+import { AITaskManagerPanel } from './AITaskManagerPanel';
+import {
+  getPromptLibrary,
+  getPromptContent,
+  PromptLibraryItem,
+  PromptLayer,
+  isPromptEditable,
+  setUserOverride,
+  removeUserOverride,
+  clearAllUserOverrides,
+} from '../../../shared/prompts';
 import { aiService } from '../../shared/services/aiService';
 import { useTheme, THEME_LIST, ThemeId } from '../../shared/contexts/ThemeContext';
 import { useZoom, ZOOM_PRESETS } from '../../shared/contexts/ZoomContext';
@@ -20,94 +33,28 @@ interface SettingsModalProps {
   onClose: () => void;
 }
 
-type SettingsTab = 'model' | 'prompts' | 'system' | 'theme';
+type SettingsTab = 'model' | 'routing' | 'promptLibrary' | 'modules' | 'tasks' | 'theme' | 'system';
 
 const CATEGORY_LABELS: Record<string, string> = {
   inspiration: '灵感构思',
   character: '角色塑造',
+  world: '世界观构建',
+  timeline: '时间线',
   outline: '大纲规划',
-  chapter: '章节细纲',
+  chapter: '章节拆分',
   writing: '正文创作',
   edit: '润色编辑',
   summary: '摘要提取',
-};
-
-/** 提供商信息映射（参考项目1的 modelProviders.ts 增强版） */
-interface ProviderInfo {
-  label: string;
-  defaultEndpoint: string;
-  endpointHint: string;
-  apiKeyHint: string;
-  icon: string;
-  color: string;
-  gradient: string;
-  website: string;
-  apiApplyUrl: string;
-  modelExamples: string[];
-  description: string;
-  tips: string[];
-}
-
-const PROVIDER_INFO: Record<string, ProviderInfo> = {
-  'openai-compatible': {
-    label: 'OpenAI Compatible',
-    defaultEndpoint: 'https://api.openai.com/v1',
-    endpointHint: '兼容 OpenAI 格式的 API 端点',
-    apiKeyHint: '以 sk- 开头的 API 密钥',
-    icon: 'fa-robot',
-    color: 'text-green-400',
-    gradient: 'from-green-500/20 to-emerald-500/10',
-    website: 'https://platform.openai.com',
-    apiApplyUrl: 'https://platform.openai.com/api-keys',
-    modelExamples: ['gpt-4o', 'gpt-4-turbo', 'gpt-3.5-turbo'],
-    description: '标准 OpenAI 兼容接口，支持大多数 AI 模型服务商',
-    tips: [
-      '支持所有提供 OpenAI 兼容 API 的服务商',
-      'API Key 在服务商平台获取',
-      '确保端点地址以 /v1 结尾',
-      '支持流式输出（Streaming）'
-    ],
-  },
-  'deepseek': {
-    label: 'DeepSeek',
-    defaultEndpoint: 'https://api.deepseek.com/v1',
-    endpointHint: 'DeepSeek 官方 API 端点',
-    apiKeyHint: '在 platform.deepseek.com 获取 API 密钥',
-    icon: 'fa-brain',
-    color: 'text-blue-400',
-    gradient: 'from-blue-500/20 to-indigo-500/10',
-    website: 'https://platform.deepseek.com',
-    apiApplyUrl: 'https://platform.deepseek.com/api_keys',
-    modelExamples: ['deepseek-chat', 'deepseek-coder'],
-    description: '深度求索公司开发的 AI 模型，提供高质量的对话和代码生成能力',
-    tips: [
-      '注册后可在控制台获取 API Key',
-      '免费额度：每月 1000 万 tokens',
-      '模型名称填写：deepseek-chat',
-      '支持 128K 上下文长度'
-    ],
-  },
-  'ollama': {
-    label: 'Ollama (本地)',
-    defaultEndpoint: 'http://127.0.0.1:11434/v1',
-    endpointHint: 'Ollama 本地服务的 API 端点',
-    apiKeyHint: 'Ollama 无需 API 密钥，留空即可',
-    icon: 'fa-server',
-    color: 'text-emerald-400',
-    gradient: 'from-emerald-500/20 to-teal-500/10',
-    website: 'https://ollama.com',
-    apiApplyUrl: 'https://ollama.com/download',
-    modelExamples: ['qwen2.5', 'llama3.2', 'mistral', 'gemma', 'phi'],
-    description: '本地运行的 AI 模型服务，支持多种开源模型，数据完全本地处理',
-    tips: [
-      '下载并安装 Ollama：https://ollama.com/download',
-      '在终端运行：ollama pull qwen2.5 下载模型',
-      '启动服务：ollama serve',
-      'API Key 留空即可',
-      '模型名称填写已下载的模型名，如：qwen2.5',
-      '支持完全离线运行，保护隐私'
-    ],
-  },
+  memory: '记忆库',
+  analysis: '分析决策',
+  'tool-format': '工具格式',
+  workflow: '工作流程',
+  'file-rules': '文件规则',
+  'canon-system': '正典系统',
+  compress: '摘要压缩',
+  agent: '角色层',
+  format: '格式层',
+  rule: '规则层',
 };
 
 // 快速添加模板（参考项目1的 quickAddProviderModel）
@@ -123,6 +70,23 @@ const TEMP_LABELS = [
   { value: 0.7, label: '平衡' },
   { value: 1.5, label: '创意' },
   { value: 2.0, label: '天马行空' },
+];
+
+interface NavItem {
+  id: SettingsTab;
+  label: string;
+  icon: string;
+  description: string;
+}
+
+const NAV_ITEMS: NavItem[] = [
+  { id: 'model', label: '模型配置', icon: 'fa-robot', description: '配置 AI 模型连接' },
+  { id: 'routing', label: '智能路由', icon: 'fa-route', description: '配置任务路由规则' },
+  { id: 'promptLibrary', label: '提示词库', icon: 'fa-book', description: '管理提示词模板' },
+  { id: 'modules', label: '模块管理', icon: 'fa-cubes', description: '启用/禁用功能模块' },
+  { id: 'tasks', label: 'AI 任务', icon: 'fa-tasks', description: '查看和管理 AI 任务' },
+  { id: 'theme', label: '主题外观', icon: 'fa-palette', description: '个性化界面样式' },
+  { id: 'system', label: '系统信息', icon: 'fa-info-circle', description: '系统信息和帮助' },
 ];
 
 const SettingsModal: React.FC<SettingsModalProps> = ({
@@ -151,6 +115,11 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
   const [editingName, setEditingName] = useState('');
   const [editingContent, setEditingContent] = useState('');
   const modalRef = useRef<HTMLDivElement>(null);
+  const modelsRef = useRef<ModelConfig[]>(models);
+  
+  useEffect(() => {
+    modelsRef.current = models;
+  }, [models]);
 
   const handleOpenEditPrompt = useCallback((prompt: PromptTemplate) => {
     setEditingPrompt(prompt);
@@ -175,10 +144,12 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
 
   const handleResetSinglePrompt = useCallback((promptId: string) => {
     const defaultPrompt = DEFAULT_PROMPTS.find(p => p.id === promptId);
-    if (!defaultPrompt) return;
-    const updated = prompts.map(p =>
-      p.id === promptId ? { ...defaultPrompt } : p
-    );
+    removeUserOverride(promptId);
+    const updated = prompts.map(p => {
+      if (p.id !== promptId) return p;
+      if (defaultPrompt) return { ...defaultPrompt };
+      return { ...p, content: getPromptContent(promptId) };
+    });
     onUpdatePrompts(updated);
   }, [prompts, onUpdatePrompts]);
 
@@ -189,7 +160,14 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
       variant: 'warning',
       onConfirm: () => {
         setPendingConfirm(null);
-        onUpdatePrompts(DEFAULT_PROMPTS.map(p => ({ ...p })));
+        clearAllUserOverrides();
+        const allDefaultPrompts = getPromptLibrary().map(p => ({
+          id: p.id,
+          category: (p.category ?? p.layer) as any,
+          name: p.name,
+          content: p.content,
+        }));
+        onUpdatePrompts(allDefaultPrompts);
       },
     });
   }, [onUpdatePrompts]);
@@ -252,8 +230,11 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
   }, [models, editingModelId, activeModelId, onUpdateModels, onUpdateActiveModelId]);
 
   const handleUpdateModel = useCallback((id: string, updates: Partial<ModelConfig>) => {
-    onUpdateModels(models.map(m => m.id === id ? { ...m, ...updates } : m));
-  }, [models, onUpdateModels]);
+    const currentModels = modelsRef.current;
+    console.log('[SettingsModal] handleUpdateModel called:', { id, updates, currentModelsCount: currentModels.length });
+    const updatedModels = currentModels.map(m => m.id === id ? { ...m, ...updates } : m);
+    onUpdateModels(updatedModels);
+  }, [onUpdateModels]);
 
   /** 获取可用模型 */
   const handleFetchModels = useCallback(async (model: ModelConfig) => {
@@ -361,6 +342,8 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
 
   const editingModel = editingModelId ? models.find(m => m.id === editingModelId) || null : null;
 
+  const isMobile = typeof window !== 'undefined' && window.innerWidth <= 768;
+
   return (
     <div
       className={`fixed inset-0 z-50 flex items-center justify-center transition-all duration-300 ${
@@ -375,9 +358,10 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
       <div
         ref={modalRef}
         className={`
-          relative w-full max-w-4xl max-h-[85vh] mx-4
+          relative w-full mx-4
+          ${isMobile ? 'h-[100dvh] max-h-[100dvh] rounded-none' : 'max-w-6xl max-h-[85vh] rounded-2xl'}
           bg-gray-950/90 backdrop-blur-xl
-          rounded-2xl border border-purple-900/25
+          border border-purple-900/25
           shadow-2xl shadow-purple-900/20
           flex flex-col overflow-hidden
           transition-all duration-300
@@ -390,15 +374,21 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
         <div className="absolute -bottom-24 -left-24 w-48 h-48 bg-violet-600/10 rounded-full blur-3xl pointer-events-none"></div>
 
         {/* 头部 */}
-        <div className="relative flex items-center justify-between p-6 border-b shrink-0" style={{ borderColor: 'var(--color-primary-100)' }}>
+        <div className={`relative flex items-center justify-between border-b shrink-0 ${isMobile ? 'px-3 py-2' : 'px-6 py-4'}`} style={{ borderColor: 'var(--color-primary-100)' }}>
           <div className="flex items-center gap-3">
+            {!isMobile && (
             <div className="w-10 h-10 rounded-xl flex items-center justify-center border"
               style={{ background: 'linear-gradient(135deg, var(--color-primary-100), var(--color-primary-50))', borderColor: 'var(--color-primary-200)' }}>
               <i className="fas fa-cog text-sm" style={{ color: 'var(--color-primary-400)' }}></i>
             </div>
+            )}
             <div>
-              <h2 className="text-lg font-bold" style={{ color: 'var(--color-text-primary)' }}>系统设置</h2>
-              <p className="text-xs mt-0.5" style={{ color: 'var(--color-text-tertiary)' }}>管理 AI 模型与提示词模板</p>
+              <h2 className={`font-bold ${isMobile ? 'text-base' : 'text-lg'}`} style={{ color: 'var(--color-text-primary)' }}>系统设置</h2>
+              {!isMobile && (
+              <p className="text-xs mt-0.5" style={{ color: 'var(--color-text-tertiary)' }}>
+                {NAV_ITEMS.find(n => n.id === activeTab)?.description}
+              </p>
+              )}
             </div>
           </div>
           <button
@@ -410,63 +400,71 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
           </button>
         </div>
 
-        {/* 标签导航 */}
-        <div className="relative flex px-6 pt-3 gap-1 border-b border-purple-900/10">
-          <button
-            onClick={() => setActiveTab('model')}
-            className={`
-              px-4 py-2.5 text-sm font-medium rounded-t-lg transition-all duration-200
-              ${activeTab === 'model'
-                ? 'text-purple-300 bg-purple-600/10 border-t border-l border-r border-purple-900/15 -mb-px'
-                : 'text-gray-500 hover:text-gray-300 hover:bg-gray-800/30'
-              }
-            `}
-          >
-            <i className="fas fa-robot mr-2"></i>模型配置
-            <span className="ml-2 text-[10px] px-1.5 py-0.5 rounded-full bg-gray-800 text-gray-500">{models.length}</span>
-          </button>
-          <button
-            onClick={() => setActiveTab('prompts')}
-            className={`
-              px-4 py-2.5 text-sm font-medium rounded-t-lg transition-all duration-200
-              ${activeTab === 'prompts'
-                ? 'text-purple-300 bg-purple-600/10 border-t border-l border-r border-purple-900/15 -mb-px'
-                : 'text-gray-500 hover:text-gray-300 hover:bg-gray-800/30'
-              }
-            `}
-          >
-            <i className="fas fa-scroll mr-2"></i>提示词模板
-            <span className="ml-2 text-[10px] px-1.5 py-0.5 rounded-full bg-gray-800 text-gray-500">{prompts.length}</span>
-          </button>
-          <button
-            onClick={() => setActiveTab('system')}
-            className={`
-              px-4 py-2.5 text-sm font-medium rounded-t-lg transition-all duration-200
-              ${activeTab === 'system'
-                ? 'text-purple-300 bg-purple-600/10 border-t border-l border-r border-purple-900/15 -mb-px'
-                : 'text-gray-500 hover:text-gray-300 hover:bg-gray-800/30'
-              }
-            `}
-          >
-            <i className="fas fa-info-circle mr-2"></i>系统信息
-          </button>
-          <button
-            onClick={() => setActiveTab('theme')}
-            className={`
-              px-4 py-2.5 text-sm font-medium rounded-t-lg transition-all duration-200
-              ${activeTab === 'theme'
-                ? 'text-purple-300 bg-purple-600/10 border-t border-l border-r border-purple-900/15 -mb-px'
-                : 'text-gray-500 hover:text-gray-300 hover:bg-gray-800/30'
-              }
-            `}
-          >
-            <i className="fas fa-palette mr-2"></i>主题外观
-          </button>
-        </div>
+        {/* 主体内容 - 左侧导航 + 右侧内容 */}
+        <div className={`flex flex-1 overflow-hidden ${isMobile ? 'flex-col' : ''}`}>
+          {/* 左侧导航栏 */}
+          <div className={`${isMobile ? 'w-full border-b overflow-x-auto p-2 flex gap-1 shrink-0' : 'w-60 shrink-0 border-r overflow-y-auto p-4'}`} style={{ borderColor: 'var(--color-primary-100)', background: 'var(--color-surface-elevated)/30' }}>
+            <div className={`${isMobile ? 'flex gap-1' : 'space-y-1'}`}>
+              {NAV_ITEMS.map((item) => (
+                <button
+                  key={item.id}
+                  onClick={() => setActiveTab(item.id)}
+                  className={`
+                    ${isMobile ? 'flex-shrink-0 px-3 py-2 rounded-lg text-xs' : 'w-full flex items-center gap-3 px-3 py-3 rounded-xl text-left'} transition-all duration-200
+                    ${activeTab === item.id
+                      ? 'bg-gradient-to-r from-purple-600/20 to-violet-600/10 text-purple-300 border border-purple-500/25 shadow-sm'
+                      : 'text-gray-500 hover:text-gray-300 hover:bg-gray-800/40'
+                    }
+                  `}
+                >
+                  <i className={`fas ${item.icon} ${isMobile ? '' : 'w-5 text-center'}`}></i>
+                  {!isMobile && (
+                    <div className="flex-1">
+                      <span className="font-medium text-sm">{item.label}</span>
+                    </div>
+                  )}
+                  {item.id === 'model' && !isMobile && (
+                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-gray-800 text-gray-500">{models.length}</span>
+                  )}
+                  {item.id === 'promptLibrary' && !isMobile && (
+                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-gray-800 text-gray-500">{getPromptLibrary().length}</span>
+                  )}
+                  {item.id === 'routing' && !isMobile && (
+                    <span className="text-[9px] px-1.5 py-0.5 rounded-full" style={{ backgroundColor: 'var(--color-purple-100, rgba(168,85,247,0.2))', color: 'var(--color-purple-500, #a855f7)' }}>NEW</span>
+                  )}
+                </button>
+              ))}
+            </div>
 
-        {/* 内容区 */}
-        <div className="flex-1 overflow-y-auto p-6">
-          {activeTab === 'model' && (
+            {/* 底部信息 */}
+            {!isMobile && (
+            <div className="mt-8 pt-4 border-t" style={{ borderColor: 'var(--color-primary-100)' }}>
+              <div className="text-center">
+                <p className="text-[10px] text-gray-500">墨渊灵笔</p>
+                <p className="text-[10px] text-gray-500 mt-1">版本 1.0.0</p>
+              </div>
+            </div>
+            )}
+          </div>
+
+          {/* 右侧内容区 */}
+          <div className="flex-1 overflow-y-auto p-6">
+            {activeTab === 'routing' && (
+              <div className="animate-fade-in">
+                <ModelRoutingPanel models={models} />
+              </div>
+            )}
+            {activeTab === 'modules' && (
+              <div className="animate-fade-in">
+                <ModuleManagerPanel />
+              </div>
+            )}
+            {activeTab === 'tasks' && (
+              <div className="animate-fade-in">
+                <AITaskManagerPanel />
+              </div>
+            )}
+            {activeTab === 'model' && (
             <div className="animate-fade-in">
               {/* 顶部操作栏 */}
               <div className="flex items-center justify-between mb-5">
@@ -851,7 +849,10 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                             <input
                               type="password"
                               value={model.apiKey || ''}
-                              onChange={(e) => handleUpdateModel(model.id, { apiKey: e.target.value })}
+                              onChange={(e) => {
+                                console.log('[SettingsModal] API Key onChange:', { modelId: model.id, valueLength: e.target.value.length });
+                                handleUpdateModel(model.id, { apiKey: e.target.value });
+                              }}
                               className="w-full bg-gray-800/40 border border-purple-900/15 rounded-xl px-3.5 py-2.5 text-sm text-gray-200 focus:outline-none focus:border-purple-500/50 focus:bg-gray-800/60 transition-all duration-200 placeholder:text-gray-600"
                               placeholder={info.apiKeyHint}
                             />
@@ -1048,8 +1049,8 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
             </div>
           )}
 
-          {/* 提示词模板标签 */}
-          {activeTab === 'prompts' && (
+          {/* 提示词库标签 */}
+          {activeTab === 'promptLibrary' && (
             <div className="animate-fade-in">
               <div className="mb-5">
                 <div className="flex items-center justify-between mb-2">
@@ -1093,6 +1094,20 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                             prompt.category === 'outline' ? 'fa-sitemap' :
                             prompt.category === 'chapter' ? 'fa-list' :
                             prompt.category === 'writing' ? 'fa-pen' :
+                            prompt.category === 'world' ? 'fa-globe' :
+                            prompt.category === 'timeline' ? 'fa-clock' :
+                            prompt.category === 'memory' ? 'fa-brain' :
+                            prompt.category === 'analysis' ? 'fa-chart-simple' :
+                            prompt.category === 'edit' ? 'fa-scroll' :
+                            prompt.category === 'tool-format' ? 'fa-wrench' :
+                            prompt.category === 'workflow' ? 'fa-diagram-project' :
+                            prompt.category === 'file-rules' ? 'fa-file-lines' :
+                            prompt.category === 'canon-system' ? 'fa-book' :
+                            prompt.category === 'compress' ? 'fa-compress' :
+                            prompt.category === 'agent' ? 'fa-robot' :
+                            prompt.category === 'format' ? 'fa-cube' :
+                            prompt.category === 'rule' ? 'fa-scale-balanced' :
+                            prompt.category === 'foundation' ? 'fa-layer-group' :
                             'fa-scroll'
                           }`} style={{ color: 'var(--color-text-tertiary)' }}></i>
                         </div>
@@ -1205,6 +1220,11 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                         {models.find(m => m.id === activeModelId)?.name || '未选择'}
                       </span>
                     </div>
+                  </div>
+                  <div className="mt-3 pt-3 border-t" style={{ borderColor: 'var(--color-primary-100)' }}>
+                    <p className="text-[10px]" style={{ color: 'var(--color-text-muted)' }}>
+                      图标由 <a href="https://fontawesome.com" target="_blank" rel="noopener noreferrer" className="hover:underline" style={{ color: 'var(--color-primary-300)' }}>Font Awesome</a> 提供
+                    </p>
                   </div>
                 </div>
 
@@ -1542,9 +1562,11 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
             </div>
           )}
         </div>
+      </div>
 
         {/* 底部信息栏 */}
-        <div className="relative flex justify-between items-center px-6 py-4 border-t border-purple-900/10 shrink-0 bg-gray-950/50">
+        <div className={`relative flex justify-between items-center border-t border-purple-900/10 shrink-0 bg-gray-950/50 ${isMobile ? 'px-3 py-2' : 'px-6 py-4'}`}>
+          {!isMobile && (
           <div className="flex items-center gap-3">
             <span className="text-[10px] text-gray-600">
               <i className="fas fa-robot mr-1"></i>
@@ -1558,9 +1580,10 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
               </span>
             </span>
           </div>
+          )}
           <button
             onClick={handleClose}
-            className="px-6 py-2 bg-gradient-to-r from-purple-600 to-violet-600 text-white rounded-xl hover:from-purple-700 hover:to-violet-700 transition-all duration-200 font-medium text-sm shadow-lg shadow-purple-900/25 hover:shadow-purple-900/40 active:scale-[0.98]"
+            className={`bg-gradient-to-r from-purple-600 to-violet-600 text-white rounded-xl hover:from-purple-700 hover:to-violet-700 transition-all duration-200 font-medium shadow-lg shadow-purple-900/25 hover:shadow-purple-900/40 active:scale-[0.98] ${isMobile ? 'px-4 py-2 text-sm w-full' : 'px-6 py-2 text-sm'}`}
           >
             完成
           </button>
@@ -1722,6 +1745,9 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                     if (dp) {
                       setEditingName(dp.name);
                       setEditingContent(dp.content);
+                    } else {
+                      removeUserOverride(editingPrompt.id);
+                      setEditingContent(getPromptContent(editingPrompt.id));
                     }
                   }}
                   className="px-4 py-2 rounded-xl text-xs transition-all"

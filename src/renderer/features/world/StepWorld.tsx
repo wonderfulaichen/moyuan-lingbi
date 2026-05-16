@@ -1,7 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import { Project, ModelConfig, WorldFaction } from '../../../shared/types';
-import { aiService } from '../../shared/services/aiService';
-import { useAIStatus } from '../../shared/contexts/AIStatusContext';
+import { useAIGeneration } from '../../shared/hooks/useAIGeneration';
 import AIProgressButton from '../../shared/components/AIProgressButton';
 
 // ===== 子组件：关系图大窗口弹窗 =====
@@ -143,9 +142,10 @@ interface StepWorldProps {
   project: Project;
   onUpdate: (updates: Partial<Project>) => void;
   activeModel: ModelConfig;
+  onOpenSettings?: () => void;
 }
 
-type EditorType = 'location' | 'faction' | 'rule' | null;
+type EditorType = 'location' | 'faction' | 'rule' | 'timeline' | null;
 
 // ===== 子组件：内联编辑器 =====
 interface InlineEditorProps {
@@ -161,7 +161,7 @@ const InlineEditor: React.FC<InlineEditorProps> = ({ type, onSave, onCancel, ini
   const [extra, setExtra] = useState(initial?.type || initial?.ideology || '');
 
   const labelMap = {
-    location: { extraLabel: '类型（如：城市/森林/神殿）', icon: 'fa-map-marker-alt', color: '#34d399' },
+    location: { extraLabel: '类型（如：城市/森林/神殿/秘境）', icon: 'fa-map-marker-alt', color: '#34d399' },
     faction: { extraLabel: '核心理念', icon: 'fa-chess-rook', color: '#f59e0b' },
     rule: { extraLabel: '规则类型（如：魔法/科技/社会）', icon: 'fa-gavel', color: '#22d3ee' },
   };
@@ -171,7 +171,29 @@ const InlineEditor: React.FC<InlineEditorProps> = ({ type, onSave, onCancel, ini
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) return;
-    onSave({ name: name.trim(), description: description.trim(), [type === 'faction' ? 'ideology' : 'type']: extra.trim() });
+
+    const baseData: Record<string, string | string[]> = {
+      name: name.trim(),
+      description: description.trim(),
+    };
+
+    if (type === 'location') {
+      baseData.type = extra.trim();
+      baseData.climate = initial?.climate || '';
+      baseData.culture = initial?.culture || '';
+      baseData.architecture = initial?.architecture || '';
+    } else if (type === 'faction') {
+      baseData.ideology = extra.trim();
+      baseData.members = initial?.members || [];
+      baseData.territory = initial?.territory || '';
+      baseData.diplomacy = initial?.diplomacy || '';
+    } else if (type === 'rule') {
+      baseData.type = extra.trim();
+      baseData.principles = initial?.principles || [];
+      baseData.limitations = initial?.limitations || [];
+    }
+
+    onSave(baseData);
   };
 
   return (
@@ -323,12 +345,11 @@ const SimpleRelationshipGraph: React.FC<{
 };
 
 // ===== 主组件 =====
-const StepWorld: React.FC<StepWorldProps> = ({ project, onUpdate, activeModel }) => {
-  const { setGenerating, setTokenUsage, setComplete, setError, status } = useAIStatus();
+const StepWorld: React.FC<StepWorldProps> = ({ project, onUpdate, activeModel, onOpenSettings }) => {
+  const { generate, isGenerating, status, abort } = useAIGeneration();
   const [editing, setEditing] = useState<{ type: EditorType; data?: any; id?: string }>({ type: null });
   const [activeView, setActiveView] = useState<'cards' | 'graph' | 'tree'>('cards');
-  const [isGenerating, setIsGenerating] = useState<EditorType>(null);
-  const [currentTaskId, setCurrentTaskId] = useState<string | null>(null);
+  const [generatingType, setGeneratingType] = useState<EditorType>(null);
   const [showGraphModal, setShowGraphModal] = useState(false);
 
   // ---- 保存编辑 ----
@@ -378,10 +399,10 @@ const StepWorld: React.FC<StepWorldProps> = ({ project, onUpdate, activeModel })
     }
   }, [project, onUpdate]);
 
-  // ---- AI 生成（带 taskId 支持精确中止） ----
+  // ---- AI 生成（使用 useAIGeneration hook） ----
   const handleAIGenerate = useCallback(async (type: EditorType) => {
     if (!type || !activeModel) return;
-    setIsGenerating(type);
+    setGeneratingType(type);
 
     const taskLabels: Record<string, string> = {
       location: '正在AI生成地点设定...',
@@ -389,34 +410,50 @@ const StepWorld: React.FC<StepWorldProps> = ({ project, onUpdate, activeModel })
       rule: '正在AI生成规则设定...',
     };
 
-    // 为本次生成创建唯一 taskId
-    const taskId = `world-${type}-${Date.now()}`;
-    setCurrentTaskId(taskId);
+    const prompts: Record<string, string> = {
+      location: `为奇幻/科幻小说生成一个详细的地点设定，需包含以下字段并以JSON格式返回：
+{
+  "name": "地点名称",
+  "description": "详细描述（100-200字，包含环境氛围、视觉印象、独特之处）",
+  "type": "类型（城市/森林/神殿/秘境/废墟/沙漠/海洋/天空城等）",
+  "climate": "气候特征（温度范围、天气特点、季节变化）",
+  "culture": "文化习俗（居民生活方式、节日庆典、社会等级、禁忌与信仰）",
+  "architecture": "建筑风格（材料、色彩、标志性建筑、空间布局特点）"
+}
+仅返回一个JSON对象，不要其他文字。`,
 
-    // 通知全局悬浮窗：开始生成
-    setGenerating(activeModel.name, taskLabels[type] || '正在AI生成世界设定...', 'generateWorldContent');
+      faction: `为奇幻/科幻小说生成一个详细的势力组织设定，需包含以下字段并以JSON格式返回：
+{
+  "name": "势力名称",
+  "description": "详细描述（100-200字，包含历史渊源、当前地位、核心理念体现）",
+  "ideology": "核心理念（统治哲学、核心价值观、行动准则）",
+  "members": ["成员1（职位/角色）", "成员2（职位/角色）", "成员3（职位/角色）"],
+  "territory": "势力范围（地理区域、控制据点、资源掌控）",
+  "diplomacy": "外交倾向（友好/中立/敌对，与其他势力的关系概述）"
+}
+仅返回一个JSON对象，不要其他文字。`,
 
-    try {
-      const prompts: Record<string, string> = {
-        location: `为奇幻小说生成一个地点设定，包含 name（名称）、description（描述）、type（类型，如城市/森林/神殿）。以JSON格式返回，仅返回一个JSON对象。`,
-        faction: `为奇幻小说生成一个势力组织设定，包含 name（名称）、description（描述）、ideology（核心理念）。以JSON格式返回，仅返回一个JSON对象。`,
-        rule: `为奇幻小说生成一个规则体系设定，包含 name（名称）、description（描述）、type（类型，如魔法/科技/社会规则）。以JSON格式返回，仅返回一个JSON对象。`,
+      rule: `为奇幻/科幻小说生成一个详细的规则体系设定，需包含以下字段并以JSON格式返回：
+{
+  "name": "规则体系名称",
+  "description": "详细描述（100-200字，包含体系起源、对世界的影响、普通人的感受）",
+  "type": "类型（魔法/科技/社会规则/自然法则/宗教信条等）",
+  "principles": ["核心原则1（具体说明）", "核心原则2（具体说明）", "核心原则3（具体说明）"],
+  "limitations": ["限制条件1（代价或副作用）", "限制条件2（触发条件或禁忌）"]
+}
+仅返回一个JSON对象，不要其他文字。`,
       };
 
-      const response = await aiService.generateWithContext({
+      const result = await generate({
         model: activeModel,
         prompt: prompts[type],
         temperature: 0.8,
-      }, undefined, taskId);
+        label: taskLabels[type] || '正在AI生成世界设定...',
+      });
 
-      // 上报 Token 用量
-      if (response.tokens) {
-        setTokenUsage(response.tokens);
-      }
-
-      if (response.content && !response.error) {
+      if (result.content && !result.error) {
         try {
-          const jsonMatch = response.content.match(/\{[\s\S]*\}/);
+          const jsonMatch = result.content.match(/\{[\s\S]*\}/);
           if (jsonMatch) {
             const data = JSON.parse(jsonMatch[0]);
             const id = Date.now().toString();
@@ -438,43 +475,30 @@ const StepWorld: React.FC<StepWorldProps> = ({ project, onUpdate, activeModel })
           // JSON parse failed — fallback: create with raw content
           const fallback = {
             id: Date.now().toString(),
-            name: response.content.slice(0, 40).replace(/[^\w\u4e00-\u9fff\s]/g, '').trim() || `AI生成${type}`,
-            description: response.content.slice(0, 200),
+            name: result.content.slice(0, 40).replace(/[^\w\u4e00-\u9fff\s]/g, '').trim() || `AI生成${type}`,
+            description: result.content.slice(0, 200),
             type: '',
             ideology: '',
           };
           const key = type === 'location' ? 'locations' : type === 'faction' ? 'factions' : 'ruleSystems';
-      if (key === 'locations') {
-        onUpdate({ locations: [...project.locations, fallback] });
-      } else if (key === 'factions') {
-        onUpdate({ factions: [...project.factions, fallback] });
-      } else {
-        onUpdate({ ruleSystems: [...project.ruleSystems, fallback] });
-      }
+          if (key === 'locations') {
+            onUpdate({ locations: [...project.locations, fallback] });
+          } else if (key === 'factions') {
+            onUpdate({ factions: [...project.factions, fallback] });
+          } else {
+            onUpdate({ ruleSystems: [...project.ruleSystems, fallback] });
+          }
         }
-
-        // 通知悬浮窗：生成完成
-        setComplete();
-      } else {
-        // API 返回了错误
-        setError(response.error || 'AI 返回内容为空');
       }
-    } catch (err: any) {
-      // 网络异常 / 请求中断
-      setError(err?.message || 'AI 生成请求失败，请检查网络连接或模型配置');
     } finally {
-      setIsGenerating(null);
-      setCurrentTaskId(null);
+      setGeneratingType(null);
     }
-  }, [activeModel, project, onUpdate, setGenerating, setTokenUsage, setComplete, setError]);
+  }, [activeModel, project, onUpdate, generate]);
 
   // ---- 中止 AI 生成 ----
   const handleAbort = useCallback(() => {
-    if (currentTaskId) {
-      aiService.abort(currentTaskId);
-      setCurrentTaskId(null);
-    }
-  }, [currentTaskId]);
+    abort();
+  }, [abort]);
 
   // ---- 渲染分类卡片 ----
   const renderSection = (
@@ -506,7 +530,7 @@ const StepWorld: React.FC<StepWorldProps> = ({ project, onUpdate, activeModel })
           <div className="flex items-center gap-1.5">
             <AIProgressButton
               onClick={() => handleAIGenerate(type)}
-              isGenerating={isGenerating === type}
+              isGenerating={generatingType === type}
               progress={status.progress}
               label="AI生成"
               generatingLabel="生成中..."
@@ -564,7 +588,7 @@ const StepWorld: React.FC<StepWorldProps> = ({ project, onUpdate, activeModel })
                       {displayFields.map(f => item[f] && (
                         <span key={f} className="text-[10px] px-1.5 py-0.5 rounded shrink-0"
                           style={{ color: 'var(--color-text-tertiary)', backgroundColor: 'var(--color-surface-muted)' }}>
-                          {item[f]}
+                          {Array.isArray(item[f]) ? (item[f] as string[]).slice(0, 2).join(' · ') : item[f]}
                         </span>
                       ))}
                     </div>
@@ -651,9 +675,223 @@ const StepWorld: React.FC<StepWorldProps> = ({ project, onUpdate, activeModel })
         <>
           {/* 卡片网格 */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 max-w-5xl">
-            {project.locations.length > 0 && renderSection('location', '地点管理', 'fa-map-marker-alt', '#34d399', project.locations, ['type'])}
-            {project.factions.length > 0 && renderSection('faction', '势力阵营', 'fa-chess-rook', '#f59e0b', project.factions, ['ideology'])}
+            {project.locations.length > 0 && renderSection('location', '地点管理', 'fa-map-marker-alt', '#34d399', project.locations, ['type', 'climate', 'architecture'])}
+            {project.factions.length > 0 && renderSection('faction', '势力阵营', 'fa-chess-rook', '#f59e0b', project.factions, ['ideology', 'territory'])}
             {project.ruleSystems.length > 0 && renderSection('rule', '规则体系', 'fa-gavel', '#22d3ee', project.ruleSystems, ['type'])}
+          </div>
+
+          {/* ====== 时间线 & 随机事件生成器 ====== */}
+          <div className="mt-8 max-w-5xl">
+            <div className="rounded-2xl p-5"
+              style={{ backgroundColor: 'var(--color-surface-muted, rgba(255,255,255,0.03))', border: '1px solid var(--color-border-default, rgba(255,255,255,0.06))' }}>
+              <div className="flex items-center justify-between mb-4">
+                <h4 className="text-sm font-semibold" style={{ color: 'var(--color-text-primary)' }}>
+                  <i className="fas fa-clock-rotate-left mr-2" style={{ color: '#f59e0b' }} />
+                  世界时间线 & 剧情转折
+                </h4>
+                <span className="text-[10px] px-2 py-1 rounded-full"
+                  style={{ backgroundColor: 'rgba(245,158,11,0.15)', color: '#f59e0b', border: '1px solid rgba(245,158,11,0.25)' }}>
+                  ⚡ AI 辅助创作
+                </span>
+              </div>
+
+              <p className="text-[11px] mb-4" style={{ color: 'var(--color-text-muted)' }}>
+                使用 AI 生成戏剧性的随机事件或历史转折点，丰富你的世界观叙事。生成的事件可以关联角色和地点，成为故事的重要推动力。
+              </p>
+
+              {/* 随机事件生成按钮 */}
+              <div className="flex gap-3 flex-wrap mb-4">
+                <button
+                  onClick={async () => {
+                    if (!activeModel?.modelName) { onOpenSettings(); return; }
+                    setIsGenerating('timeline');
+                    setGenerating(activeModel.name, '生成随机事件...');
+                    try {
+                      const worldContext = [
+                        `地点: ${project.locations.map(l => l.name).join(', ') || '未设定'}`,
+                        `势力: ${project.factions.map(f => f.name).join(', ') || '未设定'}`,
+                        `规则: ${project.ruleSystems.map(r => r.name).join(', ') || '未设定'}`,
+                      ].join('\n');
+
+                      const prompt = `基于以下小说世界设定，生成 3 个意想不到的"随机事件/历史转折点"。每个事件要求：
+1. 标题（简短有力）
+2. 描述（80-120字，具有戏剧性、能推动故事发展）
+3. 时间标记（如："故事开始前100年"、"第三卷中期"等）
+
+以 JSON 数组格式返回：
+[{"title": "事件标题", "description": "详细描述", "timestamp": "时间点"}]
+
+世界设定：
+${worldContext}
+
+仅返回 JSON 数组，不要其他文字。`;
+
+                      const res = await aiService.generate({ model: activeModel, prompt, temperature: 0.9 });
+                      if (res.content && !res.error) {
+                        try {
+                          const jsonMatch = res.content.match(/\[[\s\S]*\]/);
+                          if (jsonMatch) {
+                            const events = JSON.parse(jsonMatch[0]);
+                            if (Array.isArray(events)) {
+                              const newEvents = events.map((ev: any, i: number) => ({
+                                id: `event-${Date.now()}-${i}`,
+                                title: ev.title || `事件 ${i+1}`,
+                                description: ev.description || '',
+                                timestamp: ev.timestamp || '未知时间',
+                                order: (project.timelineEvents?.length || 0) + i,
+                              }));
+                              onUpdate({ timelineEvents: [...(project.timelineEvents || []), ...newEvents] });
+                            }
+                          }
+                        } catch { setError('AI 返回格式解析失败'); }
+                        setComplete();
+                      } else {
+                        setError(res.error || '生成失败');
+                      }
+                    } catch (err: any) {
+                      setError(err?.message || '随机事件生成失败');
+                    } finally {
+                      setIsGenerating(null);
+                      resetStatus();
+                    }
+                  }}
+                  disabled={!activeModel?.modelName}
+                  className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-[11px] font-medium transition-all border"
+                  style={{
+                    background: 'linear-gradient(135deg, rgba(245,158,11,0.15), rgba(245,158,11,0.08))',
+                    borderColor: 'rgba(245,158,11,0.35)',
+                    color: '#f59e0b',
+                    opacity: activeModel?.modelName ? 1 : 0.5,
+                  }}
+                >
+                  <i className="fas fa-bolt" />
+                  ⚡ 生成随机事件
+                </button>
+
+                <button
+                  onClick={() => {
+                    const newEvent = {
+                      id: `manual-${Date.now()}`,
+                      title: '新事件',
+                      description: '',
+                      timestamp: '待定',
+                      order: project.timelineEvents?.length || 0,
+                    };
+                    onUpdate({ timelineEvents: [...(project.timelineEvents || []), newEvent] });
+                  }}
+                  className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-[11px] font-medium transition-all border"
+                  style={{
+                    backgroundColor: 'var(--color-surface-base)',
+                    borderColor: 'var(--color-border-default)',
+                    color: 'var(--color-text-secondary)',
+                  }}
+                >
+                  <i className="fas fa-plus" />
+                  手动添加事件
+                </button>
+              </div>
+
+              {/* 时间线事件列表 */}
+              {(project.timelineEvents?.length || 0) > 0 ? (
+                <div className="space-y-2 max-h-[300px] overflow-y-auto pr-1">
+                  {project.timelineEvents!.map((event, idx) => (
+                    <div key={event.id}
+                      className="group rounded-xl p-3.5 transition-all duration-200"
+                      style={{
+                        backgroundColor: 'var(--color-surface-base, rgba(255,255,255,0.04))',
+                        border: '1px solid var(--color-border-default, rgba(255,255,255,0.06))',
+                      }}
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex items-start gap-3 flex-1 min-w-0">
+                          <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 mt-0.5"
+                            style={{
+                              background: 'linear-gradient(135deg, rgba(245,158,11,0.2), rgba(245,158,11,0.1))',
+                              border: '1px solid rgba(245,158,11,0.25)',
+                            }}
+                          >
+                            <span className="text-xs font-bold" style={{ color: '#f59e0b' }}>{idx + 1}</span>
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 mb-1">
+                              <span className="text-sm font-semibold truncate" style={{ color: 'var(--color-text-primary)' }}>
+                                {event.title}
+                              </span>
+                              <span className="text-[9px] px-1.5 py-0.5 rounded shrink-0"
+                                style={{
+                                  backgroundColor: 'rgba(245,158,11,0.12)',
+                                  color: '#f59e0b',
+                                  border: '1px solid rgba(245,158,11,0.2)',
+                                }}
+                              >
+                                <i className="fas fa-clock mr-1" style={{ fontSize: '8px' }} />
+                                {event.timestamp}
+                              </span>
+                            </div>
+                            {event.description && (
+                              <p className="text-xs line-clamp-3" style={{ color: 'var(--color-text-secondary)' }}>
+                                {event.description}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all shrink-0">
+                          <button
+                            onClick={() => {
+                              const title = prompt('编辑事件标题:', event.title);
+                              if (title !== null) {
+                                const updated = project.timelineEvents!.map(e =>
+                                  e.id === event.id ? { ...e, title } : e
+                                );
+                                onUpdate({ timelineEvents: updated });
+                              }
+                            }}
+                            className="w-6 h-6 rounded-lg flex items-center justify-center hover:bg-white/10 transition-all"
+                            style={{ color: 'var(--color-text-tertiary)' }}
+                            title="编辑标题"
+                          >
+                            <i className="fas fa-pen text-[9px]"></i>
+                          </button>
+                          <button
+                            onClick={() => {
+                              const desc = prompt('编辑事件描述:', event.description);
+                              if (desc !== null) {
+                                const updated = project.timelineEvents!.map(e =>
+                                  e.id === event.id ? { ...e, description: desc } : e
+                                );
+                                onUpdate({ timelineEvents: updated });
+                              }
+                            }}
+                            className="w-6 h-6 rounded-lg flex items-center justify-center hover:bg-white/10 transition-all"
+                            style={{ color: 'var(--color-text-tertiary)' }}
+                            title="编辑描述"
+                          >
+                            <i className="fas fa-align-left text-[9px]"></i>
+                          </button>
+                          <button
+                            onClick={() => {
+                              const updated = project.timelineEvents!.filter(e => e.id !== event.id);
+                              onUpdate({ timelineEvents: updated });
+                            }}
+                            className="w-6 h-6 rounded-lg flex items-center justify-center hover:bg-red-500/15 transition-all"
+                            style={{ color: 'var(--color-text-tertiary)' }}
+                            title="删除事件"
+                          >
+                            <i className="fas fa-trash-alt text-[9px]"></i>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8" style={{ color: 'var(--color-text-tertiary)' }}>
+                  <i className="fas fa-clock-rotate-left text-3xl mb-3 opacity-30"></i>
+                  <p className="text-sm">暂无时间线事件</p>
+                  <p className="text-xs mt-1 opacity-50">点击上方按钮生成随机事件，或手动添加</p>
+                </div>
+              )}
+            </div>
           </div>
 
           {/* 快速统计 */}

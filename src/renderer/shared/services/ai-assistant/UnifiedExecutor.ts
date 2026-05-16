@@ -52,6 +52,45 @@ function findDuplicateFile(parentId: string | null, name: string): VFile | null 
   return null;
 }
 
+function parseVolumesFromText(text: string): { name: string; content: string }[] {
+  const volumeRegex = /^(\s*#*\s*)第\s*([0-9一二三四五六七八九十百]+)\s*卷[:：]?\s*(.+)/i;
+  const lines = text.split('\n');
+  const volumes: { name: string; content: string }[] = [];
+  let currentVolumeName: string | null = null;
+  let currentLines: string[] = [];
+  const flushVolume = () => {
+    if (currentVolumeName && currentLines.length > 0) {
+      volumes.push({ name: currentVolumeName, content: currentLines.join('\n').trim() });
+    }
+  };
+  for (const line of lines) {
+    const match = line.match(volumeRegex);
+    if (match) {
+      flushVolume();
+      const volNum = match[2];
+      const volTitle = match[3].trim().replace(/[#*]/g, '').trim();
+      currentVolumeName = `第${volNum}卷${volTitle ? ' · ' + volTitle : ''}`;
+      currentLines = [line];
+      continue;
+    }
+    if (currentVolumeName) {
+      currentLines.push(line);
+    }
+  }
+  flushVolume();
+  if (volumes.length === 0 && text.trim()) {
+    volumes.push({ name: '细纲', content: text.trim() });
+  }
+  return volumes;
+}
+
+function isDetailedOutlineFolder(parentId: string | null): boolean {
+  if (!parentId) return false;
+  const parent = dataService.getFile(parentId);
+  if (!parent) return false;
+  return parent.metadata?.tags?.includes('detailed_outline') || parent.metadata?.cardType === 'detailed_outline';
+}
+
 interface FileOperation {
   id: string;
   messageId: string;
@@ -160,9 +199,38 @@ export class UnifiedExecutor {
           return `❌ 内容格式不是有效的角色档案（缺少角色类型标记或姓名字段），跳过创建「${action.name || '未命名'}」。请重新输出包含【角色类型】和基本信息的角色卡内容。`;
         }
 
+        // 细纲类型：按卷拆分创建文件，不检测重复更新
+        const isOutlineFolder = isDetailedOutlineFolder(parentId);
+        if (isOutlineFolder) {
+          const volumes = parseVolumesFromText(fileContent);
+          const createdNames: string[] = [];
+          for (const vol of volumes) {
+            const file = dataService.createFile(parentId, {
+              name: vol.name,
+              type: 'file',
+              content: vol.content,
+              metadata: { tags: action.tags || [], aiGenerated: true },
+            });
+            if (msgId) {
+              this.fileOperations.push({
+                id: nanoid(),
+                messageId: msgId,
+                type: 'create_file',
+                fileId: file.id,
+                fileName: file.name,
+                parentId,
+                timestamp: Date.now(),
+              });
+            }
+            createdNames.push(file.name);
+          }
+          return `✅ 已在「${parentName}」创建 ${createdNames.length} 卷细纲：${createdNames.join('、')}`;
+        }
+
         const targetName = action.name || '新文件';
         const existingFile = findDuplicateFile(parentId, targetName);
         if (existingFile) {
+          const previousContent = existingFile.content || '';
           dataService.updateFile(existingFile.id, { content: fileContent });
           const autoTags = extractRoleTags(fileContent, parentId);
           const mergedTags = action.tags?.length ? [...action.tags, ...autoTags] : autoTags;
@@ -177,6 +245,7 @@ export class UnifiedExecutor {
               fileId: existingFile.id,
               fileName: existingFile.name,
               parentId,
+              previousContent,
               timestamp: Date.now(),
             });
           }
@@ -281,16 +350,15 @@ export class UnifiedExecutor {
 
   resolveFolderId(idOrName: string | null | undefined): string | null {
     if (!idOrName || idOrName === 'null') return null;
+    const trimmed = idOrName.trim();
     const fs = dataService.getFS();
-    if (fs.files[idOrName]) return idOrName;
-    const folder = Object.values(fs.files).find(f => f.type === 'folder' && (f.name === idOrName || f.name.includes(idOrName)));
+    if (fs.files[trimmed]) return trimmed;
+    const folder = Object.values(fs.files).find(f => f.type === 'folder' && f.name === trimmed);
     if (folder) return folder.id;
     const directTypeMap: Record<string, string> = { 'characters': 'characters', 'world': 'world', 'timeline': 'timeline', 'outline': 'outline', 'chapters': 'chapters', 'custom': 'custom' };
-    if (directTypeMap[idOrName]) return dataService.getRootFolderIdByType(directTypeMap[idOrName]);
-    const typeMap: Record<string, string> = { '角色': 'characters', '人物': 'characters', '世界': 'world', '世界观': 'world', '地点': 'world', '时间线': 'timeline', '时间': 'timeline', '大纲': 'outline', '章节': 'chapters' };
-    for (const [keyword, type] of Object.entries(typeMap)) {
-      if (idOrName.includes(keyword)) return dataService.getRootFolderIdByType(type);
-    }
+    if (directTypeMap[trimmed]) return dataService.getRootFolderIdByType(directTypeMap[trimmed]);
+    const exactTypeMap: Record<string, string> = { '角色': 'characters', '人物': 'characters', '世界': 'world', '世界观': 'world', '地点': 'world', '时间线': 'timeline', '大纲': 'outline', '章节': 'chapters' };
+    if (exactTypeMap[trimmed]) return dataService.getRootFolderIdByType(exactTypeMap[trimmed]);
     return null;
   }
 
