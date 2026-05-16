@@ -5,6 +5,13 @@ node_modules/
 build/
 dist/
 
+# Root public dir (Vite public is at src/renderer/public/)
+/public/
+
+# Legacy build scripts (superseded by electron-builder.yml)
+build-portable.js
+build-win.js
+
 # IDE
 .vscode/
 .idea/
