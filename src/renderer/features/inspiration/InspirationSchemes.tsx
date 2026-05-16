@@ -277,7 +277,7 @@ const InspirationSchemes: React.FC<InspirationSchemesProps> = ({
 
   // ===== 中止 =====
   const handleAbort = useCallback(() => {
-    aiService.abort();
+    aiService.abortAll();
     setIsGenerating(false);
     setStreamContent(null);
     aiStatus.resetStatus();

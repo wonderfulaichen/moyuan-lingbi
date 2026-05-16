@@ -185,7 +185,7 @@ const InspirationIncubation: React.FC<InspirationIncubationProps> = ({
 
   // ===== 中止 =====
   const handleAbort = useCallback(() => {
-    aiService.abort();
+    aiService.abortAll();
     setIsGenerating(false);
     setStreamContent(null);
     aiStatus.resetStatus();

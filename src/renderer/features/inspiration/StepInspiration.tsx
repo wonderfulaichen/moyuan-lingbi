@@ -189,7 +189,7 @@ const StepInspiration: React.FC<StepInspirationProps> = ({ activeModel, prompts,
     onConfirmScheme();
   }, [schemes, inspiration, tags, onConfirmScheme]);
 
-  const handleAbort = useCallback(() => { aiService.abort(); setIsGeneratingTags(false); setIsGeneratingSchemes(false); setStreamContent(null); resetStatus(); }, [resetStatus]);
+  const handleAbort = useCallback(() => { aiService.abortAll(); setIsGeneratingTags(false); setIsGeneratingSchemes(false); setStreamContent(null); resetStatus(); }, [resetStatus]);
   const isGenerating = isGeneratingTags || isGeneratingSchemes;
 
   return (

@@ -395,7 +395,7 @@ const DetailedOutlineView: React.FC<DetailedOutlineViewProps> = ({
               {chapterPrompts.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
             </select>
             {isGenerating ? (
-              <button onClick={() => { if (abortRef.current) { abortRef.current.abort(); abortRef.current = null; } aiService.abort(); setIsGenerating(false); }}
+              <button onClick={() => { if (abortRef.current) { abortRef.current.abort(); abortRef.current = null; } aiService.abortAll(); setIsGenerating(false); }}
                 className="px-4 py-2 rounded-lg text-sm border border-red-400/30 hover:bg-red-400/10 transition-colors"><i className="fas fa-stop text-sm mr-1.5" style={{ color: 'var(--color-red-400)' }}></i><span style={{ color: 'var(--color-red-400)' }}>停止</span></button>
             ) : (
               <AIProgressButton onClick={handleGenerateDetailed} isGenerating={isGenerating} progress={status.progress} label="AI生成细纲" generatingLabel="生成中..." icon="fa-magic" disabled={!activeModel || !project.outline} />

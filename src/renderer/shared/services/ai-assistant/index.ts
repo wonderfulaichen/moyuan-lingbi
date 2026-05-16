@@ -96,7 +96,7 @@ class AIAssistantService {
   }
 
   private abortSilent(): void {
-    aiService.abort();
+    aiService.abortAll();
     this.currentTaskId = null;
     this.state.streamingContent = null;
     this.state.streamingThinking = null;
@@ -600,7 +600,7 @@ class AIAssistantService {
 
   newConversation(): void {
     if (this.state.isProcessing) {
-      aiService.abort();
+      aiService.abortAll();
       this.state.streamingContent = null;
       this.state.streamingThinking = null;
       this.state.pendingPrompt = null;
@@ -755,7 +755,7 @@ class AIAssistantService {
 
   abort(): void {
     this.currentTaskId = null;
-    aiService.abort();
+    aiService.abortAll();
     if (this.state.streamingContent) {
       const thinking = this.state.streamingThinking;
       this.addMessage({ 

@@ -103,7 +103,7 @@ const OutlineView: React.FC<OutlineViewProps> = ({
   }, [activeModel, project, prompts, selectedPromptId, onUpdate, setGenerating, setStatusMessage, setComplete, setError]);
 
   const handleAbort = useCallback(() => {
-    aiService.abort();
+    aiService.abortAll();
     setIsGenerating(false);
   }, []);
 

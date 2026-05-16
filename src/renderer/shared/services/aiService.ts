@@ -43,7 +43,7 @@ function getDefaultEndpoint(provider: ModelConfig['provider']): string {
  * 构建 chat/completions 请求体
  */
 function buildChatCompletionsRequest(config: AIRequestConfig): RequestInit {
-  const { model, prompt, systemPrompt, temperature, maxTokens, stream } = config;
+  const { model, prompt, systemPrompt, temperature, maxTokens, stream, signal } = config;
   const modelName = model.modelName;
 
   const messages: Array<{ role: string; content: string }> = [];
@@ -75,6 +75,7 @@ function buildChatCompletionsRequest(config: AIRequestConfig): RequestInit {
     method: 'POST',
     headers,
     body: JSON.stringify(body),
+    signal,
   };
 }
 

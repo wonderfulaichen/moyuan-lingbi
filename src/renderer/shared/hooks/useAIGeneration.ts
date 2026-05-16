@@ -84,7 +84,7 @@ export function useAIGeneration() {
   }, [setGenerating, setProgress, setStatusMessage, setTokenUsage, setComplete, setError]);
 
   const abort = useCallback(() => {
-    aiService.abort();
+    aiService.abortAll();
     setIsGenerating(false);
     resetStatus();
   }, [resetStatus]);
