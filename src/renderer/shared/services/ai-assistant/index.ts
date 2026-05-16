@@ -30,6 +30,24 @@ class AIAssistantService {
   private constructor() {
     this.state = this.createDefaultState();
     this.loadCustomAgents();
+    this.initAutoSave();
+  }
+
+  private autoSaveTimer: ReturnType<typeof setInterval> | null = null;
+
+  private initAutoSave(): void {
+    if (typeof window === 'undefined') return;
+    // 页面关闭前强制保存
+    window.addEventListener('beforeunload', () => this.flushSave());
+    window.addEventListener('pagehide', () => this.flushSave());
+    // 定期自动保存（每5秒）
+    this.autoSaveTimer = setInterval(() => this.flushSave(), 5000);
+  }
+
+  private flushSave(): void {
+    if (!this.projectId) return;
+    this.saveCurrentConversation();
+    this.persistConversations();
   }
 
   private createDefaultState(): AIAssistantState {
@@ -917,6 +935,9 @@ class AIAssistantService {
             createdAt: c.createdAt || Date.now(),
             updatedAt: c.updatedAt || Date.now(),
           }));
+        console.log(`[AI] 加载了 ${this.state.conversations.length} 条对话记录`);
+      } else {
+        this.state.conversations = [];
       }
     } catch (e) {
       console.warn('[AI] 加载对话历史失败:', e);
