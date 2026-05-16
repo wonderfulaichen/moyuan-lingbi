@@ -76,6 +76,7 @@ export async function processWithAI(text: string, model: ModelConfig, cb: Proces
   let taskPlan: TaskPlan | null = null;
   let completedOps = 0;
   let toolResults: string[] = [];
+  const originalUserText = text;
   let currentPrompt = text;
   let accumulatedContext = '';
   let lastAction: string | null = null;
@@ -170,7 +171,7 @@ export async function processWithAI(text: string, model: ModelConfig, cb: Proces
       cb.updateSystemStep(SYSTEM_STEPS.COMPOSE_PROMPT.id, 'completed', `Agent: ${agentId}`);
       cb.updateSystemStep(SYSTEM_STEPS.CALL_AI.id, 'in_progress', `Token 预算: ${budgetForHistory}`);
 
-      const prompt = `${historyStr}\n\n用户：${currentPrompt}`;
+      const prompt = `## 用户原始需求\n${originalUserText}\n\n## 当前任务\n${currentPrompt}\n\n## 对话历史\n${historyStr}`;
 
       cb.setStreamingContent('');
       cb.setStreamingThinking(null);
@@ -267,7 +268,7 @@ export async function processWithAI(text: string, model: ModelConfig, cb: Proces
             });
             accumulatedThinking = '';
 
-            currentPrompt = buildAutonomousPrompt(taskPlan, completedOps);
+            currentPrompt = buildAutonomousPrompt(taskPlan, completedOps, originalUserText);
             toolResults = [`[系统] 计划已确认，共 ${taskPlan.operations.length} 个操作待执行。请开始逐个执行，每完成一个立即继续下一个，不要停下来询问。`];
             continue;
           }
@@ -367,7 +368,7 @@ export async function processWithAI(text: string, model: ModelConfig, cb: Proces
             completedOps += loopResult.opsProcessed || 1;
             if (completedOps < taskPlan.operations.length) {
               toolResults = [loopResult.accumulatedResults || '', buildContinuePrompt(taskPlan, completedOps)];
-              currentPrompt = buildAutonomousPrompt(taskPlan, completedOps);
+              currentPrompt = buildAutonomousPrompt(taskPlan, completedOps, originalUserText);
               continue;
             } else {
               cb.setAgentPhase(AgentPhase.COMPLETED, summarizeTask(text), 100);
@@ -382,14 +383,14 @@ export async function processWithAI(text: string, model: ModelConfig, cb: Proces
                 completedOps = Math.min(loopResult.opsProcessed || 1, taskPlan.operations.length);
                 if (completedOps < taskPlan.operations.length) {
                   toolResults = [loopResult.accumulatedResults || '', buildContinuePrompt(taskPlan, completedOps)];
-                  currentPrompt = buildAutonomousPrompt(taskPlan, completedOps);
+                  currentPrompt = buildAutonomousPrompt(taskPlan, completedOps, originalUserText);
                   continue;
                 }
               }
             }
             if (taskPlan && completedOps < taskPlan.operations.length) {
               toolResults = [loopResult.accumulatedResults || '', buildContinuePrompt(taskPlan, completedOps)];
-              currentPrompt = buildAutonomousPrompt(taskPlan, completedOps);
+              currentPrompt = buildAutonomousPrompt(taskPlan, completedOps, originalUserText);
               continue;
             }
             if (loopResult.accumulatedResults && loopResult.accumulatedResults.includes('read_folder')) {
@@ -409,7 +410,7 @@ export async function processWithAI(text: string, model: ModelConfig, cb: Proces
         if (loopResult.type === 'continue') {
           toolResults = [loopResult.accumulatedResults || '', loopResult.nextPrompt || '请继续完成任务'];
           if (taskPlan) {
-            currentPrompt = buildAutonomousPrompt(taskPlan, completedOps);
+            currentPrompt = buildAutonomousPrompt(taskPlan, completedOps, originalUserText);
           } else {
             accumulatedContext += `\n${loopResult.accumulatedResults || ''}`;
             currentPrompt = buildAnalyzeStatePrompt(text, accumulatedContext);
@@ -456,7 +457,7 @@ export async function processWithAI(text: string, model: ModelConfig, cb: Proces
             thinking: accumulatedThinking || undefined,
           });
           accumulatedThinking = '';
-          currentPrompt = buildAutonomousPrompt(taskPlan, completedOps);
+          currentPrompt = buildAutonomousPrompt(taskPlan, completedOps, originalUserText);
           toolResults = [`[系统] 已自动规划 ${taskPlan.operations.length} 个操作。请开始逐个执行，不要停下来。`];
           continue;
         }
@@ -479,7 +480,7 @@ export async function processWithAI(text: string, model: ModelConfig, cb: Proces
           `[系统] 第 ${consecutiveNoToolCount} 次提醒：还有未完成的操作，必须使用 tool 格式执行。`,
           buildContinuePrompt(taskPlan, completedOps),
         ];
-        currentPrompt = buildAutonomousPrompt(taskPlan, completedOps);
+        currentPrompt = buildAutonomousPrompt(taskPlan, completedOps, originalUserText);
         continue;
       }
 
@@ -527,14 +528,7 @@ export async function processWithAI(text: string, model: ModelConfig, cb: Proces
 }
 
 function buildAnalyzeStatePrompt(originalText: string, accumulatedContext: string): string {
-  return `请分析当前项目状态并决定下一步操作。
-
-**原始指令**：${originalText}
-
-**已执行的操作**：
-${accumulatedContext}
-
-请使用 analyze-state 工具分析当前状态，然后使用 decide-next 工具决定下一步操作。
+  return `## 用户的原始需求\n${originalText}\n\n## 已执行的操作\n${accumulatedContext}\n\n请分析当前项目状态并决定下一步操作。请使用 analyze-state 工具分析当前状态，然后使用 decide-next 工具决定下一步操作。
 
 **analyze-state 格式**：
 \`\`\`tool
@@ -599,9 +593,11 @@ function parseDecideTool(tool: any): AIDecision | null {
   }
 }
 
-function buildAutonomousPrompt(plan: TaskPlan, completedOps: number): string {
+function buildAutonomousPrompt(plan: TaskPlan, completedOps: number, originalText?: string): string {
   const pendingOps = plan.operations.slice(completedOps);
   if (pendingOps.length === 0) return '所有操作已完成。';
+
+  const userRequest = originalText ? `\n## 用户的原始需求\n${originalText}\n` : '';
 
   const opList = pendingOps.map((op, i) => {
     const marker = i === 0 ? '🔄 当前' : '⏳';
@@ -617,7 +613,7 @@ function buildAutonomousPrompt(plan: TaskPlan, completedOps: number): string {
     ? `\n4. ⚠️ 这是大纲，每章只写30-80字！只写核心事件+转折+结果，禁止写关键对话、冲突点、角色动态、伏笔等细节`
     : '';
 
-  return `请继续执行任务计划。剩余 ${pendingOps.length} 个操作：\n${opList}\n\n⚠️ 关键规则：
+  return `${userRequest}请继续执行任务计划。已完成 ${completedOps}/${plan.operations.length}，剩余 ${pendingOps.length} 个操作：\n${opList}\n\n⚠️ 关键规则：
 1. 文件名必须严格使用计划中指定的名称，绝对不能自创新名字
 2. 完成当前操作后，立即继续下一个，不要停下来询问
 3. 全部完成后告知用户${detailHint}`;
@@ -634,7 +630,7 @@ function buildContinuePrompt(plan: TaskPlan, completedOps: number): string {
   const isOutline = (nextOp.description || '').includes('大纲') || (nextOp.name || '').includes('大纲') || (nextOp.fileId || '').includes('outline');
   const detailHint = isOutline ? ' ⚠️ 大纲每章只写30-80字，禁止写对话/冲突点/角色动态/伏笔！' : '';
 
-  return `[系统] 已完成 ${completedOps}/${plan.operations.length} 个操作。下一个：${actionLabel}「${nextOp.description || nextOp.action}」（还剩 ${remaining} 个）。${nameHint}${detailHint}\n请立即输出内容并跟 tool 继续执行，不要停下来。`;
+  return `[进度 ${completedOps}/${plan.operations.length}] 下一个操作：${actionLabel}「${nextOp.description || nextOp.action}」（还剩 ${remaining} 个）。${nameHint}${detailHint}\n请直接输出 tool 继续执行，不要停。`;
 }
 
 function determinePhase(iteration: number, plan: TaskPlan | null, completedOps: number, lastAction: string | null): AgentPhase {
@@ -716,9 +712,19 @@ async function handleToolCalls(
       const newCompleted = completedOps + processedCount;
       const remainingCount = taskPlan.operations.length - newCompleted;
 
+      if (remainingCount > 0) {
+        // 还有剩余操作：不加入对话历史（避免AI误以为已完成），通过toolResults传递进度
+        return {
+          type: 'done',
+          accumulatedResults: actionResults + `\n[进度] ${newCompleted}/${taskPlan.operations.length} 个文件操作完成，剩余 ${remainingCount} 个`,
+          lastResult: actionResults,
+          opsProcessed: processedCount,
+        };
+      }
+
       cb.addMessage({
         role: 'assistant',
-        content: `${actionResults.trim()}\n\n✅ 已完成 ${processedCount} 个文件操作（${newCompleted}/${taskPlan.operations.length}）${remainingCount > 0 ? `。剩余 ${remainingCount} 个操作` : ''}`,
+        content: `${actionResults.trim()}\n\n✅ 全部完成！共执行 ${taskPlan.operations.length} 个文件操作。`,
       });
 
       return {
