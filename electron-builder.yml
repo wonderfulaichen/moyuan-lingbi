@@ -1,5 +1,6 @@
 appId: com.moyuan.lingbi
 productName: 墨渊灵笔
+description: AI小说创作工坊 - 从灵感萌发到完成整部小说
 directories:
   output: build/release
   buildResources: src/assets

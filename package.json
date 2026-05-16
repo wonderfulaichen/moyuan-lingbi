@@ -2,6 +2,8 @@
   "name": "moyuan-lingbi",
   "private": true,
   "version": "0.3.7",
+  "description": "墨渊灵笔 - AI小说创作工坊。一款基于AI辅助的小说创作工具，帮助作者从灵感萌发到完成整部小说。",
+  "author": "wonderful艾辰",
   "license": "MIT",
   "main": "build/main/main.js",
   "scripts": {
