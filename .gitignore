@@ -64,9 +64,26 @@ tauri.conf.json
 # Startup scripts
 *.bat
 启动命令.txt
+*.ps1
 
 # Trae workspace
 .trae/
 
 # Temporary plans (deleted)
 plans/
+
+# Debug/fix files
+debug*.png
+debug*.js
+debug*.txt
+
+# Evaluation docs
+*_EVALUATION.md
+*_SETUP_GUIDE.md
+*_STRATEGY.md
+CREATE_TAURI_PROJECT.md
+架构流程分析.md
+
+# Test artifacts
+test_button.py
+web-test.png
