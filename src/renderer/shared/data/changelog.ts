@@ -9,15 +9,12 @@ export const CHANGELOG: ChangelogEntry[] = [
   {
     version: '0.3.7',
     date: '2026-05-16',
-    title: '移动端适配 & 记忆系统 & AI任务管理',
+    title: '移动端适配 & AI任务管理 & 编辑器改进',
     items: [
       { type: 'feature', text: '移动端适配：手机版UI、底部导航、抽屉菜单、全屏AI助手' },
-      { type: 'feature', text: '记忆系统：记忆网络图谱（角色/地点/情节关联）、健康检测、版本控制' },
       { type: 'feature', text: 'AI任务管理：任务面板、待办列表、统一执行器、模块化架构' },
-      { type: 'feature', text: '成就系统：创作者成就体系、写作统计' },
-      { type: 'feature', text: '番茄钟：专注计时器、白噪音：写作背景音' },
       { type: 'feature', text: '写作辅助：一致性检查、灵感面板、角色快捷查看' },
-      { type: 'feature', text: '桌面宠物：互动助手' },
+      { type: 'feature', text: '白噪音：写作背景音' },
       { type: 'improvement', text: '灵感模块重构：方案孵化器、标签云、收藏夹' },
       { type: 'improvement', text: 'AI服务层重构：统一执行器、计划执行、上下文压缩' },
       { type: 'improvement', text: '提示词系统：分层架构（基础/Agent/任务/格式/规则）' },
