@@ -11,7 +11,7 @@ export const CHANGELOG: ChangelogEntry[] = [
     date: '2026-05-16',
     title: '移动端适配 & AI任务管理 & 编辑器改进',
     items: [
-      { type: 'feature', text: '移动端适配：手机版UI、底部导航、抽屉菜单、全屏AI助手' },
+      { type: 'feature', text: '移动端适配：手机版UI、底部导航、抽屉菜单、全屏AI助手（调试中）' },
       { type: 'feature', text: 'AI任务管理：任务面板、待办列表、统一执行器、模块化架构' },
       { type: 'feature', text: '写作辅助：一致性检查、灵感面板、角色快捷查看' },
       { type: 'feature', text: '白噪音：写作背景音' },
