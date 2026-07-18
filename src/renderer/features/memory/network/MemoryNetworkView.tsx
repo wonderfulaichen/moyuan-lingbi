@@ -213,7 +213,7 @@ const MemoryNetworkViewContent: React.FC<MemoryNetworkViewProps> = ({ projectId 
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
       filteredNodes = filteredNodes.map((node) => {
-        const name = (node.data.name || node.data.title || '').toLowerCase();
+        const name = String(node.data.name || node.data.title || '').toLowerCase();
         const matches = name.includes(query);
         return {
           ...node,

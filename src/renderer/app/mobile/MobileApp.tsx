@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { AppData } from '../../shared/types/fileSystem';
-import { Project } from '../../shared/types';
+import { AppData } from '../../../shared/types/fileSystem';
+import { Project } from '../../../shared/types';
 import { dataService } from '../../shared/services/DataService';
 import { AIStatusProvider } from '../../shared/contexts/AIStatusContext';
 import { ThemeProvider } from '../../shared/contexts/ThemeContext';

@@ -1,4 +1,4 @@
-import { AIChatMessage, AIPendingPrompt, AgentPhase, AgentRequiredAction, AgentStateInfo } from '../../../shared/types/fileSystem';
+import { AIChatMessage, AIPendingPrompt, AgentPhase, AgentRequiredAction, AgentStateInfo } from '../../../../shared/types/fileSystem';
 
 export interface PendingConfirm {
   files: Array<{

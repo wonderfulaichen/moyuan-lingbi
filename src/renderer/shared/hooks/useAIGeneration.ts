@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef } from 'react';
-import { ModelConfig } from '../../../../../shared/types';
+import { ModelConfig } from '../../../shared/types';
 import { aiService } from '../../shared/services/aiService';
 import { useAIStatus } from '../../shared/contexts/AIStatusContext';
 

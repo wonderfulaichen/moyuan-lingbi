@@ -46,7 +46,7 @@ export interface UIStoreState {
   attachedFiles: Array<{ name: string; content: string; size: number }>;
   showJumpMenu: boolean;
   showAgentEditor: boolean;
-  editingAgent: import('../../shared/types/fileSystem').AIAgent | null;
+  editingAgent: import('../../../shared/types/fileSystem').AIAgent | null;
   aiGenerating: boolean;
   showAiGenDialog: boolean;
   aiGenInput: string;
@@ -57,6 +57,7 @@ export interface UIStoreState {
   dayTimeStart: string; // 例如 "07:00"
   nightTimeStart: string; // 例如 "19:00"
   writingStats: WritingStats;
+  updateWritingStats: (updates: Partial<WritingStats>) => void;
 }
 
 const defaultWritingStats: WritingStats = {
@@ -138,7 +139,7 @@ export const useUIStore = create<UIStoreState>()((set) => ({
   clearAttachedFiles: () => set({ attachedFiles: [] }),
   setShowJumpMenu: (show: boolean) => set({ showJumpMenu: show }),
   setShowAgentEditor: (show: boolean) => set({ showAgentEditor: show }),
-  setEditingAgent: (agent: import('../../shared/types/fileSystem').AIAgent | null) => set({ editingAgent: agent }),
+  setEditingAgent: (agent: import('../../../shared/types/fileSystem').AIAgent | null) => set({ editingAgent: agent }),
   setAiGenerating: (generating: boolean) => set({ aiGenerating: generating }),
   setShowAiGenDialog: (show: boolean) => set({ showAiGenDialog: show }),
   setAiGenInput: (input: string) => set({ aiGenInput: input }),

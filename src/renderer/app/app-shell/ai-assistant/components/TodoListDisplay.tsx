@@ -1,5 +1,5 @@
 import React from 'react';
-import { TodoItem } from '../../../../shared/types/fileSystem';
+import { TodoItem } from '../../../../../shared/types/fileSystem';
 
 interface TodoListDisplayProps {
   todos: TodoItem[];
