@@ -1,4 +1,4 @@
-const { app, BrowserWindow, dialog, nativeImage } = require('electron');
+const { app, BrowserWindow, dialog, nativeImage, safeStorage } = require('electron');
 const fs = require('fs');
 const fsp = require('fs/promises');
 const path = require('path');
@@ -135,6 +135,29 @@ function setupIpcHandlers() {
 
   ipcMain.on('window-close', () => {
     if (mainWindow) mainWindow.close();
+  });
+
+  // safeStorage: OS 原生加密（Windows Credential Manager / macOS Keychain）
+  ipcMain.handle('safe-storage-available', () => {
+    return safeStorage.isEncryptionAvailable();
+  });
+
+  ipcMain.handle('safe-storage-encrypt', (_event, plaintext) => {
+    try {
+      const buf = safeStorage.encryptString(plaintext);
+      return buf.toString('base64');
+    } catch (err) {
+      throw new Error(`safeStorage encrypt failed: ${err.message}`);
+    }
+  });
+
+  ipcMain.handle('safe-storage-decrypt', (_event, base64Cipher) => {
+    try {
+      const buf = Buffer.from(base64Cipher, 'base64');
+      return safeStorage.decryptString(buf);
+    } catch (err) {
+      throw new Error(`safeStorage decrypt failed: ${err.message}`);
+    }
   });
 }
 

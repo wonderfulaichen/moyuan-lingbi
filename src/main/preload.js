@@ -20,4 +20,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
   minimize: () => ipcRenderer.send('window-minimize'),
   maximize: () => ipcRenderer.send('window-maximize'),
   close: () => ipcRenderer.send('window-close'),
+
+  // safeStorage: OS 原生加密
+  safeStorageAvailable: () => ipcRenderer.invoke('safe-storage-available'),
+  safeStorageEncrypt: (plaintext) => ipcRenderer.invoke('safe-storage-encrypt', plaintext),
+  safeStorageDecrypt: (base64Cipher) => ipcRenderer.invoke('safe-storage-decrypt', base64Cipher),
 });

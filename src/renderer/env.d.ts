@@ -16,5 +16,8 @@ interface Window {
     minimize: () => void;
     maximize: () => void;
     close: () => void;
+    safeStorageAvailable: () => Promise<boolean>;
+    safeStorageEncrypt: (plaintext: string) => Promise<string>;
+    safeStorageDecrypt: (base64Cipher: string) => Promise<string>;
   };
 }

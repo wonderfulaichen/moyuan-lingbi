@@ -259,6 +259,11 @@ const App: React.FC = () => {
     return unsub;
   }, []);
 
+  // 初始化加密密钥并迁移旧密钥
+  useEffect(() => {
+    dataService.initCryptoKey().then(() => dataService.migrateApiKeys());
+  }, []);
+
   const activeProject = data.projects.find(p => p.id === data.activeProjectId) || null;
   const models = dataService.getModels();
   const activeModel = models.find(m => m.id === data.activeModelId) || models[0];
@@ -322,7 +327,7 @@ const App: React.FC = () => {
     }
   }, [activeProject]);
 
-  const renderStepContent = () => {
+  const stepContent = useMemo(() => {
     if (!activeProject) {
       return (
         <div className="h-full flex flex-col items-center justify-center px-8">
@@ -389,7 +394,7 @@ const App: React.FC = () => {
       default:
         return null;
     }
-  };
+  }, [activeProject, activeStep, activeModel, data.prompts, projectForSettings, handleConfirmScheme, handleUpdateProject]);
 
   return (
     <ThemeProvider>
@@ -440,7 +445,7 @@ const App: React.FC = () => {
                   style={{
                     backdropFilter: 'blur(12px)',
                   }}>
-                  {renderStepContent()}
+                  {stepContent}
                 </main>
 
                 {/* ── 右侧 AI 助手面板（常驻） ── */}

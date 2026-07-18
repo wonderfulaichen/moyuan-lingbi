@@ -5,6 +5,9 @@ import { getPromptLibrary } from '../../../shared/prompts';
 import { memoryBankService } from './MemoryBankService';
 import { accumulateTodayWords } from '../stores/uiStore';
 
+function getRecycleBinKey(projectId: string) { return `moyuan-recycle-bin-${projectId}`; }
+function getRecycleFolderKey(projectId: string) { return `moyuan-recycle-folder-${projectId}`; }
+
 const STORAGE_KEY = 'moyuan-v2-data';
 
 type ChangeListener = () => void;
@@ -64,11 +67,70 @@ class DataService {
   private listeners: Set<ChangeListener> = new Set();
   private saveTimer: ReturnType<typeof setTimeout> | null = null;
   private static instance: DataService | null = null;
+  private _cryptoKey: string = 'moyuan-lingbi-v1'; // 旧密钥，initCryptoKey 后替换为每安装随机密钥
 
   private constructor() {
     this.data = this.loadFromStorage() || this.createDefaultData();
     this.autoCleanOutlineFragments();
     this.ensureDetailedOutlineFolder();
+  }
+
+  /** 初始化加密密钥（应用启动时调用一次） */
+  async initCryptoKey(): Promise<void> {
+    try {
+      const api = window.electronAPI;
+      if (api) {
+        const keyPath = (await api.getAppDataPath()) + '/crypto.key';
+        if (await api.exists(keyPath)) {
+          this._cryptoKey = await api.readFile(keyPath);
+        } else {
+          const newKey = this.generateRandomKey();
+          await api.writeFile(keyPath, newKey);
+          this._cryptoKey = newKey;
+        }
+      } else {
+        let stored = localStorage.getItem('moyuan-crypto-key');
+        if (!stored) {
+          stored = this.generateRandomKey();
+          localStorage.setItem('moyuan-crypto-key', stored);
+        }
+        this._cryptoKey = stored;
+      }
+    } catch (err) {
+      console.warn('[DataService] 加密密钥初始化失败，使用默认密钥:', err);
+    }
+  }
+
+  /** 迁移旧密钥加密的 API Key 到新密钥 */
+  async migrateApiKeys(): Promise<void> {
+    if (this._cryptoKey === 'moyuan-lingbi-v1') return;
+    const oldKey = 'moyuan-lingbi-v1';
+    let migrated = false;
+    for (const model of this.data.models) {
+      if (model.apiKey && model.apiKey.startsWith('enc:')) {
+        const raw = this.xorCrypt(atob(model.apiKey.slice(4)), oldKey);
+        model.apiKey = 'enc:' + btoa(this.xorCrypt(raw, this._cryptoKey));
+        migrated = true;
+      }
+    }
+    if (migrated) {
+      this.saveToStorage();
+      console.log('[DataService] API Key 已迁移到新的加密密钥');
+    }
+  }
+
+  private generateRandomKey(): string {
+    const arr = new Uint8Array(32);
+    crypto.getRandomValues(arr);
+    return Array.from(arr, b => b.toString(16).padStart(2, '0')).join('');
+  }
+
+  private xorCrypt(input: string, key: string): string {
+    let result = '';
+    for (let i = 0; i < input.length; i++) {
+      result += String.fromCharCode(input.charCodeAt(i) ^ key.charCodeAt(i % key.length));
+    }
+    return result;
   }
 
   private autoCleanOutlineFragments(): void {
@@ -476,24 +538,12 @@ class DataService {
   }
 
   private encryptApiKey(key: string): string {
-    // 简单 XOR 加密，防止明文存储
-    const secret = 'moyuan-lingbi-v1';
-    let result = '';
-    for (let i = 0; i < key.length; i++) {
-      result += String.fromCharCode(key.charCodeAt(i) ^ secret.charCodeAt(i % secret.length));
-    }
-    return 'enc:' + btoa(result);
+    return 'enc:' + btoa(this.xorCrypt(key, this._cryptoKey));
   }
 
   private decryptApiKey(encrypted: string): string {
     if (!encrypted.startsWith('enc:')) return encrypted;
-    const secret = 'moyuan-lingbi-v1';
-    const data = atob(encrypted.slice(4));
-    let result = '';
-    for (let i = 0; i < data.length; i++) {
-      result += String.fromCharCode(data.charCodeAt(i) ^ secret.charCodeAt(i % secret.length));
-    }
-    return result;
+    return this.xorCrypt(atob(encrypted.slice(4)), this._cryptoKey);
   }
 
   getModels(): ModelConfig[] {
