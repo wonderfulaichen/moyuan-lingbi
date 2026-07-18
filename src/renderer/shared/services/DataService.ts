@@ -143,10 +143,16 @@ class DataService {
       const toDelete = children.filter(f => f !== mainOutline);
       if (toDelete.length === 0) return;
       console.log(`[DataService] 自动清理 ${toDelete.length} 个大纲碎片文件，保留「${mainOutline?.name || children[0]?.name}」`);
+      // P0-1 修复：类内方法直接访问 this.data.fileSystems 而非 this.getFS()，
+      // 避免通过 getter 返回的引用修改内部状态（getter 未来将返回只读视图）
+      const pid = this.data.activeProjectId;
+      if (!pid) return;
+      const fs = this.data.fileSystems[pid];
+      if (!fs) return;
       for (const file of toDelete) {
-        delete this.getFS().files[file.id];
-        if (file.parentId && this.getFS().files[file.parentId]) {
-          this.getFS().files[file.parentId].childrenIds = this.getFS().files[file.parentId].childrenIds.filter(id => id !== file.id);
+        delete fs.files[file.id];
+        if (file.parentId && fs.files[file.parentId]) {
+          fs.files[file.parentId].childrenIds = fs.files[file.parentId].childrenIds.filter(id => id !== file.id);
         }
       }
       this.saveToStorage();
@@ -166,9 +172,14 @@ class DataService {
         content: '', metadata: createDefaultMetadata({ tags: ['detailed_outline'], cardType: 'folder' }),
         childrenIds: [], createdAt: now, updatedAt: now, version: 1,
       };
-      this.getFS().files[id] = folder;
-      this.getFS().rootIds.push(id);
-      const meta = this.getActiveProject();
+      // P0-1 修复：类内方法直接访问 this.data 而非 this.getFS()/this.getActiveProject()
+      const pid = this.data.activeProjectId;
+      if (!pid) return;
+      const fs = this.data.fileSystems[pid];
+      if (!fs) return;
+      fs.files[id] = folder;
+      fs.rootIds.push(id);
+      const meta = this.data.projects.find(p => p.id === pid);
       if (meta) {
         meta.rootFolderIds.push(id);
         meta.updatedAt = now;
@@ -202,18 +213,71 @@ class DataService {
     this.saveTimer = setTimeout(() => this.saveToStorage(), 150);
   }
 
+  /**
+   * P0-1 探测：包装一个对象，在 DEV 模式下检测外部直接修改内部状态的行为。
+   * 生产行为不变（直接返回原对象），仅在开发模式打 console.warn 并打印调用栈。
+   * 用法：return this.wrapDevReadOnly(this.data, 'getData');
+   */
+  private wrapDevReadOnly<T extends object>(obj: T, getterName: string): T {
+    // 生产环境直接返回原对象（性能优先）
+    if (!import.meta.env?.DEV) return obj;
+    // 已经包装过的不再重复包装
+    if ((obj as any).__p01_wrapped) return obj;
+    const warned = new Set<string>();
+    const handler: ProxyHandler<T> = {
+      get(target, prop, receiver) {
+        // 内部标记直接放行
+        if (prop === '__p01_wrapped') return true;
+        const value = Reflect.get(target, prop, receiver);
+        // 返回的引用类型也递归包装（浅层，避免性能问题）
+        if (value && typeof value === 'object' && !Array.isArray(value) && !(value instanceof Date)) {
+          return new Proxy(value as object, handler) as any;
+        }
+        return value;
+      },
+      set(_target, prop, value) {
+        const key = `${getterName}.${String(prop)}`;
+        if (!warned.has(key)) {
+          warned.add(key);
+          console.warn(
+            `[P0-1] 检测到外部直接修改 DataService 返回值: ${key}\n` +
+            `应改用 DataService 的 mutation API（如 updateFile/updateProjectMeta 等）以保证 emit 与持久化。\n` +
+            `调用栈:\n${new Error().stack?.split('\n').slice(2, 6).join('\n') || '(无)'}`
+          );
+        }
+        return Reflect.set(_target, prop, value);
+      },
+      deleteProperty(_target, prop) {
+        const key = `${getterName}.[delete ${String(prop)}]`;
+        if (!warned.has(key)) {
+          warned.add(key);
+          console.warn(
+            `[P0-1] 检测到外部直接删除 DataService 返回值属性: ${key}\n` +
+            `调用栈:\n${new Error().stack?.split('\n').slice(2, 6).join('\n') || '(无)'}`
+          );
+        }
+        return Reflect.deleteProperty(_target, prop);
+      },
+    };
+    return new Proxy(obj, handler);
+  }
+
   getData(): AppData {
-    return this.data;
+    return this.wrapDevReadOnly(this.data, 'getData');
   }
 
   getFS(projectId?: string): VFileSystem {
     const pid = projectId || this.data.activeProjectId;
     if (!pid) return createEmptyFS();
-    return this.data.fileSystems[pid] || createEmptyFS();
+    const fs = this.data.fileSystems[pid];
+    if (!fs) return createEmptyFS();
+    return this.wrapDevReadOnly(fs, 'getFS');
   }
 
   getActiveProject(): ProjectMeta | null {
-    return this.data.projects.find(p => p.id === this.data.activeProjectId) || null;
+    const project = this.data.projects.find(p => p.id === this.data.activeProjectId);
+    if (!project) return null;
+    return this.wrapDevReadOnly(project, 'getActiveProject');
   }
 
   getActiveModel(): ModelConfig {
@@ -222,13 +286,21 @@ class DataService {
   }
 
   getFile(fileId: string, projectId?: string): VFile | undefined {
-    return this.getFS(projectId).files[fileId];
+    // P0-1 修复：通过 getFS() 获取（已被 Proxy 包装），再取 file
+    const fs = this.getFS(projectId);
+    const file = fs.files[fileId];
+    return file ? this.wrapDevReadOnly(file, `getFile(${fileId})`) : undefined;
   }
 
   getChildren(parentId: string | null, projectId?: string): VFile[] {
     const fs = this.getFS(projectId);
     const ids = parentId ? (fs.files[parentId]?.childrenIds || []) : fs.rootIds;
-    return ids.map(id => fs.files[id]).filter(Boolean).sort((a, b) => (a.metadata.sortOrder || 0) - (b.metadata.sortOrder || 0));
+    // P0-1 修复：数组元素也需包装，避免外部通过元素引用直接改状态
+    return ids
+      .map(id => fs.files[id])
+      .filter(Boolean)
+      .sort((a, b) => (a.metadata.sortOrder || 0) - (b.metadata.sortOrder || 0))
+      .map(f => this.wrapDevReadOnly(f, `getChildren(${parentId ?? 'root'})[${f.id}]`));
   }
 
   getRootFolderIdByType(typeTag: string, projectId?: string): string | null {
