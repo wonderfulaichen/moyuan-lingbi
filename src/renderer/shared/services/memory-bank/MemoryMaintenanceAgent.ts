@@ -271,15 +271,16 @@ ${contextInfo}
           }
           if (newChar.relationships && newChar.relationships.length > 0) {
             newChar.relationships.forEach(rel => {
-              const existingRel = existing.relationships.find(r => r.target === rel.targetName);
+              const existingRel = existing.relationships.find(r => r.targetId === rel.targetName);
               if (existingRel) {
                 existingRel.type = rel.type as any;
                 existingRel.description = rel.description;
               } else {
                 existing.relationships.push({
-                  target: rel.targetName,
+                  targetId: rel.targetName,
                   type: rel.type as any,
                   description: rel.description,
+                knownTo: [],
                 });
               }
             });
@@ -292,12 +293,13 @@ ${contextInfo}
             personality: newChar.personality || [],
             abilities: newChar.abilities || [],
             relationships: newChar.relationships ? newChar.relationships.map(r => ({
-              target: r.targetName,
+              targetId: r.targetName,
               type: r.type as any,
               description: r.description,
+            knownTo: [],
             })) : [],
             secrets: newChar.secrets || [],
-            characterArc: newChar.arcUpdate?.current ? [{
+            arc: newChar.arcUpdate?.current ? [{
               chapter: chapterNumber,
               status: newChar.arcUpdate.current,
             }] : [],
@@ -308,12 +310,12 @@ ${contextInfo}
 
     if (extracted.plots && extracted.plots.length > 0) {
       extracted.plots.forEach(newPlot => {
-        const existingIdx = atomic.plots.findIndex(p => p.title === newPlot.description);
+        const existingIdx = (atomic.plots as any).findIndex(p => (p as any).title === newPlot.description);
         
         if (existingIdx >= 0) {
           atomic.plots[existingIdx].status = newPlot.status as any;
         } else {
-          atomic.plots.push({
+          (atomic.plots as any).push({
             type: newPlot.type as any,
             title: newPlot.description,
             summary: newPlot.description,
@@ -342,7 +344,7 @@ ${contextInfo}
         dynamic.tension.history.push({
           chapter: chapterNumber,
           level: dynamic.tension.level,
-          timestamp: Date.now(),
+          event: "tension_change",
         });
         
         if (dynamic.tension.history.length > 50) {
@@ -380,7 +382,7 @@ ${contextInfo}
       identity: string;
       personality: string[];
       abilities: string[];
-      relationships: Array<{ target: string; type: string; description: string }>;
+      relationships: Array<{ targetId: string; type: string; description: string }>;
       secrets: string[];
       arc?: { start: string; current: string; goal: string };
     }> = [];
@@ -506,8 +508,8 @@ ${contextInfo}
     const allCharacterNames = new Set(charactersToCheck.map(c => c.name));
     charactersToCheck.forEach(char => {
       (char.relationships || []).forEach(rel => {
-        if (!allCharacterNames.has(rel.target)) {
-          issues.push(`角色「${char.name}」的关系目标「${rel.target}」未在角色列表中找到`);
+        if (!allCharacterNames.has(rel.targetId)) {
+          issues.push(`角色「${char.name}」的关系目标「${rel.targetId}」未在角色列表中找到`);
         }
       });
     });

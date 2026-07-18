@@ -140,7 +140,7 @@ describe('MemoryVersionControl', () => {
   });
 
   describe('compareVersions', () => {
-    it('应该检测到新增的角色', () => {
+    it('应该检测到新增的角色', async () => {
       const oldAtomic = createMockAtomicMemory();
       const newAtomic = createMockAtomicMemory();
       newAtomic.characters.push({
@@ -168,12 +168,12 @@ describe('MemoryVersionControl', () => {
         snapshot: { atomic: newAtomic, dynamic: createMockDynamicMemory(), vectors: createMockVectors() }
       };
 
-      const diff = MemoryVersionControl.compareVersions(oldVersion, newVersion);
+      const diff = MemoryVersionControl._compareVersions(oldVersion, newVersion);
       expect(diff.length).toBeGreaterThan(0);
       expect(diff.some(d => d.type === DiffChangeType.ADD && d.category === 'atomic.character')).toBe(true);
     });
 
-    it('应该检测到修改的动态记忆', () => {
+    it('应该检测到修改的动态记忆', async () => {
       const oldDynamic = createMockDynamicMemory();
       const newDynamic = createMockDynamicMemory();
       newDynamic.current.chapter = 2;
@@ -192,11 +192,11 @@ describe('MemoryVersionControl', () => {
         snapshot: { atomic: createMockAtomicMemory(), dynamic: newDynamic, vectors: createMockVectors() }
       };
 
-      const diff = MemoryVersionControl.compareVersions(oldVersion, newVersion);
+      const diff = MemoryVersionControl._compareVersions(oldVersion, newVersion);
       expect(diff.some(d => d.type === DiffChangeType.MODIFY && d.category === 'dynamic')).toBe(true);
     });
 
-    it('应该检测到删除的向量记忆', () => {
+    it('应该检测到删除的向量记忆', async () => {
       const oldVectors = createMockVectors();
       const newVectors: VectorMemory[] = [];
 
@@ -214,7 +214,7 @@ describe('MemoryVersionControl', () => {
         snapshot: { atomic: createMockAtomicMemory(), dynamic: createMockDynamicMemory(), vectors: newVectors }
       };
 
-      const diff = MemoryVersionControl.compareVersions(oldVersion, newVersion);
+      const diff = MemoryVersionControl._compareVersions(oldVersion, newVersion);
       expect(diff.some(d => d.type === DiffChangeType.DELETE && d.category === 'vector')).toBe(true);
     });
   });
