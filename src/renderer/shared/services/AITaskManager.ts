@@ -109,7 +109,7 @@ class AITaskManager {
 
     } catch (error) {
       // 任务失败
-      if (task.status as string !== 'cancelled') {
+      if (task.status !== 'cancelled') {
         task.status = 'failed';
         task.error = error instanceof Error ? error.message : '未知错误';
         task.completedAt = Date.now();
