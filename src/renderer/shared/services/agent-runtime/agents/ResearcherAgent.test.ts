@@ -13,7 +13,7 @@ describe('ResearcherAgent', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.mocked(StepRunner.executeStep).mockResolvedValue({
-      // success: true,
+      success: true,
       content: '根据已有设定资料...',
       error: undefined,
     });

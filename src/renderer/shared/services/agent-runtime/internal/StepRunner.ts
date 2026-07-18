@@ -169,38 +169,51 @@ async function executeStepOnce(
   const prompt = buildPrompt(input);
 
   // 调用 AI 服务（含超时保护）
+  // 注意：原实现用 Promise.race + 内联 Promise，定时器和 abort 监听器在 generate 先完成时不会被清理，
+  // 导致定时器泄漏（120s）和监听器泄漏。改用 finally 统一清理。
   const LLM_TIMEOUT_MS = 120000; // 120 秒
-  const response = await Promise.race([
-    aiService.generate(
-      {
-        model: modelConfig,
-        prompt,
-        systemPrompt,
-        signal: token.signal,
-      },
-      `agent-${agentDef.id}-${Date.now()}`,
-    ),
-    new Promise<never>((_, reject) => {
-      const timeoutId = setTimeout(() => {
-        reject(new Error(`[StepRunner] LLM 请求超时 (${LLM_TIMEOUT_MS / 1000}s)`));
-      }, LLM_TIMEOUT_MS);
-      if (token.signal) {
-        const onAbort = () => {
-          clearTimeout(timeoutId);
-          reject(new Error('已中断生成'));
-        };
-        token.signal.addEventListener('abort', onAbort, { once: true });
-      }
-    }),
-  ]);
+  let timeoutId: ReturnType<typeof setTimeout> | undefined;
+  let onAbort: (() => void) | undefined;
 
-  // 处理错误
-  if (response.error) {
-    throw new Error(response.error);
+  try {
+    const response = await Promise.race([
+      aiService.generate(
+        {
+          model: modelConfig,
+          prompt,
+          systemPrompt,
+          signal: token.signal,
+        },
+        `agent-${agentDef.id}-${Date.now()}`,
+      ),
+      new Promise<never>((_, reject) => {
+        timeoutId = setTimeout(() => {
+          reject(new LLMTimeoutError(`[StepRunner] LLM 请求超时 (${LLM_TIMEOUT_MS / 1000}s)`));
+        }, LLM_TIMEOUT_MS);
+        if (token.signal) {
+          onAbort = () => {
+            clearTimeout(timeoutId!);
+            reject(new CancelledError('已中断生成'));
+          };
+          token.signal.addEventListener('abort', onAbort, { once: true });
+        }
+      }),
+    ]);
+
+    // 处理错误
+    if (response.error) {
+      throw new Error(response.error);
+    }
+
+    // 解析输出
+    return parseLLMResponse(response.content, input);
+  } finally {
+    // 无论成功/失败/超时/取消，都清理定时器和监听器，避免泄漏
+    if (timeoutId) clearTimeout(timeoutId);
+    if (onAbort && token.signal) {
+      token.signal.removeEventListener('abort', onAbort);
+    }
   }
-
-  // 解析输出
-  return parseLLMResponse(response.content, input);
 }
 
 // ============================================================
@@ -340,6 +353,7 @@ function parseLLMResponse(content: string, input: AgentInput): AgentOutput {
     suggestedNextSteps,
     status: 'completed',
     summary,
+    success: true,
   };
 }
 

@@ -126,7 +126,8 @@ describe('MemorySearchService', () => {
       const results = MemorySearchService.searchMemories(testMemory, '');
       const sorted = MemorySearchService.sortMemories(results, 'name');
       const titles = sorted.map(r => r.title);
-      expect(titles).toEqual([...titles].sort());
+      // sortMemories 使用 localeCompare，测试期望也必须用 localeCompare（默认 sort() 对中文与 localeCompare 结果不同）
+      expect(titles).toEqual([...titles].sort((a, b) => a.localeCompare(b)));
     });
 
     it('应该按相关性排序', () => {
