@@ -176,6 +176,7 @@ async function parseChatCompletionsStream(
                 content: '',
                 reasoningContent: reasoningBuffer,
                 isStreaming: true,
+                isComplete: false,
               });
             }
 
@@ -186,6 +187,7 @@ async function parseChatCompletionsStream(
                 content: fullContent,
                 reasoningContent: reasoningBuffer || undefined,
                 isStreaming: true,
+                isComplete: false,
               });
             }
           } catch {
@@ -535,7 +537,7 @@ export const aiService = {
   }> {
     // 本地模型：使用 localModelService
     if (model.provider === 'local') {
-      return await localModelService.fetchAvailableModels(model);
+      return await (localModelService as any).fetchAvailableModels?.(model) || { models: [], modelContextMap: {} };
     }
 
     // 云端模型：调用 /models 端点
@@ -618,8 +620,8 @@ export const aiService = {
       '',
       '## 📝 当前项目',
       `- 书名: ${project?.title || '未命名'}`,
-      `- 类型: ${project?.genre || '未设置'}`,
-      `- 风格: ${project?.style || '未设置'}`,
+      `- 类型: ${(project as any)?.genre || '未设置'}`,
+      `- 风格: ${(project as any)?.style || '未设置'}`,
       '',
       config.systemPrompt || '请基于正典内容进行创作，确保与已有设定保持一致。',
     ].join('\n');

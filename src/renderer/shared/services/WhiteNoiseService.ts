@@ -212,7 +212,7 @@ class WhiteNoiseService {
 
     if (!this.noiseNodes.has(type)) {
       const nodeGroup = this.createNoiseForType(context, type);
-      nodeGroup.sources.forEach(s => s.start());
+      nodeGroup.sources.forEach(s => (s as any)?.start?.());
       this.noiseNodes.set(type, nodeGroup);
     }
 
@@ -281,7 +281,7 @@ class WhiteNoiseService {
       this.noiseNodes.forEach((nodeGroup) => {
         nodeGroup.sources.forEach(s => {
           try {
-            s.stop();
+            (s as any)?.stop?.();
           } catch {
             // ignore
           }

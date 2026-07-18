@@ -6,7 +6,7 @@ let loadedModels: Map<string, any> = new Map();
 async function getLLM(): Promise<any> {
   if (!LLM) {
     try {
-      const module = await import('node-llama-cpp');
+      const module: any = await import('node-llama-cpp');
       LLM = module.LLM || module.default?.LLM;
     } catch (e) {
       throw new Error(`无法加载 node-llama-cpp 模块: ${e instanceof Error ? e.message : String(e)}\n请运行 npm install node-llama-cpp`);

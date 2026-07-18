@@ -404,6 +404,7 @@ const StepWorld: React.FC<StepWorldProps> = ({ project, onUpdate, activeModel, o
     if (!type || !activeModel) return;
     setGeneratingType(type);
 
+    try {
     const taskLabels: Record<string, string> = {
       location: '正在AI生成地点设定...',
       faction: '正在AI生成势力设定...',

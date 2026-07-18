@@ -3,7 +3,7 @@ import { ModelConfig } from '../../../../shared/types';
 import { dataService } from '../DataService';
 import { aiService } from '../aiService';
 import { BUILT_IN_AGENTS } from './systemPrompt';
-import { processWithAI } from './processWithAI';
+import { processWithAI, ProcessCallbacks } from './processWithAI';
 import { setPlanSteps, clearPlanState, toggleStep, executePlan } from './PlanExecutor';
 import { unifiedExecutor } from './UnifiedExecutor';
 import { summarizeTask } from './contextBuilder';
@@ -111,6 +111,14 @@ class AIAssistantService {
     }
 
     this.emit();
+  }
+
+  ensureActiveProjectLoaded(): void {
+    const project = dataService.getActiveProject();
+    const pid = project?.id ?? null;
+    if (pid !== this.projectId) {
+      this.switchToProject(pid);
+    }
   }
 
   private abortSilent(): void {
@@ -267,7 +275,7 @@ class AIAssistantService {
     }
   }
 
-  private createCallbacks(text: string): ProcessCallbacks {
+  private createCallbacks(text: string): any {
     const currentTaskId = this.currentTaskId;
     return {
       addMessage: (msg) => {
