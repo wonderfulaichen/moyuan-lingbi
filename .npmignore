@@ -1,0 +1,16 @@
+# electron-builder respects .npmignore for app packaging
+android/
+参考项目/
+src/
+memory-bank/
+.trae/
+.workbuddy/
+.uploads/
+docs/
+deliverables/
+*.bat
+*.ps1
+*.txt
+*.md
+_*.py
+.git/
