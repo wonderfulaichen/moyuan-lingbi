@@ -68,6 +68,12 @@ class DataService {
   private saveTimer: ReturnType<typeof setTimeout> | null = null;
   private static instance: DataService | null = null;
   private _cryptoKey: string = 'moyuan-lingbi-v1'; // 旧密钥，initCryptoKey 后替换为每安装随机密钥
+  /**
+   * P0-safeStorage: 启动时把所有 models 的 apiKey 明文解密缓存到内存 Map
+   * getActiveModel/getModels 从 Map 读明文，避免把同步方法改异步（影响面大）
+   * 缓存未命中时（如 updateModels 后未刷新）降级用同步 XOR 解密
+   */
+  private apiKeyCache: Map<string, string> = new Map();
 
   private constructor() {
     this.data = this.loadFromStorage() || this.createDefaultData();
@@ -116,6 +122,83 @@ class DataService {
     if (migrated) {
       this.saveToStorage();
       console.log('[DataService] API Key 已迁移到新的加密密钥');
+    }
+  }
+
+  /**
+   * safeStorage 集成：优先用 OS 原生加密（Windows Credential Manager / macOS Keychain），
+   * 不可用时降级到 XOR + 随机密钥（Web/PWA/Capacitor 或 Linux 无 DE 环境）。
+   * 密文前缀 'safe:' 表示 safeStorage，'enc:' 表示 XOR 降级。
+   */
+  private async secureEncrypt(plaintext: string): Promise<string> {
+    const api = window.electronAPI;
+    if (api && await api.safeStorageAvailable()) {
+      try {
+        const cipher = await api.safeStorageEncrypt(plaintext);
+        return 'safe:' + cipher;
+      } catch (err) {
+        console.warn('[DataService] safeStorage encrypt 失败，降级 XOR:', err);
+      }
+    }
+    return 'enc:' + btoa(this.xorCrypt(plaintext, this._cryptoKey));
+  }
+
+  private async secureDecrypt(cipher: string): Promise<string> {
+    if (cipher.startsWith('safe:')) {
+      const api = window.electronAPI;
+      if (api) {
+        try {
+          return await api.safeStorageDecrypt(cipher.slice(5));
+        } catch (err) {
+          console.warn('[DataService] safeStorage decrypt 失败（可能系统重装/账户变更），需用户重填 API Key:', err);
+          return '';
+        }
+      }
+      // 非 Electron 环境但密文是 safe: 格式（不应发生，防御性处理）
+      console.warn('[DataService] 非 Electron 环境无法解密 safe: 密文，需用户重填');
+      return '';
+    }
+    if (cipher.startsWith('enc:')) {
+      return this.xorCrypt(atob(cipher.slice(4)), this._cryptoKey);
+    }
+    // 无前缀：旧明文（历史数据），直接返回
+    return cipher;
+  }
+
+  /** 把旧 XOR 密文（enc:）升级到 safeStorage 密文（safe:） */
+  async upgradeToSafeStorage(): Promise<void> {
+    const api = window.electronAPI;
+    if (!api || !await api.safeStorageAvailable()) return; // 非 Electron 或不可用，跳过
+    let upgraded = 0;
+    for (const model of this.data.models) {
+      if (model.apiKey && model.apiKey.startsWith('enc:')) {
+        try {
+          const plain = this.xorCrypt(atob(model.apiKey.slice(4)), this._cryptoKey);
+          model.apiKey = await this.secureEncrypt(plain);
+          upgraded++;
+        } catch (err) {
+          console.warn(`[DataService] 模型 ${model.id} 的 API Key 升级 safeStorage 失败:`, err);
+        }
+      }
+    }
+    if (upgraded > 0) {
+      this.saveToStorage();
+      console.log(`[DataService] ${upgraded} 个 API Key 已升级到 safeStorage 加密`);
+    }
+  }
+
+  /** 启动时把所有 models 的 apiKey 解密缓存到内存（供 getActiveModel/getModels 同步读） */
+  async initApiKeyCache(): Promise<void> {
+    this.apiKeyCache.clear();
+    for (const model of this.data.models) {
+      if (model.apiKey) {
+        try {
+          const plain = await this.secureDecrypt(model.apiKey);
+          this.apiKeyCache.set(model.id, plain);
+        } catch (err) {
+          console.warn(`[DataService] 模型 ${model.id} 的 apiKey 缓存失败:`, err);
+        }
+      }
     }
   }
 
@@ -282,7 +365,13 @@ class DataService {
 
   getActiveModel(): ModelConfig {
     const model = this.data.models.find(m => m.id === this.data.activeModelId) || this.data.models[0];
-    return model ? { ...model, apiKey: model.apiKey ? this.decryptApiKey(model.apiKey) : undefined } : model;
+    if (!model) return model;
+    // safeStorage 集成：优先从内存缓存读明文（启动时已解密），缓存未命中降级同步 XOR 解密
+    const cachedPlain = this.apiKeyCache.get(model.id);
+    const apiKey = cachedPlain !== undefined
+      ? cachedPlain
+      : (model.apiKey ? this.decryptApiKey(model.apiKey) : undefined);
+    return { ...model, apiKey };
   }
 
   getFile(fileId: string, projectId?: string): VFile | undefined {
@@ -600,12 +689,25 @@ class DataService {
     this.emit();
   }
 
-  updateModels(models: ModelConfig[]): void {
-    // 加密存储 API 密钥
-    this.data.models = models.map(m => ({
-      ...m,
-      apiKey: m.apiKey ? this.encryptApiKey(m.apiKey) : undefined,
-    }));
+  /**
+   * 更新模型列表（含 API Key 加密存储）。
+   * safeStorage 集成后改为 async：加密走 IPC（OS 原生加密优先，XOR 降级）。
+   * 加密完成后同步刷新内存缓存，再 emit 触发 UI 更新。
+   */
+  async updateModels(models: ModelConfig[]): Promise<void> {
+    const encrypted: ModelConfig[] = [];
+    for (const m of models) {
+      encrypted.push({
+        ...m,
+        apiKey: m.apiKey ? await this.secureEncrypt(m.apiKey) : undefined,
+      });
+    }
+    this.data.models = encrypted;
+    // 同步刷新内存缓存（updateModels 后 getActiveModel/getModels 立即可读）
+    this.apiKeyCache.clear();
+    for (const m of models) {
+      if (m.apiKey) this.apiKeyCache.set(m.id, m.apiKey);
+    }
     this.emit();
   }
 
@@ -619,10 +721,14 @@ class DataService {
   }
 
   getModels(): ModelConfig[] {
-    return this.data.models.map(m => ({
-      ...m,
-      apiKey: m.apiKey ? this.decryptApiKey(m.apiKey) : undefined,
-    }));
+    return this.data.models.map(m => {
+      // safeStorage 集成：优先从内存缓存读明文，缓存未命中降级同步 XOR 解密
+      const cachedPlain = this.apiKeyCache.get(m.id);
+      const apiKey = cachedPlain !== undefined
+        ? cachedPlain
+        : (m.apiKey ? this.decryptApiKey(m.apiKey) : undefined);
+      return { ...m, apiKey };
+    });
   }
 
   setActiveModel(modelId: string): void {

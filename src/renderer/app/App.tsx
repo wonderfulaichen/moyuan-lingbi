@@ -259,9 +259,17 @@ const App: React.FC = () => {
     return unsub;
   }, []);
 
-  // 初始化加密密钥并迁移旧密钥
+  // 初始化加密密钥 -> 迁移旧 XOR 密钥 -> 升级到 safeStorage -> 缓存明文到内存
   useEffect(() => {
-    dataService.initCryptoKey().then(() => dataService.migrateApiKeys());
+    dataService.initCryptoKey()
+      .then(() => dataService.migrateApiKeys())
+      .then(() => dataService.upgradeToSafeStorage())
+      .then(() => dataService.initApiKeyCache())
+      .then(() => {
+        // 缓存就绪后刷新一次 UI（getModels 现在能读到明文）
+        setData({ ...dataService.getData() });
+      })
+      .catch(err => console.error('[App] 加密初始化失败:', err));
   }, []);
 
   const activeProject = data.projects.find(p => p.id === data.activeProjectId) || null;
