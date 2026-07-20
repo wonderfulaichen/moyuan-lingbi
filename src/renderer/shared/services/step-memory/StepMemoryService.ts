@@ -489,33 +489,34 @@ export class StepMemoryService {
   ): Promise<void> {
     await this.init();
     const steps = await this.loadSteps(projectId);
-    const step = steps.find(s => s.id === stepId);
-    if (!step) {
+    const idx = steps.findIndex(s => s.id === stepId);
+    if (idx === -1) {
       throw new Error(`[StepMemoryService] updateStepStatus 失败：Step 不存在 ${stepId}`);
     }
 
-    step.status = status;
+    // P0-4 修复：写时拷贝，不直接修改缓存中的 step 对象，避免并发读取拿到不一致状态
+    const oldStep = steps[idx];
+    const now = Date.now();
+    const updatedStep: Step = {
+      ...oldStep,
+      status,
+      error: error !== undefined ? error : oldStep.error,
+      startedAt: status === 'running' && oldStep.startedAt === null ? now : oldStep.startedAt,
+      completedAt: status === 'completed' || status === 'failed' || status === 'cancelled'
+        ? now
+        : oldStep.completedAt,
+      duration: status === 'completed' || status === 'failed' || status === 'cancelled'
+        ? (oldStep.startedAt !== null ? now - oldStep.startedAt : oldStep.duration)
+        : oldStep.duration,
+    };
 
-    if (error !== undefined) {
-      step.error = error;
-    }
-
-    if (status === 'running' && step.startedAt === null) {
-      step.startedAt = Date.now();
-    }
-
-    if (status === 'completed' || status === 'failed' || status === 'cancelled') {
-      step.completedAt = Date.now();
-      if (step.startedAt !== null) {
-        step.duration = step.completedAt - step.startedAt;
-      }
-    }
-
-    await this.saveSteps(projectId, steps);
+    // 创建新数组替换旧元素，保持不可变约定
+    const newSteps = [...steps.slice(0, idx), updatedStep, ...steps.slice(idx + 1)];
+    await this.saveSteps(projectId, newSteps);
 
     // 如果某个 Step 完成，检查是否有依赖它的 Step 可以变为 ready
     if (status === 'completed') {
-      await this.cascadeUnblockDependents(projectId, stepId, steps);
+      await this.cascadeUnblockDependents(projectId, stepId, newSteps);
     }
   }
 
@@ -531,20 +532,25 @@ export class StepMemoryService {
   async completeStep(projectId: string, stepId: string, output: StepOutput): Promise<void> {
     await this.init();
     const steps = await this.loadSteps(projectId);
-    const step = steps.find(s => s.id === stepId);
-    if (!step) {
+    const idx = steps.findIndex(s => s.id === stepId);
+    if (idx === -1) {
       throw new Error(`[StepMemoryService] completeStep 失败：Step 不存在 ${stepId}`);
     }
 
-    step.status = 'completed';
-    step.output = output;
-    step.completedAt = Date.now();
-    if (step.startedAt !== null) {
-      step.duration = step.completedAt - step.startedAt;
-    }
+    // P0-4 修复：写时拷贝，不直接修改缓存中的 step 对象
+    const oldStep = steps[idx];
+    const now = Date.now();
+    const updatedStep: Step = {
+      ...oldStep,
+      status: 'completed',
+      output,
+      completedAt: now,
+      duration: oldStep.startedAt !== null ? now - oldStep.startedAt : oldStep.duration,
+    };
 
-    await this.saveSteps(projectId, steps);
-    await this.cascadeUnblockDependents(projectId, stepId, steps);
+    const newSteps = [...steps.slice(0, idx), updatedStep, ...steps.slice(idx + 1)];
+    await this.saveSteps(projectId, newSteps);
+    await this.cascadeUnblockDependents(projectId, stepId, newSteps);
   }
 
   /**
@@ -557,8 +563,9 @@ export class StepMemoryService {
   ): Promise<void> {
     let changed = false;
 
-    for (const step of allSteps) {
-      if (step.status !== 'pending' || !step.dependencies.includes(completedStepId)) continue;
+    // P0-4 修复：写时拷贝，不直接修改 step 对象，用 map 生成新数组
+    const newSteps = allSteps.map(step => {
+      if (step.status !== 'pending' || !step.dependencies.includes(completedStepId)) return step;
 
       // 检查该 Step 的所有依赖是否都已完成
       const allDepsCompleted = step.dependencies.every(depId => {
@@ -567,13 +574,14 @@ export class StepMemoryService {
       });
 
       if (allDepsCompleted) {
-        step.status = 'ready';
         changed = true;
+        return { ...step, status: 'ready' as StepStatus };
       }
-    }
+      return step;
+    });
 
     if (changed) {
-      await this.saveSteps(projectId, allSteps);
+      await this.saveSteps(projectId, newSteps);
     }
   }
 
@@ -624,15 +632,17 @@ export class StepMemoryService {
     }
 
     const steps = await this.loadSteps(projectId);
-    const step = steps.find(s => s.id === stepId);
+    const idx = steps.findIndex(s => s.id === stepId);
     const dependsOn = steps.find(s => s.id === dependsOnStepId);
 
-    if (!step || !dependsOn) {
+    if (idx === -1 || !dependsOn) {
       throw new Error('[StepMemoryService] addDependency 失败：Step 不存在');
     }
 
+    const oldStep = steps[idx];
+
     // 防止重复添加
-    if (step.dependencies.includes(dependsOnStepId)) {
+    if (oldStep.dependencies.includes(dependsOnStepId)) {
       return;
     }
 
@@ -643,14 +653,12 @@ export class StepMemoryService {
       );
     }
 
-    step.dependencies.push(dependsOnStepId);
-
-    // 如果依赖的 Step 尚未完成，当前 Step 不应是 ready 状态
-    if (dependsOn.status !== 'completed' && step.status === 'ready') {
-      step.status = 'pending';
-    }
-
-    await this.saveSteps(projectId, steps);
+    // P0-4 修复：写时拷贝，不直接修改 step 对象
+    const newDeps = [...oldStep.dependencies, dependsOnStepId];
+    const newStatus = dependsOn.status !== 'completed' && oldStep.status === 'ready' ? 'pending' as StepStatus : oldStep.status;
+    const updatedStep: Step = { ...oldStep, dependencies: newDeps, status: newStatus };
+    const newSteps = [...steps.slice(0, idx), updatedStep, ...steps.slice(idx + 1)];
+    await this.saveSteps(projectId, newSteps);
   }
 
   /**
@@ -982,25 +990,30 @@ export class StepMemoryService {
         return;
       }
 
-      const step = steps.find(s => s.id === stepId);
-      if (!step) {
+      const idx = steps.findIndex(s => s.id === stepId);
+      if (idx === -1) {
         console.warn('[StepMemoryService] addStepToChain 失败：Step 不存在', stepId);
         return;
       }
 
+      const oldStep = steps[idx];
+
       // 防止重复添加
       if (chain.stepIds.includes(stepId)) return;
 
+      // TODO(P1): chain 对象也应写时拷贝（与 step 同类问题），当前保留原样属 P0-4 范围外
       chain.stepIds.push(stepId);
 
-      // 更新 Step 的 chainId
-      if (step.chainId !== chainId) {
-        step.chainId = chainId;
-        await this.saveSteps(projectId, steps);
+      // P0-4 修复：写时拷贝更新 step 的 chainId，不直接修改缓存中的 step 对象
+      let workingSteps = steps;
+      if (oldStep.chainId !== chainId) {
+        const updatedStep: Step = { ...oldStep, chainId };
+        workingSteps = [...steps.slice(0, idx), updatedStep, ...steps.slice(idx + 1)];
+        await this.saveSteps(projectId, workingSteps);
       }
 
-      // 重新推导 Chain 状态
-      chain.status = this.deriveChainStatus(chainId, steps);
+      // 重新推导 Chain 状态（用 workingSteps 确保读到最新 step 状态）
+      chain.status = this.deriveChainStatus(chainId, workingSteps);
       await this.saveChains(projectId, chains);
     } catch (error) {
       console.error('[StepMemoryService] addStepToChain 失败:', error);
