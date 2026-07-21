@@ -54,6 +54,8 @@ export const SlashCommandOverlay: React.FC<SlashCommandOverlayProps> = ({
         backgroundColor: 'var(--color-surface-base)',
         borderColor: 'var(--color-border-default)',
       }}
+      role="listbox"
+      aria-label={titleMap[kind]}
     >
       <div
         className="px-2.5 py-1 text-[9px] font-semibold uppercase tracking-wide border-b"
@@ -62,7 +64,7 @@ export const SlashCommandOverlay: React.FC<SlashCommandOverlayProps> = ({
         {titleMap[kind]}
       </div>
       {items.length === 0 ? (
-        <div className="p-3 text-center text-[10px] opacity-50">无匹配项</div>
+        <div className="p-3 text-center text-[10px] opacity-50" role="status">无匹配项</div>
       ) : (
         <div className="p-1 flex flex-col gap-0.5 max-h-[220px] overflow-auto">
           {items.map((item, idx) => {
@@ -79,6 +81,8 @@ export const SlashCommandOverlay: React.FC<SlashCommandOverlayProps> = ({
                     ? (item.color || 'var(--color-primary-400)')
                     : 'var(--color-text-primary)',
                 }}
+                role="option"
+                aria-selected={isActive}
               >
                 {item.icon && (
                   <div
@@ -97,7 +101,7 @@ export const SlashCommandOverlay: React.FC<SlashCommandOverlayProps> = ({
                     <p className="text-[8px] opacity-60 truncate">{item.description}</p>
                   )}
                 </div>
-                {isActive && <i className="fas fa-arrow-turn-down text-[8px] opacity-70" />}
+                {isActive && <i className="fas fa-arrow-turn-down text-[8px] opacity-70" aria-hidden="true" />}
               </button>
             );
           })}
