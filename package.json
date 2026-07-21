@@ -21,7 +21,10 @@
     "build:pwa": "vite build",
     "test": "vitest",
     "test:run": "vitest run",
-    "test:coverage": "vitest run --coverage"
+    "test:coverage": "vitest run --coverage",
+    "lint:colors": "node scripts/check-tailwind-colors.mjs",
+    "lint:colors:staged": "node scripts/check-tailwind-colors.mjs --staged",
+    "setup:hooks": "node scripts/install-hook.mjs"
   },
   "dependencies": {
     "@capacitor/android": "^8.3.1",
