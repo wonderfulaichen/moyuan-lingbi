@@ -222,3 +222,69 @@ ai-assistant 子模块已全覆盖，建议下一步关注：
 3. **源码 require vs import**：vitest mock 只对 import 生效，require 方式需特殊处理
 4. **测试反映源码真实行为**：当假设与实际不符时，修正测试并记录源码设计意图，而非强行修改源码
 5. **按工作量推进**：从简单文件开始建立 mock 模式，复杂文件复用已验证的 mock 策略
+
+---
+
+## 八、Bug 修复附录（2026-07-21 追加）
+
+测试覆盖率提升过程中发现的 2 个源码 bug 已全部修复，commit `c1c7b61`。
+
+### 8.1 Bug 1: index.ts 底部 require() 与 import 冲突
+
+**位置**：`src/renderer/shared/services/ai-assistant/index.ts`（原 line 1007-1010）
+
+**根因**：
+- 顶部 line 7 import 中**遗漏** `getPlanState`（只 import 了 `setPlanSteps, clearPlanState, toggleStep, executePlan`）
+- 开发者为弥补 import 缺失，在底部添加了 `function getPlanState() { const { getPlanState } = require('./PlanExecutor'); return getPlanState(); }`
+- 函数声明遮蔽机制 + vitest mock 不拦截 require → mock 失效
+
+**修复**：
+1. 将 `getPlanState` 加入顶部 import：`import { setPlanSteps, clearPlanState, toggleStep, executePlan, getPlanState } from './PlanExecutor';`
+2. 删除底部冗余 `function getPlanState()` 声明
+
+**影响**：
+- `togglePlanStep` 方法现在使用顶部 import 的 mock-able 版本
+- `showPrompt` 中的 plan 分支也使用同一版本，行为一致
+- 测试中 `vi.mocked(getPlanState).mockReturnValue(...)` 现在生效
+
+### 8.2 Bug 2: PlanExecutor.executePlan 不更新 step.status
+
+**位置**：`src/renderer/shared/services/ai-assistant/PlanExecutor.ts:141`
+
+**根因**：
+- `executePlan` 只通过 `onStepStatus(originalIndex, 'completed')` 回调通知状态变化
+- 未直接修改 `planState.steps[originalIndex].status`
+- 导致 line 141 的 `planState.steps.filter(s => s.status === 'completed').length` 始终为 0
+- UI 显示 "🎉 计划执行完毕！共 N 步，0 步成功。" 即使全部成功
+
+**修复**：新增 `updateStepStatus` 辅助函数，在 4 处 `onStepStatus` 调用前同步更新 `planState.steps[originalIndex].status`：
+```typescript
+const updateStepStatus = (originalIndex: number, status: 'in_progress' | 'completed' | 'failed') => {
+  if (planState.steps[originalIndex]) {
+    planState.steps[originalIndex].status = status;
+  }
+  onStepStatus(originalIndex, status);
+};
+```
+
+**双重更新幂等性**：index.ts 调用方在 onStepStatus 回调中也更新 step.status，但两次赋同一值无副作用。
+
+### 8.3 测试更新
+
+| 测试文件 | 变更 | 说明 |
+|---|---|---|
+| PlanExecutor.test.ts | 修改 1 个测试 | "0 步成功" → "2 步成功" |
+| PlanExecutor.test.ts | 新增 2 个测试 | 验证 step.status 同步更新（in_progress/completed/failed） |
+| index.test.ts | 修改 1 个测试 | togglePlanStep 移除 try/catch 容错，验证 pendingPrompt 更新 |
+
+### 8.4 验证结果
+
+- ai-assistant 子模块：410 测试通过（原 407，+3）
+- 全量测试：745 测试通过（原 743，+2）
+- 无回归
+
+### 8.5 经验教训
+
+1. **import 遗漏检测**：底部 `function xxx() { require(...) }` 模式通常暗示顶部 import 遗漏，应直接补全 import 而非用 require 弥补
+2. **回调与状态同步**：通过回调通知状态变化时，调用方与被调用方都可能需要更新状态，需明确职责边界或使用辅助函数确保一致性
+3. **测试发现 bug 的价值**：测试假设与源码行为不符时，可能是测试假设错（多数情况），也可能是源码 bug（少数情况），需深入分析根因
