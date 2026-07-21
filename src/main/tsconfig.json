@@ -12,7 +12,7 @@
     "rootDir": ".",
     "allowSyntheticDefaultImports": true,
     "allowJs": true,
-    "checkJs": false,
+    "checkJs": true,
     "resolveJsonModule": true
   },
   "include": ["**/*.js", "**/*.ts"],
