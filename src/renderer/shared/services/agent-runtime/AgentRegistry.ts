@@ -500,12 +500,13 @@ class AgentRegistryService {
    * 重置注册表到初始状态（测试用）
    *
    * @internal
-   * 清除所有自定义 Agent 并重新注册内置 Agent。
+   * 清除所有自定义 Agent 并重新注册内置 Agent（含主 Agent 和子 Agent）。
    */
   _clearForTest(): void {
     this.agents.clear();
     this.builtInAgentIds.clear();
     this.registerBuiltInAgents();
+    this.registerSubAgents();
   }
 }
 
