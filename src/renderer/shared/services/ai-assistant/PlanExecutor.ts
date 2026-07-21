@@ -48,12 +48,20 @@ export async function executePlan(
     return;
   }
 
+  // 同步更新 step.status 并通知调用方（修复：原实现只通知不更新，导致成功步骤统计始终为 0）
+  const updateStepStatus = (originalIndex: number, status: 'in_progress' | 'completed' | 'failed') => {
+    if (planState.steps[originalIndex]) {
+      planState.steps[originalIndex].status = status;
+    }
+    onStepStatus(originalIndex, status);
+  };
+
   onMessage({ role: 'assistant', content: `📋 开始执行计划，共 ${steps.length} 个步骤…` });
 
   for (let i = 0; i < steps.length; i++) {
     const step = steps[i];
     const originalIndex = planState.steps.indexOf(step);
-    onStepStatus(originalIndex, 'in_progress');
+    updateStepStatus(originalIndex, 'in_progress');
     onMessage({ role: 'assistant', content: `▶ 步骤 ${i + 1}/${steps.length}：${step.title}\n${step.description}` });
 
     try {
@@ -115,7 +123,7 @@ export async function executePlan(
       }
 
       if (stepError) {
-        onStepStatus(originalIndex, 'failed');
+        updateStepStatus(originalIndex, 'failed');
         onMessage({ role: 'assistant', content: `❌ 步骤 ${i + 1} 执行失败：${stepError}` });
       } else {
         for (const tc of toolCalls) {
@@ -129,11 +137,11 @@ export async function executePlan(
           onMessage({ role: 'assistant', content: textParts });
         }
 
-        onStepStatus(originalIndex, 'completed');
+        updateStepStatus(originalIndex, 'completed');
         onMessage({ role: 'assistant', content: `✅ 步骤 ${i + 1} 完成` });
       }
     } catch (err) {
-      onStepStatus(originalIndex, 'failed');
+      updateStepStatus(originalIndex, 'failed');
       onMessage({ role: 'assistant', content: `❌ 步骤 ${i + 1} 出错：${err instanceof Error ? err.message : '未知错误'}` });
     }
   }

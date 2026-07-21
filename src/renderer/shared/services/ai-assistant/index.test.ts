@@ -368,20 +368,18 @@ describe('AIAssistantService', () => {
       expect(onCancel).toHaveBeenCalled();
     });
 
-    it('togglePlanStep 调用 toggleStep（注：pendingPrompt 更新依赖源码底部 require() 动态加载 getPlanState，vitest mock 不生效，故仅验证 toggleStep 调用）', () => {
+    it('togglePlanStep 调用 toggleStep 并更新 pendingPrompt', () => {
       const onStepToggle = vi.fn();
       const step = { title: 's1', description: '', enabled: true, status: 'pending' as const };
       (service as any).state.pendingPrompt = { type: 'plan', title: 't', steps: [step], onConfirm: vi.fn(), onCancel: vi.fn(), onStepToggle };
       mockedGetPlanState.mockReturnValue({ steps: [{ ...step, enabled: false }] });
 
-      // 源码 togglePlanStep 内部调用 toggleStep（import 的，mock 生效）+ getPlanState（底部 require 的，mock 不生效）
-      // 此处仅验证 toggleStep 被调用；getPlanState 会抛错但被 try/catch 不影响 toggleStep 已执行
-      try {
-        service.togglePlanStep(0, false);
-      } catch (e) {
-        // 源码 require('./PlanExecutor') 在 vitest 环境下会抛错，忽略
-      }
+      // 修复后：源码底部冗余的 function getPlanState() 已删除，使用顶部 import 的版本，vitest mock 生效
+      service.togglePlanStep(0, false);
       expect(mockedToggleStep).toHaveBeenCalledWith(0, false);
+      // pendingPrompt 应被更新为新 steps
+      const updatedPrompt = service.getState().pendingPrompt as any;
+      expect(updatedPrompt.steps[0].enabled).toBe(false);
     });
 
     it('dismissPrompt 清空 pendingPrompt', () => {

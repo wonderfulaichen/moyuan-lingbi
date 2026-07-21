@@ -4,7 +4,7 @@ import { dataService } from '../DataService';
 import { aiService } from '../aiService';
 import { BUILT_IN_AGENTS } from './systemPrompt';
 import { processWithAI, ProcessCallbacks } from './processWithAI';
-import { setPlanSteps, clearPlanState, toggleStep, executePlan } from './PlanExecutor';
+import { setPlanSteps, clearPlanState, toggleStep, executePlan, getPlanState } from './PlanExecutor';
 import { unifiedExecutor } from './UnifiedExecutor';
 import { summarizeTask } from './contextBuilder';
 import { nanoid } from '../../utils/nanoid';
@@ -1002,11 +1002,6 @@ class AIAssistantService {
       localStorage.setItem(`moyuan-ai-active-agent-${this.projectId}`, this.state.activeAgentId);
     } catch {}
   }
-}
-
-function getPlanState() {
-  const { getPlanState } = require('./PlanExecutor');
-  return getPlanState();
 }
 
 export const aiAssistant = AIAssistantService.getInstance();

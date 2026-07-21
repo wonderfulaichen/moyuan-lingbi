@@ -400,7 +400,7 @@ describe('executePlan', () => {
     expect(state.model).toBeNull();
   });
 
-  it('应输出计划执行完毕消息（成功步骤数取决于 planState.steps[i].status 更新）', async () => {
+  it('应输出计划执行完毕消息（成功步骤数正确统计）', async () => {
     const steps = [
       createStep({ title: 'A' }),
       createStep({ title: 'B' }),
@@ -418,10 +418,60 @@ describe('executePlan', () => {
       () => {},
     );
 
-    // 源码 L141: planState.steps.filter(s => s.status === 'completed').length
-    // 但 executePlan 只通过 onStepStatus 回调通知，未直接修改 step.status
-    // 所以统计始终为 0。应输出 "0 步成功"
+    // 修复后：executePlan 内部 updateStepStatus 同步更新 planState.steps[i].status
+    // 所以统计正确，应输出 "2 步成功"
     expect(messages.some(m => m.includes('计划执行完毕'))).toBe(true);
+    expect(messages.some(m => m.includes('2 步成功'))).toBe(true);
+  });
+
+  it('executePlan 应同步更新 step.status 为 in_progress/completed', async () => {
+    const steps = [
+      createStep({ title: 'A' }),
+      createStep({ title: 'B' }),
+    ];
+    setPlanSteps(steps, createModel());
+
+    mockedGenerate.mockResolvedValue({
+      content: '```tool\n{"action": "create_file", "name": "x"}\n```',
+      error: undefined,
+    } as any);
+
+    const statusUpdates: Array<{ index: number; status: string }> = [];
+    await executePlan(
+      () => {},
+      (index, status) => statusUpdates.push({ index, status }),
+    );
+
+    // 每步应先 in_progress 再 completed
+    expect(statusUpdates).toEqual([
+      { index: 0, status: 'in_progress' },
+      { index: 0, status: 'completed' },
+      { index: 1, status: 'in_progress' },
+      { index: 1, status: 'completed' },
+    ]);
+  });
+
+  it('executePlan 失败时应同步更新 step.status 为 failed', async () => {
+    const steps = [createStep({ title: 'A' })];
+    setPlanSteps(steps, createModel());
+
+    mockedGenerate.mockResolvedValue({
+      content: '',
+      error: 'API 错误',
+    } as any);
+
+    const statusUpdates: Array<{ index: number; status: string }> = [];
+    const messages: string[] = [];
+    await executePlan(
+      (msg) => messages.push(msg.content),
+      (index, status) => statusUpdates.push({ index, status }),
+    );
+
+    // 失败时应更新为 failed，最终统计为 0 步成功
+    expect(statusUpdates).toEqual([
+      { index: 0, status: 'in_progress' },
+      { index: 0, status: 'failed' },
+    ]);
     expect(messages.some(m => m.includes('0 步成功'))).toBe(true);
   });
 });
