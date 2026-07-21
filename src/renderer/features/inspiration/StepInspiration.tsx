@@ -250,7 +250,7 @@ const StepInspiration: React.FC<StepInspirationProps> = ({ activeModel, prompts,
               value={inspiration}
               onChange={e => setInspiration(e.target.value)}
               placeholder="输入你的小说灵感……&#10;例如：一个古代刺客穿越到现代都市，意外卷入一场阴谋……"
-              className="w-full h-32 rounded-2xl outline-none border resize-none p-4 text-[14px] leading-relaxed transition-all duration-200 focus:border-transparent"
+              className="w-full h-32 rounded-2xl outline-none border resize-none p-4 text-sm leading-relaxed transition-all duration-200 focus:border-transparent"
               style={{ 
                 color: 'var(--color-text-secondary)', 
                 backgroundColor: 'var(--color-surface-muted)', 
@@ -425,7 +425,7 @@ const StepInspiration: React.FC<StepInspirationProps> = ({ activeModel, prompts,
 
           {/* 参数化配置面板 */}
           <div className="glass-card p-4 mb-4 rounded-xl">
-            <h4 className="text-[12px] font-semibold mb-3 flex items-center gap-1.5" style={{ color: 'var(--color-text-primary)' }}>
+            <h4 className="text-xs font-semibold mb-3 flex items-center gap-1.5" style={{ color: 'var(--color-text-primary)' }}>
               <i className="fas fa-sliders" style={{ color: 'var(--color-primary-400)' }} />
               创作方向设定
               <span className="text-[10px] font-normal ml-1" style={{ color: 'var(--color-text-muted)' }}>(可选)</span>

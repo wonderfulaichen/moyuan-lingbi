@@ -271,7 +271,7 @@ const StepSettings: React.FC<StepSettingsProps> = ({
                 return (
                   <React.Fragment key={f.id}>
                     {idx > 0 && (
-                      <i className="fas fa-chevron-right" style={{ color: 'var(--color-text-muted)', fontSize: '8px' }}></i>
+                      <i className="fas fa-chevron-right text-[8px]" style={{ color: 'var(--color-text-muted)' }}></i>
                     )}
                     <button
                       onClick={() => !isLast && handleSelectFolder(f.id)}

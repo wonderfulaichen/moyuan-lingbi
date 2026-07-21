@@ -33,7 +33,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
   const [thinkingExpanded, setThinkingExpanded] = useState(false);
   const displayContent = isCollapsed ? msg.content.slice(0, 280) + '...' : msg.content;
   const isCompressed = !!msg.compressedSummary;
-  const isSummaryMsg = msg.role === 'system' && msg.content.startsWith('【对话已压缩') || msg.content.startsWith('【');
+  const isSummaryMsg = msg.role === 'system' && msg.content.startsWith('【对话已压缩');
   const hasThinking = msg.thinking && msg.thinking.trim().length > 0;
 
   return (

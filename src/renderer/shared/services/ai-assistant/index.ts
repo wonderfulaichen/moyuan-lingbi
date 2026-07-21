@@ -7,12 +7,9 @@ import { processWithAI, ProcessCallbacks } from './processWithAI';
 import { setPlanSteps, clearPlanState, toggleStep, executePlan } from './PlanExecutor';
 import { unifiedExecutor } from './UnifiedExecutor';
 import { summarizeTask } from './contextBuilder';
+import { nanoid } from '../../utils/nanoid';
 
 type AssistantListener = (state: AIAssistantState) => void;
-
-function nanoid(): string {
-  return `${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 9)}`;
-}
 
 class AIAssistantService {
   private state: AIAssistantState;
@@ -22,6 +19,8 @@ class AIAssistantService {
   private currentTaskId: string | null = null;
   private projectId: string | null = null;
   private onTokenUsageCallback: ((tokens: { prompt: number; completion: number; total: number }) => void) | null = null;
+  // RAF 节流：流式输出时每帧最多触发一次 emit，避免高频 setState 和 localStorage 写入
+  private rafId: number | null = null;
 
   setOnTokenUsage(cb: (tokens: { prompt: number; completion: number; total: number }) => void): void {
     this.onTokenUsageCallback = cb;
@@ -158,9 +157,23 @@ class AIAssistantService {
   }
 
   private emit(): void {
+    // 取消 pending RAF，避免冗余的 UI 更新（数据已同步到 state，后续 emit 会带上最新值）
+    if (this.rafId !== null) {
+      cancelAnimationFrame(this.rafId);
+      this.rafId = null;
+    }
     for (const fn of this.listeners) fn({ ...this.state });
     this.saveCurrentConversation();
     this.persistConversations();
+  }
+
+  // 流式输出专用：用 RAF 节流，每帧最多触发一次 emit
+  private scheduleEmit(): void {
+    if (this.rafId !== null) return;
+    this.rafId = requestAnimationFrame(() => {
+      this.rafId = null;
+      this.emit();
+    });
   }
 
   private addMessage(msg: Omit<AIChatMessage, 'id' | 'timestamp' | 'actions'>): AIChatMessage {
@@ -286,13 +299,13 @@ class AIAssistantService {
       setStreamingContent: (content) => {
         if (this.currentTaskId === currentTaskId) {
           this.state.streamingContent = content;
-          this.emit();
+          this.scheduleEmit();
         }
       },
       setStreamingThinking: (thinking) => {
         if (this.currentTaskId === currentTaskId) {
           this.state.streamingThinking = thinking;
-          this.emit();
+          this.scheduleEmit();
         }
       },
       setAgentPhase: (phase, task, progress, extra) => {
@@ -735,10 +748,14 @@ class AIAssistantService {
   }
 
   switchAgent(agentId: string): void {
-    if (!this.state.agents.find(a => a.id === agentId)) return;
+    const agent = this.state.agents.find(a => a.id === agentId);
+    if (!agent || this.state.activeAgentId === agentId) return;
     this.state.activeAgentId = agentId;
     this.persistProjectActiveAgent();
-    this.emit();
+    this.addMessage({
+      role: 'system',
+      content: `已切换至 ${agent.name}${agent.description ? `（${agent.description}）` : ''}`,
+    });
   }
 
   createAgent(params: { name: string; icon: string; color: string; description: string; systemPrompt: string }): AIAgent {
