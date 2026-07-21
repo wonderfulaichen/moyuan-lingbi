@@ -106,10 +106,22 @@ export function useChatInput(activeModel: ModelConfig | null, onOpenSettings: ()
   // ============================================================
   // 快捷指令执行：消费 lastAction
   // ============================================================
+  //
+  // BUG 修复：原实现依赖 [slashCommand, setInput]，而 slashCommand 每次渲染都是
+  // 新对象（useSlashCommand 返回未 memo 的对象），导致 effect 每次渲染都执行。
+  // 又因为 lastAction 从不清除，action 被无限重复消费 → 内存溢出/浏览器卡死。
+  //
+  // 修复方案：用 ref 跟踪已消费的 timestamp，跳过已处理的 action。
+  // 保留原依赖数组以避免 ESLint 误报（close/setInput 均为稳定回调）。
+
+  const consumedTimestampRef = useRef<number | null>(null);
 
   useEffect(() => {
     if (!slashCommand.lastAction) return;
     const { action, data, timestamp } = slashCommand.lastAction;
+    // 跳过已消费的 action（防止无限循环）
+    if (consumedTimestampRef.current === timestamp) return;
+    consumedTimestampRef.current = timestamp;
 
     switch (action) {
       case 'clear':
@@ -139,9 +151,6 @@ export function useChatInput(activeModel: ModelConfig | null, onOpenSettings: ()
       default:
         break;
     }
-    // 通过 timestamp 防止重复消费（lastAction 引用不变时不重复触发）
-    // 由于每次执行都会创建新的 lastAction 对象，timestamp 用于记录执行时序
-    void timestamp;
   }, [slashCommand, setInput]);
 
   /** 鼠标点击浮层项时执行 */
