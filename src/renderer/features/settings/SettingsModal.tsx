@@ -360,9 +360,9 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
         className={`
           relative w-full mx-4
           ${isMobile ? 'h-[100dvh] max-h-[100dvh] rounded-none' : 'max-w-6xl max-h-[85vh] rounded-2xl'}
-          bg-gray-950/90 backdrop-blur-xl
-          border border-purple-900/25
-          shadow-2xl shadow-purple-900/20
+          bg-[var(--color-surface-overlay)] backdrop-blur-xl
+          border border-[var(--color-border-default)]
+          shadow-2xl shadow-[var(--color-primary-500)]/20
           flex flex-col overflow-hidden
           transition-all duration-300
           ${animExit ? 'scale-95 opacity-0' : 'scale-100 opacity-100'}
@@ -370,8 +370,8 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
         onClick={(e) => e.stopPropagation()}
       >
         {/* 装饰光效 */}
-        <div className="absolute -top-24 -right-24 w-48 h-48 bg-purple-600/10 rounded-full blur-3xl pointer-events-none"></div>
-        <div className="absolute -bottom-24 -left-24 w-48 h-48 bg-violet-600/10 rounded-full blur-3xl pointer-events-none"></div>
+        <div className="absolute -top-24 -right-24 w-48 h-48 bg-[var(--color-primary-600)]/10 rounded-full blur-3xl pointer-events-none"></div>
+        <div className="absolute -bottom-24 -left-24 w-48 h-48 bg-[var(--color-primary-600)]/10 rounded-full blur-3xl pointer-events-none"></div>
 
         {/* 头部 */}
         <div className={`relative flex items-center justify-between border-b shrink-0 ${isMobile ? 'px-3 py-2' : 'px-6 py-4'}`} style={{ borderColor: 'var(--color-primary-100)' }}>
@@ -412,8 +412,8 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                   className={`
                     ${isMobile ? 'flex-shrink-0 px-3 py-2 rounded-lg text-xs' : 'w-full flex items-center gap-3 px-3 py-3 rounded-xl text-left'} transition-all duration-200
                     ${activeTab === item.id
-                      ? 'bg-gradient-to-r from-purple-600/20 to-violet-600/10 text-purple-300 border border-purple-500/25 shadow-sm'
-                      : 'text-gray-500 hover:text-gray-300 hover:bg-gray-800/40'
+                      ? 'bg-gradient-to-r from-[var(--color-primary-500)]/20 to-[var(--color-primary-600)]/10 text-[var(--color-primary-300)] border border-[var(--color-primary-300)] shadow-sm'
+                      : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)]'
                     }
                   `}
                 >
@@ -424,10 +424,10 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                     </div>
                   )}
                   {item.id === 'model' && !isMobile && (
-                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-gray-800 text-gray-500">{models.length}</span>
+                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-[var(--color-surface-muted)] text-[var(--color-text-muted)]">{models.length}</span>
                   )}
                   {item.id === 'promptLibrary' && !isMobile && (
-                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-gray-800 text-gray-500">{getPromptLibrary().length}</span>
+                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-[var(--color-surface-muted)] text-[var(--color-text-muted)]">{getPromptLibrary().length}</span>
                   )}
                   {item.id === 'routing' && !isMobile && (
                     <span className="text-[9px] px-1.5 py-0.5 rounded-full" style={{ backgroundColor: 'var(--color-purple-100, rgba(168,85,247,0.2))', color: 'var(--color-purple-500, #a855f7)' }}>NEW</span>
@@ -440,8 +440,8 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
             {!isMobile && (
             <div className="mt-8 pt-4 border-t" style={{ borderColor: 'var(--color-primary-100)' }}>
               <div className="text-center">
-                <p className="text-[10px] text-gray-500">墨渊灵笔</p>
-                <p className="text-[10px] text-gray-500 mt-1">版本 1.0.0</p>
+                <p className="text-[10px] text-[var(--color-text-muted)]">墨渊灵笔</p>
+                <p className="text-[10px] text-[var(--color-text-muted)] mt-1">版本 1.0.0</p>
               </div>
             </div>
             )}
@@ -469,13 +469,13 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
               {/* 顶部操作栏 */}
               <div className="flex items-center justify-between mb-5">
                 <div>
-                  <p className="text-sm text-gray-400">配置 AI 模型的连接参数与行为</p>
-                  <p className="text-xs text-gray-600 mt-1">支持 OpenAI Compatible / DeepSeek / Ollama 三种协议</p>
+                  <p className="text-sm text-[var(--color-text-tertiary)]">配置 AI 模型的连接参数与行为</p>
+                  <p className="text-xs text-[var(--color-text-muted)] mt-1">支持 OpenAI Compatible / DeepSeek / Ollama 三种协议</p>
                 </div>
                 <div className="flex items-center gap-2">
                   <button
                     onClick={handleAddModel}
-                    className="px-4 py-2 bg-gradient-to-r from-purple-600/30 to-violet-600/20 text-purple-300 rounded-xl hover:from-purple-600/50 hover:to-violet-600/30 transition-all duration-200 text-sm font-medium border border-purple-500/20 hover:border-purple-500/40"
+                    className="px-4 py-2 bg-gradient-to-r from-[var(--color-primary-500)]/30 to-[var(--color-primary-600)]/20 text-[var(--color-primary-300)] rounded-xl hover:from-[var(--color-primary-500)]/50 hover:to-[var(--color-primary-600)]/30 transition-all duration-200 text-sm font-medium border border-[var(--color-primary-300)] hover:border-[var(--color-primary-400)]"
                   >
                     <i className="fas fa-plus mr-2"></i>添加模型
                   </button>
@@ -483,9 +483,9 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
               </div>
 
               {/* 快速添加提供商（参考项目1: quickAddProviderModel） */}
-              <div className="mb-4 p-3 bg-gray-900/30 rounded-xl border border-purple-900/10">
-                <p className="text-[10px] text-gray-500 mb-2.5 flex items-center gap-1">
-                  <i className="fas fa-bolt text-[8px] text-purple-400/70"></i>
+              <div className="mb-4 p-3 bg-[var(--color-surface-elevated)] rounded-xl border border-[var(--color-border-default)]">
+                <p className="text-[10px] text-[var(--color-text-muted)] mb-2.5 flex items-center gap-1">
+                  <i className="fas fa-bolt text-[8px] text-[var(--color-primary-400)]/70"></i>
                   快速添加预设
                 </p>
                 <div className="flex gap-2">
@@ -493,7 +493,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                     <button
                       key={item.provider}
                       onClick={() => handleQuickAddProvider(item.provider)}
-                      className="flex items-center gap-2 px-3.5 py-2 bg-gray-800/60 hover:bg-gray-800 rounded-xl border border-gray-700/50 hover:border-purple-500/30 transition-all duration-200 text-xs text-gray-300 hover:text-gray-100"
+                      className="flex items-center gap-2 px-3.5 py-2 bg-[var(--color-surface-hover)] hover:bg-[var(--color-surface-hover)] rounded-xl border border-[var(--color-border-default)] hover:border-[var(--color-primary-300)] transition-all duration-200 text-xs text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]"
                     >
                       <i className={`fas ${item.icon} ${item.color} text-[11px]`}></i>
                       <span>{item.label}</span>
@@ -521,8 +521,8 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                         relative rounded-xl border transition-all duration-300
                         animate-fade-in-up
                         ${isActive
-                          ? 'bg-gradient-to-r from-purple-600/8 to-violet-600/5 border-purple-500/30 shadow-md shadow-purple-900/15'
-                          : 'bg-gray-900/40 border-purple-900/10 hover:border-purple-900/25 hover:bg-gray-900/60'
+                          ? 'bg-gradient-to-r from-[var(--color-primary-500)]/8 to-[var(--color-primary-600)]/5 border-[var(--color-primary-300)] shadow-md shadow-[var(--color-primary-500)]/15'
+                          : 'bg-[var(--color-surface-elevated)] border-[var(--color-border-default)] hover:border-[var(--color-border-default)] hover:bg-[var(--color-surface-elevated)]'
                         }
                         ${isEditing ? 'scale-[1.01]' : ''}
                       `}
@@ -530,7 +530,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                     >
                       {/* 活跃指示线 */}
                       {isActive && (
-                        <div className="absolute left-0 top-2 bottom-2 w-0.5 bg-gradient-to-b from-purple-500 to-violet-500 rounded-full"></div>
+                        <div className="absolute left-0 top-2 bottom-2 w-0.5 bg-gradient-to-b from-[var(--color-primary-500)] to-[var(--color-primary-500)] rounded-full"></div>
                       )}
 
                       {/* 模型卡片头部 */}
@@ -543,31 +543,31 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                           <div className={`
                             w-2.5 h-2.5 rounded-full transition-all duration-300 shrink-0
                             ${isActive
-                              ? 'bg-purple-500 shadow-lg shadow-purple-500/50 animate-pulse-glow'
-                              : 'bg-gray-600'
+                              ? 'bg-[var(--color-primary-500)] shadow-lg shadow-[var(--color-primary-500)]/50 animate-pulse-glow'
+                              : 'bg-[var(--color-surface-muted)]'
                             }
                           `}></div>
                           {/* 提供商图标 */}
                           <div className={`
                             w-8 h-8 rounded-lg flex items-center justify-center
-                            bg-gradient-to-br ${info.gradient} border border-purple-900/20 shrink-0
+                            bg-gradient-to-br ${info.gradient} border border-[var(--color-border-default)] shrink-0
                           `}>
                             <i className={`fas ${info.icon} ${info.color} text-xs`}></i>
                           </div>
                           {/* 名称和标签 */}
                           <div className="min-w-0">
                             <div className="flex items-center gap-2">
-                              <span className="font-semibold text-gray-200 text-sm truncate">{model.name}</span>
-                              <span className="text-[10px] text-gray-500 px-2 py-0.5 bg-gray-800/80 rounded-full border border-gray-700/50 shrink-0">{info.label}</span>
+                              <span className="font-semibold text-[var(--color-text-primary)] text-sm truncate">{model.name}</span>
+                              <span className="text-[10px] text-[var(--color-text-muted)] px-2 py-0.5 bg-[var(--color-surface-muted)] rounded-full border border-[var(--color-border-default)] shrink-0">{info.label}</span>
                             </div>
                             <div className="flex items-center gap-2 mt-0.5">
                               {model.modelName ? (
-                                <span className="text-[11px] text-purple-400/70 font-mono">{model.modelName}</span>
+                                <span className="text-[11px] text-[var(--color-primary-400)]/70 font-mono">{model.modelName}</span>
                               ) : (
-                                <span className="text-[11px] text-gray-600">未配置模型</span>
+                                <span className="text-[11px] text-[var(--color-text-muted)]">未配置模型</span>
                               )}
                               {model.modelsLastFetched && model.availableModels && (
-                                <span className="text-[10px] text-gray-600">{model.availableModels.length} 个模型</span>
+                                <span className="text-[10px] text-[var(--color-text-muted)]">{model.availableModels.length} 个模型</span>
                               )}
                             </div>
                           </div>
@@ -575,7 +575,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                         <div className="flex items-center gap-2 shrink-0">
                           {/* 当前使用标签 */}
                           {isActive && (
-                            <span className="text-[10px] text-purple-400 bg-purple-600/20 px-2.5 py-0.5 rounded-full border border-purple-500/20 animate-fade-in">
+                            <span className="text-[10px] text-[var(--color-primary-400)] bg-[var(--color-primary-600)]/20 px-2.5 py-0.5 rounded-full border border-[var(--color-primary-300)] animate-fade-in">
                               当前使用
                             </span>
                           )}
@@ -586,7 +586,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                                 e.stopPropagation();
                                 onUpdateActiveModelId(model.id);
                               }}
-                              className="text-[11px] px-2.5 py-1 rounded-lg bg-gray-800/80 text-gray-400 hover:text-purple-300 hover:bg-purple-600/15 transition-all duration-200 border border-gray-700/50 hover:border-purple-500/30"
+                              className="text-[11px] px-2.5 py-1 rounded-lg bg-[var(--color-surface-muted)] text-[var(--color-text-tertiary)] hover:text-[var(--color-primary-300)] hover:bg-[var(--color-primary-600)]/15 transition-all duration-200 border border-[var(--color-border-default)] hover:border-[var(--color-primary-300)]"
                             >
                               切换
                             </button>
@@ -594,8 +594,8 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                           {/* 展开箭头 */}
                           <div className={`
                             w-6 h-6 rounded-md flex items-center justify-center
-                            text-gray-600 transition-all duration-300
-                            ${isEditing ? 'text-purple-400 rotate-180' : ''}
+                            text-[var(--color-text-muted)] transition-all duration-300
+                            ${isEditing ? 'text-[var(--color-primary-400)] rotate-180' : ''}
                           `}>
                             <i className="fas fa-chevron-down text-xs"></i>
                           </div>
@@ -604,31 +604,31 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
 
                       {/* 展开的编辑面板 */}
                       {isEditing && (
-                        <div className="px-4 pb-5 border-t border-purple-900/10 pt-4 animate-fade-in-down">
+                        <div className="px-4 pb-5 border-t border-[var(--color-border-default)] pt-4 animate-fade-in-down">
                           {/* 基础配置网格 */}
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                             {/* 配置名称 */}
                             <div>
-                              <label className="text-[11px] text-gray-500 mb-1.5 flex items-center gap-1">
+                              <label className="text-[11px] text-[var(--color-text-muted)] mb-1.5 flex items-center gap-1">
                                 <i className="fas fa-tag text-[9px]"></i>配置名称
                               </label>
                               <input
                                 type="text"
                                 value={model.name}
                                 onChange={(e) => handleUpdateModel(model.id, { name: e.target.value })}
-                                className="w-full bg-gray-800/40 border border-purple-900/15 rounded-xl px-3.5 py-2.5 text-sm text-gray-200 focus:outline-none focus:border-purple-500/50 focus:bg-gray-800/60 transition-all duration-200 placeholder:text-gray-600"
+                                className="w-full bg-[var(--color-surface-hover)] border border-[var(--color-border-default)] rounded-xl px-3.5 py-2.5 text-sm text-[var(--color-text-primary)] focus:outline-none focus:border-[var(--color-primary-400)] focus:bg-[var(--color-surface-hover)] transition-all duration-200 placeholder:text-[var(--color-text-muted)]"
                                 placeholder="给配置起个名字"
                               />
                             </div>
                             {/* 提供商 */}
                             <div>
-                              <label className="text-[11px] text-gray-500 mb-1.5 flex items-center gap-1">
+                              <label className="text-[11px] text-[var(--color-text-muted)] mb-1.5 flex items-center gap-1">
                                 <i className="fas fa-cloud text-[9px]"></i>提供商
                               </label>
                               <select
                                 value={model.provider}
                                 onChange={(e) => handleProviderChange(model, e.target.value as ModelConfig['provider'])}
-                                className="w-full bg-gray-800/40 border border-purple-900/15 rounded-xl px-3.5 py-2.5 text-sm text-gray-200 focus:outline-none focus:border-purple-500/50 focus:bg-gray-800/60 transition-all duration-200 cursor-pointer appearance-none"
+                                className="w-full bg-[var(--color-surface-hover)] border border-[var(--color-border-default)] rounded-xl px-3.5 py-2.5 text-sm text-[var(--color-text-primary)] focus:outline-none focus:border-[var(--color-primary-400)] focus:bg-[var(--color-surface-hover)] transition-all duration-200 cursor-pointer appearance-none"
                                 style={{
                                   backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3E%3C/svg%3E")`,
                                   backgroundPosition: 'right 8px center',
@@ -644,33 +644,33 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                           </div>
 
                           {/* 提供商描述和提示信息（参考项目1的功能） */}
-                          <div className="mt-3 p-3 bg-gray-800/20 rounded-xl border border-purple-900/10">
+                          <div className="mt-3 p-3 bg-[var(--color-surface-muted)] rounded-xl border border-[var(--color-border-default)]">
                             <div className="flex items-start gap-2.5">
                               <div className={`
                                 w-7 h-7 rounded-lg flex items-center justify-center shrink-0 mt-0.5
-                                bg-gradient-to-br ${info.gradient} border border-purple-900/20
+                                bg-gradient-to-br ${info.gradient} border border-[var(--color-border-default)]
                               `}>
                                 <i className={`fas ${info.icon} ${info.color} text-[10px]`}></i>
                               </div>
                               <div className="min-w-0">
-                                <p className="text-xs text-gray-300 font-medium">{info.label}</p>
-                                <p className="text-[10px] text-gray-500 mt-0.5 leading-relaxed">{info.description}</p>
+                                <p className="text-xs text-[var(--color-text-secondary)] font-medium">{info.label}</p>
+                                <p className="text-[10px] text-[var(--color-text-muted)] mt-0.5 leading-relaxed">{info.description}</p>
                                 <div className="flex flex-wrap gap-1.5 mt-2">
                                   {info.modelExamples.slice(0, 4).map(ex => (
-                                    <span key={ex} className="text-[9px] font-mono text-purple-400/60 bg-purple-900/15 px-1.5 py-0.5 rounded border border-purple-900/20">
+                                    <span key={ex} className="text-[9px] font-mono text-[var(--color-primary-400)]/60 bg-[var(--color-primary-600)]/15 px-1.5 py-0.5 rounded border border-[var(--color-border-default)]">
                                       {ex}
                                     </span>
                                   ))}
                                 </div>
-                                <div className="mt-2 pt-2 border-t border-purple-900/10">
-                                  <p className="text-[9px] text-gray-600 mb-1.5 flex items-center gap-1">
-                                    <i className="fas fa-lightbulb text-[7px] text-amber-500/70"></i>
+                                <div className="mt-2 pt-2 border-t border-[var(--color-border-default)]">
+                                  <p className="text-[9px] text-[var(--color-text-muted)] mb-1.5 flex items-center gap-1">
+                                    <i className="fas fa-lightbulb text-[7px] text-[var(--color-warning)]"></i>
                                     使用提示：
                                   </p>
                                   <ul className="space-y-1">
                                     {info.tips.slice(0, 4).map((tip, i) => (
-                                      <li key={i} className="text-[9px] text-gray-500 flex items-start gap-1.5">
-                                        <span className="text-purple-400/50 mt-0.5">•</span>
+                                      <li key={i} className="text-[9px] text-[var(--color-text-muted)] flex items-start gap-1.5">
+                                        <span className="text-[var(--color-primary-400)]/50 mt-0.5">•</span>
                                         {tip}
                                       </li>
                                     ))}
@@ -681,7 +681,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                                     href={info.website}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="text-[9px] text-purple-400/60 hover:text-purple-400 transition-colors flex items-center gap-1"
+                                    className="text-[9px] text-[var(--color-primary-400)]/60 hover:text-[var(--color-primary-400)] transition-colors flex items-center gap-1"
                                     onClick={e => e.stopPropagation()}
                                   >
                                     <i className="fas fa-globe text-[7px]"></i>
@@ -691,7 +691,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                                     href={info.apiApplyUrl}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="text-[9px] text-purple-400/60 hover:text-purple-400 transition-colors flex items-center gap-1"
+                                    className="text-[9px] text-[var(--color-primary-400)]/60 hover:text-[var(--color-primary-400)] transition-colors flex items-center gap-1"
                                     onClick={e => e.stopPropagation()}
                                   >
                                     <i className="fas fa-key text-[7px]"></i>
@@ -704,7 +704,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
 
                           {/* API 端点 + 获取模型 */}
                           <div className="mt-3">
-                            <label className="text-[11px] text-gray-500 mb-1.5 flex items-center gap-1">
+                            <label className="text-[11px] text-[var(--color-text-muted)] mb-1.5 flex items-center gap-1">
                               <i className="fas fa-link text-[9px]"></i>API 端点
                             </label>
                             <div className="flex gap-2">
@@ -719,7 +719,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                                     modelsFetchError: undefined,
                                   });
                                 }}
-                                className="flex-1 bg-gray-800/40 border border-purple-900/15 rounded-xl px-3.5 py-2.5 text-sm text-gray-200 focus:outline-none focus:border-purple-500/50 focus:bg-gray-800/60 transition-all duration-200 font-mono text-[13px] placeholder:text-gray-600"
+                                className="flex-1 bg-[var(--color-surface-hover)] border border-[var(--color-border-default)] rounded-xl px-3.5 py-2.5 text-sm text-[var(--color-text-primary)] focus:outline-none focus:border-[var(--color-primary-400)] focus:bg-[var(--color-surface-hover)] transition-all duration-200 font-mono text-[13px] placeholder:text-[var(--color-text-muted)]"
                                 placeholder={info.defaultEndpoint}
                               />
                               <button
@@ -728,8 +728,8 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                                 className={`
                                   px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 shrink-0
                                   ${isFetching
-                                    ? 'bg-purple-600/20 text-purple-400/60 cursor-wait'
-                                    : 'bg-gradient-to-r from-purple-600/25 to-violet-600/20 text-purple-300 hover:from-purple-600/40 hover:to-violet-600/30 border border-purple-500/20 hover:border-purple-500/40'
+                                    ? 'bg-[var(--color-primary-600)]/20 text-[var(--color-primary-400)]/60 cursor-wait'
+                                    : 'bg-gradient-to-r from-[var(--color-primary-500)]/25 to-[var(--color-primary-600)]/20 text-[var(--color-primary-300)] hover:from-[var(--color-primary-500)]/40 hover:to-[var(--color-primary-600)]/30 border border-[var(--color-primary-300)] hover:border-[var(--color-primary-400)]'
                                   }
                                 `}
                                 title="从端点获取可用模型列表"
@@ -747,25 +747,25 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                                 )}
                               </button>
                             </div>
-                            <p className="text-[10px] text-gray-600 mt-1.5 flex items-center gap-1">
+                            <p className="text-[10px] text-[var(--color-text-muted)] mt-1.5 flex items-center gap-1">
                               <i className="fas fa-info-circle text-[8px]"></i>
                               {info.endpointHint} · {model.provider === 'ollama' ? '确保 Ollama 服务已启动' : '需要有效的 API Key'}
                             </p>
                             {/* 获取结果反馈 */}
                             {fetchError && (
-                              <div className="mt-2 p-2.5 bg-red-900/15 border border-red-900/30 rounded-xl animate-fade-in">
+                              <div className="mt-2 p-2.5 bg-[var(--color-error-bg)] border border-[var(--color-error-border)] rounded-xl animate-fade-in">
                                 <div className="flex items-start gap-2">
-                                  <i className="fas fa-exclamation-circle text-red-400 text-[10px] mt-0.5"></i>
-                                  <div className="text-[11px] text-red-300/90 leading-relaxed whitespace-pre-line">{fetchError}</div>
+                                  <i className="fas fa-exclamation-circle text-[var(--color-error)] text-[10px] mt-0.5"></i>
+                                  <div className="text-[11px] text-[var(--color-error)] leading-relaxed whitespace-pre-line">{fetchError}</div>
                                 </div>
                               </div>
                             )}
                             {model.modelsLastFetched && !fetchError && model.availableModels && (
-                              <p className="text-[10px] text-gray-600 mt-1 flex items-center gap-1">
-                                <i className="fas fa-check-circle text-emerald-500/70"></i>
+                              <p className="text-[10px] text-[var(--color-text-muted)] mt-1 flex items-center gap-1">
+                                <i className="fas fa-check-circle text-[var(--color-success)]"></i>
                                 上次获取: {formatTime(model.modelsLastFetched)} · 共 {model.availableModels.length} 个模型
                                 {aiService.isCacheValid(model) && (
-                                  <span className="text-[8px] text-gray-600 ml-1">(缓存有效)</span>
+                                  <span className="text-[8px] text-[var(--color-text-muted)] ml-1">(缓存有效)</span>
                                 )}
                               </p>
                             )}
@@ -773,7 +773,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
 
                           {/* 模型名称 */}
                           <div className="mt-3">
-                            <label className="text-[11px] text-gray-500 mb-1.5 flex items-center gap-1">
+                            <label className="text-[11px] text-[var(--color-text-muted)] mb-1.5 flex items-center gap-1">
                               <i className="fas fa-microchip text-[9px]"></i>模型名称
                             </label>
                             {model.availableModels && model.availableModels.length > 0 ? (
@@ -789,7 +789,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                                       ...(apiCtx ? { contextWindow: apiCtx } : (spec ? { contextWindow: spec.contextWindow, maxTokens: spec.maxTokens } : {})),
                                     });
                                   }}
-                                  className="flex-1 bg-gray-800/40 border border-purple-900/15 rounded-xl px-3.5 py-2.5 text-sm text-gray-200 focus:outline-none focus:border-purple-500/50 transition-all duration-200 cursor-pointer appearance-none"
+                                  className="flex-1 bg-[var(--color-surface-hover)] border border-[var(--color-border-default)] rounded-xl px-3.5 py-2.5 text-sm text-[var(--color-text-primary)] focus:outline-none focus:border-[var(--color-primary-400)] transition-all duration-200 cursor-pointer appearance-none"
                                   style={{
                                     backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3E%3C/svg%3E")`,
                                     backgroundPosition: 'right 8px center',
@@ -804,7 +804,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                                 </select>
                                 <button
                                   onClick={() => handleUpdateModel(model.id, { availableModels: undefined })}
-                                  className="px-3 py-2 bg-gray-800/60 text-gray-500 hover:text-gray-200 rounded-xl transition-all duration-200 text-xs border border-gray-700/50 hover:border-purple-900/30"
+                                  className="px-3 py-2 bg-[var(--color-surface-hover)] text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] rounded-xl transition-all duration-200 text-xs border border-[var(--color-border-default)] hover:border-[var(--color-border-default)]"
                                   title="切换为手动输入"
                                 >
                                   <i className="fas fa-keyboard"></i>
@@ -823,7 +823,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                                     ...(apiCtx ? { contextWindow: apiCtx } : (spec ? { contextWindow: spec.contextWindow, maxTokens: spec.maxTokens } : {})),
                                   });
                                 }}
-                                className="w-full bg-gray-800/40 border border-purple-900/15 rounded-xl px-3.5 py-2.5 text-sm text-gray-200 focus:outline-none focus:border-purple-500/50 focus:bg-gray-800/60 transition-all duration-200 font-mono text-[13px] placeholder:text-gray-600"
+                                className="w-full bg-[var(--color-surface-hover)] border border-[var(--color-border-default)] rounded-xl px-3.5 py-2.5 text-sm text-[var(--color-text-primary)] focus:outline-none focus:border-[var(--color-primary-400)] focus:bg-[var(--color-surface-hover)] transition-all duration-200 font-mono text-[13px] placeholder:text-[var(--color-text-muted)]"
                                 placeholder={
                                   model.provider === 'ollama' ? '例: qwen2.5:7b, llama3.2' :
                                   model.provider === 'deepseek' ? '例: deepseek-chat, deepseek-reasoner' :
@@ -831,7 +831,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                                 }
                               />
                             )}
-                            <p className="text-[10px] text-gray-600 mt-1.5 flex items-center gap-1">
+                            <p className="text-[10px] text-[var(--color-text-muted)] mt-1.5 flex items-center gap-1">
                               <i className="fas fa-lightbulb text-[8px]"></i>
                               {model.availableModels && model.availableModels.length > 0
                                 ? '从下拉列表中选择或点击键盘图标切换手动输入'
@@ -843,7 +843,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
 
                           {/* API Key */}
                           <div className="mt-3">
-                            <label className="text-[11px] text-gray-500 mb-1.5 flex items-center gap-1">
+                            <label className="text-[11px] text-[var(--color-text-muted)] mb-1.5 flex items-center gap-1">
                               <i className="fas fa-key text-[9px]"></i>API Key
                             </label>
                             <input
@@ -853,10 +853,10 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                                 console.log('[SettingsModal] API Key onChange:', { modelId: model.id, valueLength: e.target.value.length });
                                 handleUpdateModel(model.id, { apiKey: e.target.value });
                               }}
-                              className="w-full bg-gray-800/40 border border-purple-900/15 rounded-xl px-3.5 py-2.5 text-sm text-gray-200 focus:outline-none focus:border-purple-500/50 focus:bg-gray-800/60 transition-all duration-200 placeholder:text-gray-600"
+                              className="w-full bg-[var(--color-surface-hover)] border border-[var(--color-border-default)] rounded-xl px-3.5 py-2.5 text-sm text-[var(--color-text-primary)] focus:outline-none focus:border-[var(--color-primary-400)] focus:bg-[var(--color-surface-hover)] transition-all duration-200 placeholder:text-[var(--color-text-muted)]"
                               placeholder={info.apiKeyHint}
                             />
-                            <p className="text-[10px] text-gray-600 mt-1.5 flex items-center gap-1">
+                            <p className="text-[10px] text-[var(--color-text-muted)] mt-1.5 flex items-center gap-1">
                               <i className="fas fa-shield-alt text-[8px]"></i>
                               {info.apiKeyHint} · 密钥仅本地存储，不会上传
                             </p>
@@ -865,36 +865,36 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                           {/* 高级配置切换 */}
                           <button
                             onClick={() => setShowAdvanced(prev => ({ ...prev, [model.id]: !prev[model.id] }))}
-                            className="mt-4 flex items-center gap-2 text-[11px] text-gray-500 hover:text-gray-300 transition-all duration-200 group"
+                            className="mt-4 flex items-center gap-2 text-[11px] text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] transition-all duration-200 group"
                           >
                             <div className={`
                               w-5 h-5 rounded-md flex items-center justify-center
-                              bg-gray-800/60 group-hover:bg-gray-800 transition-colors
+                              bg-[var(--color-surface-hover)] group-hover:bg-[var(--color-surface-hover)] transition-colors
                               ${isAdvancedShown ? 'rotate-90' : ''}
                             `}>
                               <i className="fas fa-chevron-right text-[8px] transition-transform duration-200"></i>
                             </div>
                             <span>高级配置</span>
                             {!isAdvancedShown && (
-                              <span className="text-[9px] text-gray-600">Temperature · Max Tokens · System Prompt</span>
+                              <span className="text-[9px] text-[var(--color-text-muted)]">Temperature · Max Tokens · System Prompt</span>
                             )}
                           </button>
 
                           {/* 高级配置面板 */}
                           {isAdvancedShown && (
-                            <div className="mt-3 p-4 bg-gray-800/20 rounded-xl border border-purple-900/10 space-y-4 animate-fade-in-down">
+                            <div className="mt-3 p-4 bg-[var(--color-surface-muted)] rounded-xl border border-[var(--color-border-default)] space-y-4 animate-fade-in-down">
                               {/* Temperature */}
                               <div>
                                 <div className="flex items-center justify-between mb-2">
-                                  <label className="text-xs text-gray-400 flex items-center gap-1.5">
-                                    <i className="fas fa-thermometer-half text-[10px] text-purple-400/70"></i>
+                                  <label className="text-xs text-[var(--color-text-tertiary)] flex items-center gap-1.5">
+                                    <i className="fas fa-thermometer-half text-[10px] text-[var(--color-primary-400)]/70"></i>
                                     Temperature（创造性）
                                   </label>
                                   <div className="flex items-center gap-2">
-                                    <span className="text-xs text-purple-400 font-mono font-semibold">
+                                    <span className="text-xs text-[var(--color-primary-400)] font-mono font-semibold">
                                       {(model.temperature ?? 0.7).toFixed(2)}
                                     </span>
-                                    <span className="text-[10px] text-gray-500 px-1.5 py-0.5 bg-gray-800 rounded">
+                                    <span className="text-[10px] text-[var(--color-text-muted)] px-1.5 py-0.5 bg-[var(--color-surface-muted)] rounded">
                                       {getTempLabel(model.temperature ?? 0.7)}
                                     </span>
                                   </div>
@@ -908,7 +908,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                                   onChange={(e) => handleUpdateModel(model.id, { temperature: parseFloat(e.target.value) })}
                                   className="w-full"
                                 />
-                                <div className="flex justify-between text-[9px] text-gray-600 mt-1.5">
+                                <div className="flex justify-between text-[9px] text-[var(--color-text-muted)] mt-1.5">
                                   <span>精确 0</span>
                                   <span>平衡 0.7</span>
                                   <span>创意 1.5</span>
@@ -919,11 +919,11 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                               {/* Max Tokens */}
                               <div>
                                 <div className="flex items-center justify-between mb-2">
-                                  <label className="text-xs text-gray-400 flex items-center gap-1.5">
-                                    <i className="fas fa-ruler text-[10px] text-purple-400/70"></i>
+                                  <label className="text-xs text-[var(--color-text-tertiary)] flex items-center gap-1.5">
+                                    <i className="fas fa-ruler text-[10px] text-[var(--color-primary-400)]/70"></i>
                                     Max Tokens（最大输出）
                                   </label>
-                                  <span className="text-xs text-purple-400 font-mono font-semibold">{model.maxTokens ?? 4096}</span>
+                                  <span className="text-xs text-[var(--color-primary-400)] font-mono font-semibold">{model.maxTokens ?? 4096}</span>
                                 </div>
                                 <input
                                   type="range"
@@ -934,7 +934,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                                   onChange={(e) => handleUpdateModel(model.id, { maxTokens: parseInt(e.target.value) })}
                                   className="w-full"
                                 />
-                                <div className="flex justify-between text-[9px] text-gray-600 mt-1.5">
+                                <div className="flex justify-between text-[9px] text-[var(--color-text-muted)] mt-1.5">
                                   <span>256</span>
                                   <span>4K</span>
                                   <span>16K</span>
@@ -944,17 +944,17 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
 
                               {/* System Prompt */}
                               <div>
-                                <label className="text-xs text-gray-400 mb-2 flex items-center gap-1.5">
-                                  <i className="fas fa-scroll text-[10px] text-purple-400/70"></i>
+                                <label className="text-xs text-[var(--color-text-tertiary)] mb-2 flex items-center gap-1.5">
+                                  <i className="fas fa-scroll text-[10px] text-[var(--color-primary-400)]/70"></i>
                                   System Prompt（系统提示词）
                                 </label>
                                 <textarea
                                   value={model.systemPrompt || ''}
                                   onChange={(e) => handleUpdateModel(model.id, { systemPrompt: e.target.value })}
-                                  className="w-full bg-gray-800/40 border border-purple-900/15 rounded-xl px-3.5 py-2.5 text-sm text-gray-200 focus:outline-none focus:border-purple-500/50 focus:bg-gray-800/60 transition-all duration-200 h-20 resize-none placeholder:text-gray-600"
+                                  className="w-full bg-[var(--color-surface-hover)] border border-[var(--color-border-default)] rounded-xl px-3.5 py-2.5 text-sm text-[var(--color-text-primary)] focus:outline-none focus:border-[var(--color-primary-400)] focus:bg-[var(--color-surface-hover)] transition-all duration-200 h-20 resize-none placeholder:text-[var(--color-text-muted)]"
                                   placeholder='例如：你是一位专业的小说创作助手，擅长构思精彩故事...'
                                 />
-                                <p className="text-[10px] text-gray-600 mt-1.5 flex items-center gap-1">
+                                <p className="text-[10px] text-[var(--color-text-muted)] mt-1.5 flex items-center gap-1">
                                   <i className="fas fa-info-circle text-[8px]"></i>
                                   将附加到每次 AI 调用的系统消息中
                                 </p>
@@ -963,11 +963,11 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                               {/* 流式输出 */}
                               <div className="flex items-center justify-between pt-2">
                                 <div>
-                                  <label className="text-xs text-gray-400 flex items-center gap-1.5">
-                                    <i className="fas fa-stream text-[10px] text-purple-400/70"></i>
+                                  <label className="text-xs text-[var(--color-text-tertiary)] flex items-center gap-1.5">
+                                    <i className="fas fa-stream text-[10px] text-[var(--color-primary-400)]/70"></i>
                                     流式输出
                                   </label>
-                                  <p className="text-[10px] text-gray-600 mt-0.5">启用后 AI 将逐字输出，体验更流畅</p>
+                                  <p className="text-[10px] text-[var(--color-text-muted)] mt-0.5">启用后 AI 将逐字输出，体验更流畅</p>
                                 </div>
                                 <button
                                   onClick={() => handleUpdateModel(model.id, { supportsStreaming: !model.supportsStreaming })}
@@ -984,7 +984,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                           <div className="mt-4 flex items-center justify-between pt-2 border-t" style={{ borderColor: 'var(--color-primary-100)' }}>
                             <button
                               onClick={() => handleDeleteModel(model.id)}
-                              className="text-xs text-gray-600 hover:text-red-400 transition-colors duration-200 flex items-center gap-1.5 px-2 py-1 rounded-lg hover:bg-red-900/10"
+                              className="text-xs text-[var(--color-text-muted)] hover:text-[var(--color-error)] transition-colors duration-200 flex items-center gap-1.5 px-2 py-1 rounded-lg hover:bg-[var(--color-error-bg)]"
                             >
                               <i className="fas fa-trash-alt text-[10px]"></i>
                               删除此配置
@@ -994,7 +994,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                               <button
                                 onClick={() => handleTestConnection(model)}
                                 disabled={isTesting || !model.modelName}
-                                className="px-3.5 py-1.5 text-xs border border-purple-900/25 text-purple-300/80 rounded-xl hover:bg-purple-600/10 hover:border-purple-500/30 transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1.5"
+                                className="px-3.5 py-1.5 text-xs border border-[var(--color-border-default)] text-[var(--color-primary-300)]/80 rounded-xl hover:bg-[var(--color-primary-600)]/10 hover:border-[var(--color-primary-300)] transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1.5"
                               >
                                 {isTesting ? (
                                   <><i className="fas fa-spinner fa-spin"></i>测试中</>
@@ -1007,8 +1007,8 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                                 <div className={`
                                   text-xs px-2.5 py-1.5 rounded-xl flex items-center gap-1.5 animate-fade-in
                                   ${connResult.success
-                                    ? 'text-emerald-400 bg-emerald-900/15 border border-emerald-900/30'
-                                    : 'text-red-400 bg-red-900/15 border border-red-900/30'
+                                    ? 'text-[var(--color-success)] bg-[var(--color-success-bg)] border border-[var(--color-success-border)]'
+                                    : 'text-[var(--color-error)] bg-[var(--color-error-bg)] border border-[var(--color-error-border)]'
                                   }
                                 `}>
                                   <i className={`fas ${connResult.success ? 'fa-check-circle' : 'fa-exclamation-circle'} text-[10px]`}></i>
@@ -1027,17 +1027,17 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
               {/* 空状态 */}
               {models.length === 0 && (
                 <div className="flex flex-col items-center justify-center py-16 animate-fade-in">
-                  <div className="w-16 h-16 rounded-2xl bg-gray-800/50 flex items-center justify-center mb-4 border border-purple-900/10">
-                    <i className="fas fa-robot text-2xl text-gray-600"></i>
+                  <div className="w-16 h-16 rounded-2xl bg-[var(--color-surface-hover)] flex items-center justify-center mb-4 border border-[var(--color-border-default)]">
+                    <i className="fas fa-robot text-2xl text-[var(--color-text-muted)]"></i>
                   </div>
-                  <p className="text-gray-400 text-sm font-medium">还没有配置任何模型</p>
-                  <p className="text-gray-600 text-xs mt-2">点击上方按钮或快速添加预设开始配置</p>
+                  <p className="text-[var(--color-text-tertiary)] text-sm font-medium">还没有配置任何模型</p>
+                  <p className="text-[var(--color-text-muted)] text-xs mt-2">点击上方按钮或快速添加预设开始配置</p>
                   <div className="flex gap-2 mt-6">
                     {QUICK_ADD_PROVIDERS.map(item => (
                       <button
                         key={item.provider}
                         onClick={() => handleQuickAddProvider(item.provider)}
-                        className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-purple-600/30 to-violet-600/20 text-purple-300 rounded-xl hover:from-purple-600/50 hover:to-violet-600/30 transition-all duration-200 text-sm font-medium border border-purple-500/20 hover:border-purple-500/40"
+                        className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-[var(--color-primary-500)]/30 to-[var(--color-primary-600)]/20 text-[var(--color-primary-300)] rounded-xl hover:from-[var(--color-primary-500)]/50 hover:to-[var(--color-primary-600)]/30 transition-all duration-200 text-sm font-medium border border-[var(--color-primary-300)] hover:border-[var(--color-primary-400)]"
                       >
                         <i className={`fas ${item.icon} ${item.color} text-xs`}></i>
                         {item.label}
@@ -1066,7 +1066,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                   </button>
                 </div>
                 <p className="text-xs mt-1" style={{ color: 'var(--color-text-muted)' }}>
-                  模板中的 <code className="text-purple-400/70 bg-purple-900/20 px-1 rounded text-[10px]">{`{变量}`}</code> 将在调用时自动替换为实际内容
+                  模板中的 <code className="text-[var(--color-primary-400)]/70 bg-[var(--color-primary-600)]/20 px-1 rounded text-[10px]">{`{变量}`}</code> 将在调用时自动替换为实际内容
                 </p>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -1172,8 +1172,8 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
           {activeTab === 'system' && (
             <div className="animate-fade-in">
               <div className="mb-5">
-                <p className="text-sm text-gray-400">应用信息与使用指南</p>
-                <p className="text-xs text-gray-600 mt-1">了解当前应用的版本、技术栈和配置信息</p>
+                <p className="text-sm text-[var(--color-text-tertiary)]">应用信息与使用指南</p>
+                <p className="text-xs text-[var(--color-text-muted)] mt-1">了解当前应用的版本、技术栈和配置信息</p>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1229,14 +1229,14 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                 </div>
 
                 {/* 使用指南 */}
-                <div className="p-5 bg-gray-900/40 rounded-xl border border-purple-900/10">
+                <div className="p-5 bg-[var(--color-surface-elevated)] rounded-xl border border-[var(--color-border-default)]">
                   <div className="flex items-center gap-3 mb-4">
                     <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-600/30 to-orange-600/20 flex items-center justify-center border border-amber-500/20">
                       <i className="fas fa-book-open text-amber-400 text-sm"></i>
                     </div>
                     <div>
-                      <h3 className="text-sm font-semibold text-gray-200">快速上手</h3>
-                      <p className="text-[10px] text-gray-500">开始使用墨渊灵笔</p>
+                      <h3 className="text-sm font-semibold text-[var(--color-text-primary)]">快速上手</h3>
+                      <p className="text-[10px] text-[var(--color-text-muted)]">开始使用墨渊灵笔</p>
                     </div>
                   </div>
                   <ol className="space-y-2.5">
@@ -1249,12 +1249,12 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                       { step: '6', title: '开始写作', desc: '生成大纲、章节规划，开始正式创作' },
                     ].map(item => (
                       <li key={item.step} className="flex items-start gap-3">
-                        <span className="w-5 h-5 rounded-lg bg-purple-600/20 text-purple-400 text-[9px] font-bold flex items-center justify-center shrink-0 mt-0.5 border border-purple-500/20">
+                        <span className="w-5 h-5 rounded-lg bg-[var(--color-primary-600)]/20 text-[var(--color-primary-400)] text-[9px] font-bold flex items-center justify-center shrink-0 mt-0.5 border border-[var(--color-primary-300)]">
                           {item.step}
                         </span>
                         <div>
-                          <p className="text-xs text-gray-300 font-medium">{item.title}</p>
-                          <p className="text-[10px] text-gray-600">{item.desc}</p>
+                          <p className="text-xs text-[var(--color-text-secondary)] font-medium">{item.title}</p>
+                          <p className="text-[10px] text-[var(--color-text-muted)]">{item.desc}</p>
                         </div>
                       </li>
                     ))}
@@ -1262,30 +1262,30 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                 </div>
 
                 {/* 数据管理 */}
-                <div className="p-5 bg-gray-900/40 rounded-xl border border-purple-900/10">
+                <div className="p-5 bg-[var(--color-surface-elevated)] rounded-xl border border-[var(--color-border-default)]">
                   <div className="flex items-center gap-3 mb-4">
                     <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-600/30 to-green-600/20 flex items-center justify-center border border-emerald-500/20">
                       <i className="fas fa-database text-emerald-400 text-sm"></i>
                     </div>
                     <div>
-                      <h3 className="text-sm font-semibold text-gray-200">数据管理</h3>
-                      <p className="text-[10px] text-gray-500">数据存储与导出</p>
+                      <h3 className="text-sm font-semibold text-[var(--color-text-primary)]">数据管理</h3>
+                      <p className="text-[10px] text-[var(--color-text-muted)]">数据存储与导出</p>
                     </div>
                   </div>
                   <div className="space-y-2.5">
                     <div className="flex justify-between items-center">
-                      <span className="text-[11px] text-gray-500">存储方式</span>
-                      <span className="text-[11px] text-gray-300">本地 localStorage</span>
+                      <span className="text-[11px] text-[var(--color-text-muted)]">存储方式</span>
+                      <span className="text-[11px] text-[var(--color-text-secondary)]">本地 localStorage</span>
                     </div>
                     <div className="flex justify-between items-center">
-                      <span className="text-[11px] text-gray-500">数据持久化</span>
-                      <span className="text-[11px] text-gray-300">自动保存</span>
+                      <span className="text-[11px] text-[var(--color-text-muted)]">数据持久化</span>
+                      <span className="text-[11px] text-[var(--color-text-secondary)]">自动保存</span>
                     </div>
                     <div className="flex justify-between items-center">
-                      <span className="text-[11px] text-gray-500">隐私</span>
-                      <span className="text-[11px] text-gray-300">数据完全本地存储</span>
+                      <span className="text-[11px] text-[var(--color-text-muted)]">隐私</span>
+                      <span className="text-[11px] text-[var(--color-text-secondary)]">数据完全本地存储</span>
                     </div>
-                    <div className="mt-3 pt-3 border-t border-purple-900/10">
+                    <div className="mt-3 pt-3 border-t border-[var(--color-border-default)]">
                       {onFactoryReset && (
                         <button
                           onClick={() => {
@@ -1299,7 +1299,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                               },
                             });
                           }}
-                          className="w-full flex items-center justify-center gap-1.5 px-3 py-2 text-[10px] text-red-400 hover:text-red-300 hover:bg-red-900/15 rounded-lg transition-all duration-200 border border-red-900/20 hover:border-red-900/40"
+                          className="w-full flex items-center justify-center gap-1.5 px-3 py-2 text-[10px] text-[var(--color-error)] hover:text-[var(--color-error)] hover:bg-[var(--color-error-bg)] rounded-lg transition-all duration-200 border border-[var(--color-error-border)] hover:border-[var(--color-error-border)]"
                         >
                           <i className="fas fa-exclamation-triangle text-[9px]"></i>
                           恢复出厂设置 - 删除所有数据
@@ -1310,32 +1310,32 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                 </div>
 
                 {/* 提供商概览 */}
-                <div className="p-5 bg-gray-900/40 rounded-xl border border-purple-900/10">
+                <div className="p-5 bg-[var(--color-surface-elevated)] rounded-xl border border-[var(--color-border-default)]">
                   <div className="flex items-center gap-3 mb-4">
                     <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-600/30 to-cyan-600/20 flex items-center justify-center border border-blue-500/20">
                       <i className="fas fa-cloud text-blue-400 text-sm"></i>
                     </div>
                     <div>
-                      <h3 className="text-sm font-semibold text-gray-200">支持的提供商</h3>
-                      <p className="text-[10px] text-gray-500">当前支持的 AI 模型服务商</p>
+                      <h3 className="text-sm font-semibold text-[var(--color-text-primary)]">支持的提供商</h3>
+                      <p className="text-[10px] text-[var(--color-text-muted)]">当前支持的 AI 模型服务商</p>
                     </div>
                   </div>
                   <div className="space-y-2">
                     {Object.entries(PROVIDER_INFO).map(([key, info]) => (
-                      <div key={key} className="flex items-center gap-2.5 p-2 bg-gray-800/30 rounded-lg border border-gray-800/50">
-                        <div className={`w-7 h-7 rounded-lg flex items-center justify-center bg-gradient-to-br ${info.gradient} border border-purple-900/20 shrink-0`}>
+                      <div key={key} className="flex items-center gap-2.5 p-2 bg-[var(--color-surface-muted)] rounded-lg border border-[var(--color-border-default)]">
+                        <div className={`w-7 h-7 rounded-lg flex items-center justify-center bg-gradient-to-br ${info.gradient} border border-[var(--color-border-default)] shrink-0`}>
                           <i className={`fas ${info.icon} ${info.color} text-[9px]`}></i>
                         </div>
                         <div className="min-w-0 flex-1">
-                          <p className="text-[11px] text-gray-300 font-medium">{info.label}</p>
-                          <p className="text-[9px] text-gray-600 truncate">{info.description}</p>
+                          <p className="text-[11px] text-[var(--color-text-secondary)] font-medium">{info.label}</p>
+                          <p className="text-[9px] text-[var(--color-text-muted)] truncate">{info.description}</p>
                         </div>
                         <div className="flex gap-1.5 shrink-0">
                           <a
                             href={info.website}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="w-6 h-6 rounded-md bg-gray-800/60 flex items-center justify-center text-gray-500 hover:text-purple-400 transition-colors"
+                            className="w-6 h-6 rounded-md bg-[var(--color-surface-hover)] flex items-center justify-center text-[var(--color-text-muted)] hover:text-[var(--color-primary-400)] transition-colors"
                             title="官网"
                           >
                             <i className="fas fa-globe text-[9px]"></i>
@@ -1344,7 +1344,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                             href={info.apiApplyUrl}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="w-6 h-6 rounded-md bg-gray-800/60 flex items-center justify-center text-gray-500 hover:text-purple-400 transition-colors"
+                            className="w-6 h-6 rounded-md bg-[var(--color-surface-hover)] flex items-center justify-center text-[var(--color-text-muted)] hover:text-[var(--color-primary-400)] transition-colors"
                             title="获取 API Key"
                           >
                             <i className="fas fa-key text-[9px]"></i>
@@ -1378,24 +1378,24 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
           {activeTab === 'theme' && (
             <div className="animate-fade-in">
               <div className="flex items-center gap-3 mb-6">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-600/30 to-violet-600/20 flex items-center justify-center border border-purple-500/20">
-                  <i className="fas fa-palette text-purple-400 text-sm"></i>
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[var(--color-primary-500)]/30 to-[var(--color-primary-600)]/20 flex items-center justify-center border border-[var(--color-primary-300)]">
+                  <i className="fas fa-palette text-[var(--color-primary-400)] text-sm"></i>
                 </div>
                 <div>
-                  <h2 className="text-base font-semibold text-gray-200">主题外观</h2>
-                  <p className="text-xs text-gray-500 mt-0.5">选择你喜欢的应用配色方案</p>
+                  <h2 className="text-base font-semibold text-[var(--color-text-primary)]">主题外观</h2>
+                  <p className="text-xs text-[var(--color-text-muted)] mt-0.5">选择你喜欢的应用配色方案</p>
                 </div>
               </div>
 
               {/* 当前主题预览 */}
-              <div className="p-5 bg-gray-900/40 rounded-xl border border-purple-900/10 mb-5">
+              <div className="p-5 bg-[var(--color-surface-elevated)] rounded-xl border border-[var(--color-border-default)] mb-5">
                 <div className="flex items-center gap-3 mb-4">
-                  <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${themeInfo.gradient} flex items-center justify-center border border-purple-900/20`}>
+                  <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${themeInfo.gradient} flex items-center justify-center border border-[var(--color-border-default)]`}>
                     <i className={`fas ${themeInfo.icon} ${themeInfo.color} text-sm`}></i>
                   </div>
                   <div>
-                    <h3 className="text-sm font-semibold text-gray-200">当前主题：{themeInfo.label}</h3>
-                    <p className="text-[10px] text-gray-500">{themeInfo.description}</p>
+                    <h3 className="text-sm font-semibold text-[var(--color-text-primary)]">当前主题：{themeInfo.label}</h3>
+                    <p className="text-[10px] text-[var(--color-text-muted)]">{themeInfo.description}</p>
                   </div>
                 </div>
               </div>
@@ -1411,8 +1411,8 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                       className={`
                         relative p-4 rounded-xl text-left transition-all duration-300
                         ${isActive
-                          ? 'bg-gray-800/60 border-2 shadow-lg scale-[1.02]'
-                          : 'bg-gray-900/40 border hover:bg-gray-800/40 hover:scale-[1.01]'
+                          ? 'bg-[var(--color-surface-hover)] border-2 shadow-lg scale-[1.02]'
+                          : 'bg-[var(--color-surface-elevated)] border hover:bg-[var(--color-surface-hover)] hover:scale-[1.01]'
                         }
                       `}
                       style={{
@@ -1456,14 +1456,14 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
 
                       {/* 主题图标与名称 */}
                       <div className="flex items-center gap-2.5">
-                        <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${t.gradient} flex items-center justify-center border border-purple-900/20 shrink-0`}>
+                        <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${t.gradient} flex items-center justify-center border border-[var(--color-border-default)] shrink-0`}>
                           <i className={`fas ${t.icon} ${t.color} text-[10px]`}></i>
                         </div>
                         <div className="min-w-0">
-                          <p className={`text-xs font-semibold ${isActive ? 'text-gray-100' : 'text-gray-300'}`}>
+                          <p className={`text-xs font-semibold ${isActive ? 'text-[var(--color-text-primary)]' : 'text-[var(--color-text-secondary)]'}`}>
                             {t.label}
                           </p>
-                          <p className="text-[9px] text-gray-600 truncate">{t.description}</p>
+                          <p className="text-[9px] text-[var(--color-text-muted)] truncate">{t.description}</p>
                         </div>
                       </div>
                     </button>
@@ -1472,14 +1472,14 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
               </div>
 
               {/* 缩放控制面板 */}
-              <div className="mt-6 p-5 bg-gray-900/40 rounded-xl border border-purple-900/10">
+              <div className="mt-6 p-5 bg-[var(--color-surface-elevated)] rounded-xl border border-[var(--color-border-default)]">
                 <div className="flex items-center gap-3 mb-4">
                   <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-600/30 to-teal-600/20 flex items-center justify-center border border-cyan-500/20">
                     <i className="fas fa-expand text-cyan-400 text-sm"></i>
                   </div>
                   <div>
-                    <h3 className="text-sm font-semibold text-gray-200">UI 缩放</h3>
-                    <p className="text-[10px] text-gray-500">调整界面整体大小 · 也可按 Ctrl+滚轮 快速缩放</p>
+                    <h3 className="text-sm font-semibold text-[var(--color-text-primary)]">UI 缩放</h3>
+                    <p className="text-[10px] text-[var(--color-text-muted)]">调整界面整体大小 · 也可按 Ctrl+滚轮 快速缩放</p>
                   </div>
                 </div>
 
@@ -1491,13 +1491,13 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                       className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
                         Math.abs(zoom - p.value) < 0.02
                           ? 'bg-cyan-600/30 text-cyan-200 border border-cyan-500/40 scale-105'
-                          : 'bg-gray-800/40 text-gray-400 hover:bg-gray-800/60 hover:text-gray-200 border border-transparent'
+                          : 'bg-[var(--color-surface-hover)] text-[var(--color-text-tertiary)] hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-text-primary)] border border-transparent'
                       }`}>
                       {p.label}
                     </button>
                   ))}
                   <button onClick={zoomReset}
-                    className="px-3 py-1.5 rounded-lg text-xs font-medium text-gray-500 hover:text-gray-300 bg-gray-800/30 hover:bg-gray-800/50 transition-all border border-gray-700/30"
+                    className="px-3 py-1.5 rounded-lg text-xs font-medium text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] bg-[var(--color-surface-muted)] hover:bg-[var(--color-surface-hover)]/50 transition-all border border-[var(--color-border-default)]"
                     title="重置为 100%">
                     <i className="fas fa-undo mr-1"></i>重置
                   </button>
@@ -1505,7 +1505,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
 
                 {/* 滑块 */}
                 <div className="flex items-center gap-4">
-                  <span className="text-xs text-gray-500 shrink-0 w-10 text-right">50%</span>
+                  <span className="text-xs text-[var(--color-text-muted)] shrink-0 w-10 text-right">50%</span>
                   <input
                     type="range"
                     min={50}
@@ -1514,48 +1514,48 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                     onChange={(e) => setZoom(parseInt(e.target.value) / 100)}
                     className="flex-1"
                   />
-                  <span className="text-xs text-gray-500 shrink-0 w-10">200%</span>
+                  <span className="text-xs text-[var(--color-text-muted)] shrink-0 w-10">200%</span>
                   <span className="text-sm font-bold tabular-nums min-w-[3rem] text-center"
                     style={{ color: zoomPercent === 100 ? 'var(--color-text-muted)' : 'var(--color-primary-300)' }}>
                     {zoomPercent}%
                   </span>
                 </div>
 
-                <div className="mt-2 flex items-center gap-4 text-[10px] text-gray-600">
+                <div className="mt-2 flex items-center gap-4 text-[10px] text-[var(--color-text-muted)]">
                   <span><i className="fas fa-mouse mr-1"></i>Ctrl+滚轮 快速缩放</span>
                   <span><i className="fas fa-keyboard mr-1"></i>Ctrl + / Ctrl - 快捷键</span>
                 </div>
               </div>
 
               {/* 主题效果预览 */}
-              <div className="mt-6 p-5 bg-gray-900/40 rounded-xl border border-purple-900/10">
+              <div className="mt-6 p-5 bg-[var(--color-surface-elevated)] rounded-xl border border-[var(--color-border-default)]">
                 <div className="flex items-center gap-3 mb-4">
                   <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-600/30 to-orange-600/20 flex items-center justify-center border border-amber-500/20">
                     <i className="fas fa-eye text-amber-400 text-sm"></i>
                   </div>
                   <div>
-                    <h3 className="text-sm font-semibold text-gray-200">效果预览</h3>
-                    <p className="text-[10px] text-gray-500">切换主题后，以下元素会同步变化</p>
+                    <h3 className="text-sm font-semibold text-[var(--color-text-primary)]">效果预览</h3>
+                    <p className="text-[10px] text-[var(--color-text-muted)]">切换主题后，以下元素会同步变化</p>
                   </div>
                 </div>
                 <div className="space-y-2.5">
-                  <div className="flex items-center gap-3 p-2.5 bg-gray-800/30 rounded-lg border border-gray-800/50">
+                  <div className="flex items-center gap-3 p-2.5 bg-[var(--color-surface-muted)] rounded-lg border border-[var(--color-border-default)]">
                     <div className="w-6 h-6 rounded-md" style={{ background: 'var(--color-primary-500)' }}></div>
                     <div className="w-6 h-6 rounded-md" style={{ background: 'var(--color-primary-400)' }}></div>
                     <div className="w-6 h-6 rounded-md" style={{ background: 'var(--color-primary-300)' }}></div>
-                    <span className="text-[10px] text-gray-500 ml-1">主色系</span>
+                    <span className="text-[10px] text-[var(--color-text-muted)] ml-1">主色系</span>
                   </div>
-                  <div className="flex items-center gap-3 p-2.5 bg-gray-800/30 rounded-lg border border-gray-800/50">
+                  <div className="flex items-center gap-3 p-2.5 bg-[var(--color-surface-muted)] rounded-lg border border-[var(--color-border-default)]">
                     <div className="w-6 h-6 rounded-md border" style={{ borderColor: 'var(--color-border-default)', background: 'transparent' }}></div>
                     <div className="w-6 h-6 rounded-md border" style={{ borderColor: 'var(--color-border-hover)', background: 'transparent' }}></div>
                     <div className="w-6 h-6 rounded-md border" style={{ borderColor: 'var(--color-border-active)', background: 'transparent' }}></div>
-                    <span className="text-[10px] text-gray-500 ml-1">边框色系</span>
+                    <span className="text-[10px] text-[var(--color-text-muted)] ml-1">边框色系</span>
                   </div>
-                  <div className="flex items-center gap-3 p-2.5 bg-gray-800/30 rounded-lg border border-gray-800/50">
+                  <div className="flex items-center gap-3 p-2.5 bg-[var(--color-surface-muted)] rounded-lg border border-[var(--color-border-default)]">
                     <div className="w-6 h-6 rounded-md flex items-center justify-center" style={{ boxShadow: 'var(--shadow-glow-purple)', background: 'var(--color-primary-50)' }}>
                       <i className="fas fa-magic text-[8px]" style={{ color: 'var(--color-primary-400)' }}></i>
                     </div>
-                    <span className="text-[10px] text-gray-500">光晕效果 & 滚动条配色</span>
+                    <span className="text-[10px] text-[var(--color-text-muted)]">光晕效果 & 滚动条配色</span>
                   </div>
                 </div>
               </div>
@@ -1565,17 +1565,17 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
       </div>
 
         {/* 底部信息栏 */}
-        <div className={`relative flex justify-between items-center border-t border-purple-900/10 shrink-0 bg-gray-950/50 ${isMobile ? 'px-3 py-2' : 'px-6 py-4'}`}>
+        <div className={`relative flex justify-between items-center border-t border-[var(--color-border-default)] shrink-0 bg-[var(--color-surface-overlay)] ${isMobile ? 'px-3 py-2' : 'px-6 py-4'}`}>
           {!isMobile && (
           <div className="flex items-center gap-3">
-            <span className="text-[10px] text-gray-600">
+            <span className="text-[10px] text-[var(--color-text-muted)]">
               <i className="fas fa-robot mr-1"></i>
               {models.length} 个模型
             </span>
-            <span className="w-1 h-1 rounded-full bg-gray-700"></span>
-            <span className="text-[10px] text-gray-600">
+            <span className="w-1 h-1 rounded-full bg-[var(--color-surface-muted)]"></span>
+            <span className="text-[10px] text-[var(--color-text-muted)]">
               当前使用:
-              <span className="text-purple-400/70 ml-1">
+              <span className="text-[var(--color-primary-400)]/70 ml-1">
                 {models.find(m => m.id === activeModelId)?.name || '未选择'}
               </span>
             </span>
@@ -1583,7 +1583,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
           )}
           <button
             onClick={handleClose}
-            className={`bg-gradient-to-r from-purple-600 to-violet-600 text-white rounded-xl hover:from-purple-700 hover:to-violet-700 transition-all duration-200 font-medium shadow-lg shadow-purple-900/25 hover:shadow-purple-900/40 active:scale-[0.98] ${isMobile ? 'px-4 py-2 text-sm w-full' : 'px-6 py-2 text-sm'}`}
+            className={`bg-gradient-to-r from-[var(--color-primary-500)] to-[var(--color-primary-600)] text-white rounded-xl hover:from-[var(--color-primary-600)] hover:to-[var(--color-primary-600)] transition-all duration-200 font-medium shadow-lg shadow-[var(--color-primary-500)]/25 hover:shadow-[var(--color-primary-500)]/40 active:scale-[0.98] ${isMobile ? 'px-4 py-2 text-sm w-full' : 'px-6 py-2 text-sm'}`}
           >
             完成
           </button>

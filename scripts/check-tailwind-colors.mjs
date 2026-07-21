@@ -24,9 +24,9 @@ const TAILWIND_COLOR_RE =
   /\b(text|bg|border|from|to|via|shadow|ring)-(red|green|blue|yellow|amber|emerald|teal|cyan|sky|indigo|violet|purple|fuchsia|pink|rose|gray|slate|zinc|neutral|stone|orange|lime)-\d{2,3}\b/g;
 
 // 阶段3 待处理文件（已知大量硬编码，全量扫描时豁免，staged 模式仍检测新增行）
+// 阶段3 已完成：SettingsModal.tsx 和 StepWorld.tsx 已主题化，从白名单移除
 const PHASE3_PENDING = new Set([
-  'src/renderer/features/settings/SettingsModal.tsx',
-  'src/renderer/features/world/StepWorld.tsx',
+  // 如未来有新的大批量硬编码文件，可添加到此白名单
 ]);
 
 // 业务色常量模块（合法使用 Tailwind 类字符串作为业务标识色，完全豁免）

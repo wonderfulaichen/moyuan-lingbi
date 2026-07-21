@@ -210,7 +210,7 @@ const InlineEditor: React.FC<InlineEditorProps> = ({ type, onSave, onCancel, ini
           value={name}
           onChange={e => setName(e.target.value)}
           placeholder={`${type === 'location' ? '地点' : type === 'faction' ? '势力' : '规则'}名称`}
-          className="w-full bg-gray-800/50 border border-purple-900/20 rounded-lg px-3 py-2 text-sm text-gray-200 placeholder-gray-600 focus:outline-none focus:border-purple-500/50 transition-all"
+          className="w-full bg-[var(--color-surface-elevated)] border border-[var(--color-border-default)] rounded-lg px-3 py-2 text-sm text-[var(--color-text-primary)] placeholder-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-primary-400)] transition-all"
           autoFocus
         />
         <textarea
@@ -218,22 +218,22 @@ const InlineEditor: React.FC<InlineEditorProps> = ({ type, onSave, onCancel, ini
           onChange={e => setDescription(e.target.value)}
           placeholder="描述"
           rows={2}
-          className="w-full bg-gray-800/50 border border-purple-900/20 rounded-lg px-3 py-2 text-sm text-gray-200 placeholder-gray-600 focus:outline-none focus:border-purple-500/50 transition-all resize-none"
+          className="w-full bg-[var(--color-surface-elevated)] border border-[var(--color-border-default)] rounded-lg px-3 py-2 text-sm text-[var(--color-text-primary)] placeholder-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-primary-400)] transition-all resize-none"
         />
         <input
           value={extra}
           onChange={e => setExtra(e.target.value)}
           placeholder={info.extraLabel}
-          className="w-full bg-gray-800/50 border border-purple-900/20 rounded-lg px-3 py-2 text-sm text-gray-200 placeholder-gray-600 focus:outline-none focus:border-purple-500/50 transition-all"
+          className="w-full bg-[var(--color-surface-elevated)] border border-[var(--color-border-default)] rounded-lg px-3 py-2 text-sm text-[var(--color-text-primary)] placeholder-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-primary-400)] transition-all"
         />
       </div>
       <div className="flex gap-2 mt-3">
         <button type="submit"
-          className="flex-1 px-3 py-1.5 rounded-lg text-xs font-medium transition-all bg-gradient-to-r from-purple-600 to-violet-600 text-white hover:from-purple-700 hover:to-violet-700">
+          className="flex-1 px-3 py-1.5 rounded-lg text-xs font-medium transition-all bg-gradient-to-r from-[var(--color-primary-500)] to-[var(--color-primary-600)] text-white hover:from-[var(--color-primary-600)] hover:to-[var(--color-primary-600)]">
           <i className="fas fa-check mr-1"></i>保存
         </button>
         <button type="button" onClick={onCancel}
-          className="px-3 py-1.5 rounded-lg text-xs transition-all text-gray-500 hover:text-gray-300 hover:bg-gray-800/50">
+          className="px-3 py-1.5 rounded-lg text-xs transition-all text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)]">
           取消
         </button>
       </div>
@@ -610,7 +610,7 @@ const StepWorld: React.FC<StepWorldProps> = ({ project, onUpdate, activeModel, o
                     </button>
                     <button
                       onClick={() => handleDelete(type, item.id)}
-                      className="w-6 h-6 rounded-lg flex items-center justify-center hover:bg-red-500/15 transition-all"
+                      className="w-6 h-6 rounded-lg flex items-center justify-center hover:bg-[var(--color-error)]/15 transition-all"
                       style={{ color: 'var(--color-text-tertiary)' }}
                       title="删除"
                     >
@@ -643,8 +643,8 @@ const StepWorld: React.FC<StepWorldProps> = ({ project, onUpdate, activeModel, o
             onClick={() => setActiveView('cards')}
             className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
               activeView === 'cards'
-                ? 'bg-purple-600/20 text-purple-300 border border-purple-500/20'
-                : 'text-gray-500 hover:text-gray-300'
+                ? 'bg-[var(--color-primary-600)]/20 text-[var(--color-primary-300)] border border-[var(--color-primary-300)]'
+                : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)]'
             }`}
           >
             <i className="fas fa-th-large mr-1.5"></i>卡片
@@ -653,8 +653,8 @@ const StepWorld: React.FC<StepWorldProps> = ({ project, onUpdate, activeModel, o
             onClick={() => setActiveView('graph')}
             className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
               activeView === 'graph'
-                ? 'bg-purple-600/20 text-purple-300 border border-purple-500/20'
-                : 'text-gray-500 hover:text-gray-300'
+                ? 'bg-[var(--color-primary-600)]/20 text-[var(--color-primary-300)] border border-[var(--color-primary-300)]'
+                : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)]'
             }`}
           >
             <i className="fas fa-project-diagram mr-1.5"></i>关系图
@@ -663,8 +663,8 @@ const StepWorld: React.FC<StepWorldProps> = ({ project, onUpdate, activeModel, o
             onClick={() => setActiveView('tree')}
             className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
               activeView === 'tree'
-                ? 'bg-purple-600/20 text-purple-300 border border-purple-500/20'
-                : 'text-gray-500 hover:text-gray-300'
+                ? 'bg-[var(--color-primary-600)]/20 text-[var(--color-primary-300)] border border-[var(--color-primary-300)]'
+                : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)]'
             }`}
           >
             <i className="fas fa-sitemap mr-1.5"></i>树状图
@@ -874,7 +874,7 @@ ${worldContext}
                               const updated = project.timelineEvents!.filter(e => e.id !== event.id);
                               onUpdate({ timelineEvents: updated });
                             }}
-                            className="w-6 h-6 rounded-lg flex items-center justify-center hover:bg-red-500/15 transition-all"
+                            className="w-6 h-6 rounded-lg flex items-center justify-center hover:bg-[var(--color-error)]/15 transition-all"
                             style={{ color: 'var(--color-text-tertiary)' }}
                             title="删除事件"
                           >
@@ -909,7 +909,7 @@ ${worldContext}
             <div className="rounded-2xl p-5"
               style={{ backgroundColor: 'var(--color-surface-muted, rgba(255,255,255,0.03))', border: '1px solid var(--color-border-default, rgba(255,255,255,0.06))' }}>
               <h4 className="text-sm font-semibold mb-3" style={{ color: 'var(--color-text-primary)' }}>
-                <i className="fas fa-chart-pie mr-2 text-purple-400"></i>世界概览
+                <i className="fas fa-chart-pie mr-2 text-[var(--color-primary-400)]"></i>世界概览
               </h4>
               <div className="grid grid-cols-4 gap-4">
                 {stats.map(stat => (
@@ -934,7 +934,7 @@ ${worldContext}
           <div className="glass-card rounded-2xl p-6">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-bold" style={{ color: 'var(--color-text-primary)' }}>
-                <i className="fas fa-project-diagram mr-2 text-purple-400"></i>势力-角色关系图
+                <i className="fas fa-project-diagram mr-2 text-[var(--color-primary-400)]"></i>势力-角色关系图
               </h3>
               <button
                 onClick={() => setShowGraphModal(true)}
