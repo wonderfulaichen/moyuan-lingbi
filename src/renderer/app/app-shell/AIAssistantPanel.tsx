@@ -36,7 +36,9 @@ const AIAssistantPanel: React.FC<AIAssistantPanelProps> = ({ activeModel, models
   const hasAnimations = animationLevel !== 'none';
   
   const state = useAIAssistantState();
-  const { input, setInput, attachedFiles, inputRef, fileInputRef, handleSend, handleKeyDown, handleFileAttach, removeAttachedFile, clearAttachedFiles, slashCommand, handleSelectItem } = useChatInput(activeModel, onOpenSettings, state.agents);
+  // fallback：state.agents 可能因 React state 时序问题暂未加载，直接从 aiAssistant 获取最新值
+  const agents = state.agents.length > 0 ? state.agents : aiAssistant.getState().agents;
+  const { input, setInput, attachedFiles, inputRef, fileInputRef, handleSend, handleKeyDown, handleFileAttach, removeAttachedFile, clearAttachedFiles, slashCommand, handleSelectItem } = useChatInput(activeModel, onOpenSettings, agents);
   const { messagesEndRef, chatContainerRef, handleChatScroll } = useChatScroll([state.messages.length, state.pendingPrompt, state.streamingContent]);
   const { editingMsgId, editContent, setEditContent, collapsedIds, copyToast, handleCopy, handleEdit, handleEditCancel, handleEditSubmit, handleRegenerate, toggleCollapse, isLongContent } = useMessageActions(activeModel);
   const { panelWidth, isExpanded, toggleExpanded, handleResizeStart } = usePanelResize();
@@ -159,7 +161,7 @@ const AIAssistantPanel: React.FC<AIAssistantPanelProps> = ({ activeModel, models
             </button>
 
             <AgentMenu
-              agents={state.agents}
+              agents={agents}
               activeAgentId={state.activeAgentId}
               showAgentMenu={showAgentMenu}
               setShowAgentMenu={setShowAgentMenu}

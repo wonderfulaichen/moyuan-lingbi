@@ -38,7 +38,7 @@ export const SlashCommandOverlay: React.FC<SlashCommandOverlayProps> = ({
   onHover,
   onSelect,
 }) => {
-  if (kind === null || items.length === 0) return null;
+  if (kind === null) return null;
 
   const titleMap: Record<NonNullable<OverlayKind>, string> = {
     commands: '快捷指令',
@@ -61,44 +61,48 @@ export const SlashCommandOverlay: React.FC<SlashCommandOverlayProps> = ({
       >
         {titleMap[kind]}
       </div>
-      <div className="p-1 flex flex-col gap-0.5 max-h-[220px] overflow-auto">
-        {items.map((item, idx) => {
-          const isActive = idx === selectedIndex;
-          return (
-            <button
-              key={item.key}
-              onMouseEnter={() => onHover(idx)}
-              onClick={() => onSelect(item)}
-              className="flex items-center gap-2 px-2 py-1.5 rounded-lg text-left transition-all border-none cursor-pointer w-full"
-              style={{
-                background: isActive ? 'var(--color-surface-hover)' : 'transparent',
-                color: isActive
-                  ? (item.color || 'var(--color-primary-400)')
-                  : 'var(--color-text-primary)',
-              }}
-            >
-              {item.icon && (
-                <div
-                  className="w-6 h-6 rounded-md flex items-center justify-center shrink-0"
-                  style={{
-                    background: `${item.color || 'var(--color-primary-400)'}20`,
-                    color: item.color || 'var(--color-primary-400)',
-                  }}
-                >
-                  <i className={`fas ${item.icon} text-[9px]`} />
-                </div>
-              )}
-              <div className="flex-1 min-w-0">
-                <p className="text-[10px] font-medium leading-tight font-mono">{item.label}</p>
-                {item.description && (
-                  <p className="text-[8px] opacity-60 truncate">{item.description}</p>
+      {items.length === 0 ? (
+        <div className="p-3 text-center text-[10px] opacity-50">无匹配项</div>
+      ) : (
+        <div className="p-1 flex flex-col gap-0.5 max-h-[220px] overflow-auto">
+          {items.map((item, idx) => {
+            const isActive = idx === selectedIndex;
+            return (
+              <button
+                key={item.key}
+                onMouseEnter={() => onHover(idx)}
+                onClick={() => onSelect(item)}
+                className="flex items-center gap-2 px-2 py-1.5 rounded-lg text-left transition-all border-none cursor-pointer w-full"
+                style={{
+                  background: isActive ? 'var(--color-surface-hover)' : 'transparent',
+                  color: isActive
+                    ? (item.color || 'var(--color-primary-400)')
+                    : 'var(--color-text-primary)',
+                }}
+              >
+                {item.icon && (
+                  <div
+                    className="w-6 h-6 rounded-md flex items-center justify-center shrink-0"
+                    style={{
+                      background: `${item.color || 'var(--color-primary-400)'}20`,
+                      color: item.color || 'var(--color-primary-400)',
+                    }}
+                  >
+                    <i className={`fas ${item.icon} text-[9px]`} />
+                  </div>
                 )}
-              </div>
-              {isActive && <i className="fas fa-arrow-turn-down text-[8px] opacity-70" />}
-            </button>
-          );
-        })}
-      </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-[10px] font-medium leading-tight font-mono">{item.label}</p>
+                  {item.description && (
+                    <p className="text-[8px] opacity-60 truncate">{item.description}</p>
+                  )}
+                </div>
+                {isActive && <i className="fas fa-arrow-turn-down text-[8px] opacity-70" />}
+              </button>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 };
