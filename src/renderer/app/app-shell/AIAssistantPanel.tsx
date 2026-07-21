@@ -12,6 +12,9 @@ import { useUIStore } from '../../shared/stores/uiStore';
 
 interface AIAssistantPanelProps {
   activeModel: ModelConfig;
+  models: ModelConfig[];
+  activeModelId: string;
+  onSelectModel: (id: string) => void;
   onOpenSettings: () => void;
 }
 
@@ -27,7 +30,7 @@ function estimateTokens(text: string): number {
   return Math.ceil(count);
 }
 
-const AIAssistantPanel: React.FC<AIAssistantPanelProps> = ({ activeModel, onOpenSettings }) => {
+const AIAssistantPanel: React.FC<AIAssistantPanelProps> = ({ activeModel, models, activeModelId, onSelectModel, onOpenSettings }) => {
   const { themeInfo } = useTheme();
   const { animationLevel } = useUIStore();
   const hasAnimations = animationLevel !== 'none';
@@ -452,7 +455,17 @@ const AIAssistantPanel: React.FC<AIAssistantPanelProps> = ({ activeModel, onOpen
 
               {/* 底部信息栏 */}
               <div className="flex items-center gap-2 px-2 py-0.5 border-t shrink-0 flex-wrap" style={{ borderColor: 'var(--color-border-default)', background: 'var(--color-surface-hover)' }}>
-                <span className="text-[8px] font-medium shrink-0" style={{ color: 'var(--color-text-secondary)' }}>{activeModel?.name || '未配置'}</span>
+                <select
+                  value={activeModelId}
+                  onChange={(e) => onSelectModel(e.target.value)}
+                  className="text-[8px] font-medium shrink-0 rounded px-1 py-0.5 bg-transparent border cursor-pointer hover:border-primary-300 max-w-[110px] truncate"
+                  style={{ color: 'var(--color-text-secondary)', borderColor: 'var(--color-border-default)' }}
+                  title="切换当前模型"
+                >
+                  {models.map(m => (
+                    <option key={m.id} value={m.id}>{m.name}</option>
+                  ))}
+                </select>
                 {activeModel?.maxTokens && (
                   <span className="text-[8px] px-1 py-0.5 rounded shrink-0 tabular-nums" style={{ color: 'var(--color-text-muted)', background: 'var(--color-surface-base)', border: '1px solid var(--color-border-default)' }}>
                     输出上限 {activeModel.maxTokens >= 1000 ? `${(activeModel.maxTokens / 1000).toFixed(0)}K` : activeModel.maxTokens}

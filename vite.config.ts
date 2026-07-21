@@ -24,7 +24,14 @@ export default defineConfig({
     emptyOutDir: true,
     sourcemap: true, // 启用 Source Map 便于调试
     rollupOptions: {
-      external: ['node-llama-cpp']
-    }
+      external: ['node-llama-cpp'],
+      output: {
+        // 分包策略：将大型依赖拆分为独立 vendor chunk，优化缓存命中率
+        manualChunks: {
+          // @xyflow/react 仅被记忆体网络视图等 6 个文件使用，独立分包按需加载
+          'xyflow-vendor': ['@xyflow/react'],
+        },
+      },
+    },
   }
 })

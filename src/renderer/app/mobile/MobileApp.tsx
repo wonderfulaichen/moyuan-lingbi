@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef, lazy, Suspense } from 'react';
 import { AppData } from '../../../shared/types/fileSystem';
 import { Project } from '../../../shared/types';
 import { dataService } from '../../shared/services/DataService';
@@ -12,13 +12,16 @@ import MobileWelcome from './MobileWelcome';
 import MobileContentPanel from './MobileContentPanel';
 import LeftDrawer from './LeftDrawer';
 import RightDrawer from './RightDrawer';
-import StepInspiration from '../../features/inspiration/StepInspiration';
-import StepSettings from '../../features/settings/StepSettings';
-import StepPlot from '../../features/plot/StepPlot';
-import StepReview from '../../features/review/StepReview';
-import SettingsModal from '../../features/settings/SettingsModal';
-import CreateProjectModal from '../../shared/components/CreateProjectModal';
 import { ConfirmModal } from '../../shared/components/Modal';
+
+// Step 组件懒加载：移动端按需加载各功能页
+const StepInspiration = lazy(() => import('../../features/inspiration/StepInspiration'));
+const StepSettings = lazy(() => import('../../features/settings/StepSettings'));
+const StepPlot = lazy(() => import('../../features/plot/StepPlot'));
+const StepReview = lazy(() => import('../../features/review/StepReview'));
+// Modal 类组件懒加载
+const SettingsModal = lazy(() => import('../../features/settings/SettingsModal'));
+const CreateProjectModal = lazy(() => import('../../shared/components/CreateProjectModal'));
 
 const STEPS: { id: StepId; label: string; icon: string }[] = [
   { id: 'inspiration', label: '灵感', icon: 'fa-lightbulb' },
@@ -231,7 +234,9 @@ const MobileApp: React.FC = () => {
 
               {/* 主内容区 */}
               <main className="mobile-main-content">
-                {renderContent()}
+                <Suspense fallback={<div className="flex items-center justify-center h-full text-xs" style={{ color: 'var(--color-text-muted)' }}>加载中...</div>}>
+                  {renderContent()}
+                </Suspense>
               </main>
 
               {/* 底部导航栏 */}
@@ -263,28 +268,35 @@ const MobileApp: React.FC = () => {
                 isOpen={isRightDrawerOpen}
                 onClose={() => setIsRightDrawerOpen(false)}
                 activeModel={activeModel}
+                models={data.models}
+                activeModelId={data.activeModelId}
+                onSelectModel={(id) => dataService.setActiveModel(id)}
               />
 
               {/* Settings Modal */}
               {isSettingsOpen && (
-                <SettingsModal
-                  models={data.models}
-                  activeModelId={data.activeModelId}
-                  prompts={data.prompts}
-                  onUpdateModels={(models) => dataService.updateModels(models)}
-                  onUpdateActiveModelId={(id) => dataService.setActiveModel(id)}
-                  onUpdatePrompts={(prompts) => dataService.updatePrompts(prompts)}
-                  onFactoryReset={() => { dataService.clearAll(); window.location.reload(); }}
-                  onClose={() => setIsSettingsOpen(false)}
-                />
+                <Suspense fallback={null}>
+                  <SettingsModal
+                    models={data.models}
+                    activeModelId={data.activeModelId}
+                    prompts={data.prompts}
+                    onUpdateModels={(models) => dataService.updateModels(models)}
+                    onUpdateActiveModelId={(id) => dataService.setActiveModel(id)}
+                    onUpdatePrompts={(prompts) => dataService.updatePrompts(prompts)}
+                    onFactoryReset={() => { dataService.clearAll(); window.location.reload(); }}
+                    onClose={() => setIsSettingsOpen(false)}
+                  />
+                </Suspense>
               )}
 
               {/* Create Project Modal */}
-              <CreateProjectModal
-                isOpen={isCreateProjectOpen}
-                onClose={() => setIsCreateProjectOpen(false)}
-                onCreate={handleCreateProjectConfirm}
-              />
+              <Suspense fallback={null}>
+                <CreateProjectModal
+                  isOpen={isCreateProjectOpen}
+                  onClose={() => setIsCreateProjectOpen(false)}
+                  onCreate={handleCreateProjectConfirm}
+                />
+              </Suspense>
 
               {/* Delete Project Confirm */}
               {deleteConfirm && (

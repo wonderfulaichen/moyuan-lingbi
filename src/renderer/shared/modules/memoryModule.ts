@@ -1,7 +1,6 @@
 
 import React from 'react';
 import { defineModule } from './hooks';
-import StepMemory from '../../features/memory/StepMemory';
 
 export const memoryModule = defineModule({
   id: 'memory',
@@ -26,10 +25,6 @@ export const memoryModule = defineModule({
   
   onError: (error) => {
     console.error('[记忆体模块] 错误:', error);
-  },
-  
-  components: {
-    main: StepMemory,
   },
 });
 

@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, lazy, Suspense } from 'react';
 import { AppData } from '../../shared/types/fileSystem';
 import { Project } from '../../shared/types';
 import { dataService } from '../shared/services/DataService';
@@ -10,21 +10,25 @@ import { ToastProvider } from '../shared/contexts/ToastContext';
 import { ZoomProvider } from '../shared/contexts/ZoomContext';
 import { useDevice } from '../shared/hooks/useDevice';
 import StepSidebar from './app-shell/StepSidebar';
-import StepInspiration from '../features/inspiration/StepInspiration';
-import StepSettings from '../features/settings/StepSettings';
-import StepPlot from '../features/plot/StepPlot';
-import StepReview from '../features/review/StepReview';
-import StepMemory from '../features/memory/StepMemory';
 import AIAssistantPanel from './app-shell/AIAssistantPanel';
-import SettingsModal from '../features/settings/SettingsModal';
 import ThemeToggle from '../shared/components/ThemeToggle';
-import CreateProjectModal from '../shared/components/CreateProjectModal';
 import { ConfirmModal } from '../shared/components/Modal';
 import { useZoom } from '../shared/contexts/ZoomContext';
 import { useMemoryStatus } from '../shared/hooks/useMemoryStatus';
-import MobileApp from './mobile/MobileApp';
 import { PROVIDER_INFO } from '../../shared/constants';
 import { useModule, useModuleRegistry } from '../shared/modules';
+
+// Step 组件懒加载：按需加载各功能页，减小首屏 bundle 体积
+const StepInspiration = lazy(() => import('../features/inspiration/StepInspiration'));
+const StepSettings = lazy(() => import('../features/settings/StepSettings'));
+const StepPlot = lazy(() => import('../features/plot/StepPlot'));
+const StepReview = lazy(() => import('../features/review/StepReview'));
+const StepMemory = lazy(() => import('../features/memory/StepMemory'));
+// Modal 类组件懒加载：触发时才加载弹窗代码
+const SettingsModal = lazy(() => import('../features/settings/SettingsModal'));
+const CreateProjectModal = lazy(() => import('../shared/components/CreateProjectModal'));
+// MobileApp 懒加载：移动端入口按需加载
+const MobileApp = lazy(() => import('./mobile/MobileApp'));
 
 export type StepId = 'inspiration' | 'content' | 'plot' | 'review' | 'memory';
 
@@ -249,7 +253,11 @@ const App: React.FC = () => {
 
   // 移动端使用专用的MobileApp组件
   if (isMobile) {
-    return <MobileApp />;
+    return (
+      <Suspense fallback={<div className="flex items-center justify-center h-screen text-xs" style={{ color: 'var(--color-text-muted)' }}>加载中...</div>}>
+        <MobileApp />
+      </Suspense>
+    );
   }
 
   useEffect(() => {
@@ -453,12 +461,17 @@ const App: React.FC = () => {
                   style={{
                     backdropFilter: 'blur(12px)',
                   }}>
-                  {stepContent}
+                  <Suspense fallback={<div className="flex items-center justify-center h-full text-xs" style={{ color: 'var(--color-text-muted)' }}>加载中...</div>}>
+                    {stepContent}
+                  </Suspense>
                 </main>
 
                 {/* ── 右侧 AI 助手面板（常驻） ── */}
                 <AIAssistantPanel
                   activeModel={activeModel}
+                  models={models}
+                  activeModelId={data.activeModelId}
+                  onSelectModel={(id) => dataService.setActiveModel(id)}
                   onOpenSettings={() => setIsSettingsOpen(true)}
                 />
 
@@ -466,24 +479,28 @@ const App: React.FC = () => {
 
               {/* Settings Modal */}
               {isSettingsOpen && (
-                <SettingsModal
-                  models={models}
-                  activeModelId={data.activeModelId}
-                  prompts={data.prompts}
-                  onUpdateModels={(models) => dataService.updateModels(models)}
-                  onUpdateActiveModelId={(id) => dataService.setActiveModel(id)}
-                  onUpdatePrompts={(prompts) => dataService.updatePrompts(prompts)}
-                  onFactoryReset={() => { dataService.clearAll(); window.location.reload(); }}
-                  onClose={() => setIsSettingsOpen(false)}
-                />
+                <Suspense fallback={null}>
+                  <SettingsModal
+                    models={models}
+                    activeModelId={data.activeModelId}
+                    prompts={data.prompts}
+                    onUpdateModels={(models) => dataService.updateModels(models)}
+                    onUpdateActiveModelId={(id) => dataService.setActiveModel(id)}
+                    onUpdatePrompts={(prompts) => dataService.updatePrompts(prompts)}
+                    onFactoryReset={() => { dataService.clearAll(); window.location.reload(); }}
+                    onClose={() => setIsSettingsOpen(false)}
+                  />
+                </Suspense>
               )}
 
               {/* Create Project Modal */}
-              <CreateProjectModal
-                isOpen={isCreateProjectOpen}
-                onClose={() => setIsCreateProjectOpen(false)}
-                onCreate={handleCreateProjectConfirm}
-              />
+              <Suspense fallback={null}>
+                <CreateProjectModal
+                  isOpen={isCreateProjectOpen}
+                  onClose={() => setIsCreateProjectOpen(false)}
+                  onCreate={handleCreateProjectConfirm}
+                />
+              </Suspense>
 
               {/* Delete Project Confirm */}
               {deleteConfirm && (

@@ -7,12 +7,18 @@ interface RightDrawerProps {
   isOpen: boolean;
   onClose: () => void;
   activeModel: ModelConfig;
+  models: ModelConfig[];
+  activeModelId: string;
+  onSelectModel: (id: string) => void;
 }
 
 const RightDrawer: React.FC<RightDrawerProps> = ({
   isOpen,
   onClose,
   activeModel,
+  models,
+  activeModelId,
+  onSelectModel,
 }) => {
   const [touchStartX, setTouchStartX] = React.useState(0);
   const [isDragging, setIsDragging] = React.useState(false);
@@ -72,6 +78,9 @@ const RightDrawer: React.FC<RightDrawerProps> = ({
       <div className="flex-1 min-h-0">
         <AIAssistantPanel
           activeModel={activeModel}
+          models={models}
+          activeModelId={activeModelId}
+          onSelectModel={onSelectModel}
           onOpenSettings={() => {}}
         />
       </div>

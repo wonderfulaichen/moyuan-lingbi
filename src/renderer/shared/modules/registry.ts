@@ -1,10 +1,6 @@
 
 import React from 'react';
 import { defineModule } from './hooks';
-import StepInspiration from '../../features/inspiration/StepInspiration';
-import StepCharacters from '../../features/characters/StepCharacters';
-import StepPlot from '../../features/plot/StepPlot';
-import WritingEditor from '../../features/writing/WritingEditor';
 import { memoryModule } from './memoryModule';
 
 // 核心模块定义
@@ -20,9 +16,6 @@ export const inspirationModule = defineModule({
   onInit: async () => {
     console.log('[灵感模块] 初始化');
   },
-  components: {
-    main: StepInspiration,
-  },
 });
 
 // 2. 角色模块
@@ -34,9 +27,6 @@ export const characterModule = defineModule({
   category: 'feature',
   priority: 20,
   tags: ['角色', '关系', '性格'],
-  components: {
-    main: StepCharacters,
-  },
 });
 
 // 3. 情节模块
@@ -48,9 +38,6 @@ export const plotModule = defineModule({
   category: 'feature',
   priority: 30,
   tags: ['大纲', '情节', '章节'],
-  components: {
-    main: StepPlot,
-  },
 });
 
 // 4. 写作模块
@@ -62,9 +49,6 @@ export const writingModule = defineModule({
   category: 'feature',
   priority: 40,
   tags: ['写作', '编辑器', 'AI'],
-  components: {
-    main: WritingEditor,
-  },
 });
 
 // 5. 主题系统模块
