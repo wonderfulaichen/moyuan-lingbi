@@ -1,12 +1,9 @@
 import { VFile, VFileSystem, VFileMetadata, ProjectMeta, AppData } from '../../../shared/types/fileSystem';
 import { AppState, Project } from '../../../shared/types';
+import { nanoid } from '../utils/nanoid';
 
 const OLD_KEY = 'moyuan-lingbi-state';
 const NEW_KEY = 'moyuan-v2-data';
-
-function nanoid(): string {
-  return `${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 9)}`;
-}
 
 function createDefaultMetadata(partial?: Partial<VFileMetadata>): VFileMetadata {
   return {

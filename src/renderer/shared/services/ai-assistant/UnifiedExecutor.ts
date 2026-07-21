@@ -1,6 +1,7 @@
 import { dataService } from '../DataService';
 import { VFile } from '../../../../shared/types/fileSystem';
 import { ToolParser, ParsedToolCall } from './ToolParser';
+import { nanoid } from '../../utils/nanoid';
 
 function extractRoleTags(content: string, parentId?: string): string[] {
   const tags: string[] = [];
@@ -101,10 +102,6 @@ interface FileOperation {
   previousContent?: string;
   timestamp: number;
   retryCount?: number;
-}
-
-function nanoid(): string {
-  return `${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 9)}`;
 }
 
 export class UnifiedExecutor {

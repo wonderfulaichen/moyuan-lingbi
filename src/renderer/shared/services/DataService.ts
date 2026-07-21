@@ -4,6 +4,7 @@ import { INITIAL_MODELS } from '../../../shared/constants';
 import { getPromptLibrary } from '../../../shared/prompts';
 import { memoryBankService } from './MemoryBankService';
 import { accumulateTodayWords } from '../stores/uiStore';
+import { nanoid } from '../utils/nanoid';
 
 function getRecycleBinKey(projectId: string) { return `moyuan-recycle-bin-${projectId}`; }
 function getRecycleFolderKey(projectId: string) { return `moyuan-recycle-folder-${projectId}`; }
@@ -11,10 +12,6 @@ function getRecycleFolderKey(projectId: string) { return `moyuan-recycle-folder-
 const STORAGE_KEY = 'moyuan-v2-data';
 
 type ChangeListener = () => void;
-
-function nanoid(): string {
-  return `${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 9)}`;
-}
 
 function createDefaultMetadata(partial?: Partial<VFileMetadata>): VFileMetadata {
   return {
