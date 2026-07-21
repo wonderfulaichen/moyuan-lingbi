@@ -6,7 +6,7 @@ import { aiAssistant } from '../../shared/services/AIAssistantService';
 import { memoryMaintenanceAgent } from '../../shared/services/memory-bank/MemoryMaintenanceAgent';
 import { dataService } from '../../shared/services/DataService';
 import { useAIAssistantState, useChatInput, useChatScroll, useMessageActions, usePanelResize } from './ai-assistant/hooks';
-import { ChatHistory, MessageBubble, PendingPromptRenderer, AgentMenu, TodoListDisplay } from './ai-assistant/components';
+import { ChatHistory, MessageBubble, PendingPromptRenderer, AgentMenu, TodoListDisplay, SlashCommandOverlay } from './ai-assistant/components';
 import { useTheme } from '../../shared/contexts/ThemeContext';
 import { useUIStore } from '../../shared/stores/uiStore';
 
@@ -36,7 +36,7 @@ const AIAssistantPanel: React.FC<AIAssistantPanelProps> = ({ activeModel, models
   const hasAnimations = animationLevel !== 'none';
   
   const state = useAIAssistantState();
-  const { input, setInput, attachedFiles, inputRef, fileInputRef, handleSend, handleKeyDown, handleFileAttach, removeAttachedFile, clearAttachedFiles } = useChatInput(activeModel, onOpenSettings);
+  const { input, setInput, attachedFiles, inputRef, fileInputRef, handleSend, handleKeyDown, handleFileAttach, removeAttachedFile, clearAttachedFiles, slashCommand, handleSelectItem } = useChatInput(activeModel, onOpenSettings, state.agents);
   const { messagesEndRef, chatContainerRef, handleChatScroll } = useChatScroll([state.messages.length, state.pendingPrompt, state.streamingContent]);
   const { editingMsgId, editContent, setEditContent, collapsedIds, copyToast, handleCopy, handleEdit, handleEditCancel, handleEditSubmit, handleRegenerate, toggleCollapse, isLongContent } = useMessageActions(activeModel);
   const { panelWidth, isExpanded, toggleExpanded, handleResizeStart } = usePanelResize();
@@ -409,7 +409,14 @@ const AIAssistantPanel: React.FC<AIAssistantPanelProps> = ({ activeModel, models
 
             {/* Input */}
             <div className="p-2.5 border-t shrink-0" style={{ borderColor: 'var(--color-border-default)' }}>
-              <div className="glass-card-inset p-1 rounded-xl">
+              <div className="glass-card-inset p-1 rounded-xl relative">
+                <SlashCommandOverlay
+                  kind={slashCommand.overlayKind}
+                  items={slashCommand.overlayItems}
+                  selectedIndex={slashCommand.selectedIndex}
+                  onHover={slashCommand.setSelectedIndex}
+                  onSelect={handleSelectItem}
+                />
                 <div className="flex gap-1.5 items-end">
                   <input ref={fileInputRef} type="file" multiple accept=".txt,.md,.json,.csv,.xml,.html,.css,.js,.ts,.jsx,.tsx,.py,.java,.c,.cpp,.h,.hpp,.go,.rs,.rb,.php,.sql,.yaml,.yml,.toml,.ini,.log,.sh,.bat,.ps1"
                     onChange={handleFileAttach} className="hidden" />
@@ -419,7 +426,7 @@ const AIAssistantPanel: React.FC<AIAssistantPanelProps> = ({ activeModel, models
                     <i className="fas fa-paperclip text-xs" />
                   </button>
                   <textarea ref={inputRef} value={input} onChange={e => setInput(e.target.value)} onKeyDown={handleKeyDown}
-                    placeholder="输入指令，AI直接操作文件…" rows={3}
+                    placeholder="输入指令，AI直接操作文件…（输入 / 查看快捷指令）" rows={3}
                     className="flex-1 rounded-lg outline-none border-none resize-none px-2.5 py-2 text-xs min-h-[56px] max-h-[140px]"
                     style={{ color: 'var(--color-text-primary)', backgroundColor: 'transparent', fontFamily: 'inherit', lineHeight: 1.5 }} />
                   <button onClick={handleSend}
