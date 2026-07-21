@@ -3,7 +3,7 @@ import { AIChatMessage, AgentPhase, AIAgent, TodoItem, SYSTEM_STEPS } from '../.
 import { aiService } from '../aiService';
 import { dataService } from '../DataService';
 import { memoryBankService } from '../MemoryBankService';
-import { PromptComposer, BUILT_IN_AGENTS, AgentId } from '../../../../shared/prompts';
+import { PromptComposer, AgentId } from '../../../../shared/prompts';
 import { ToolParser, ParsedTodoItem } from './ToolParser';
 import { unifiedExecutor } from './UnifiedExecutor';
 import { detectTarget, buildForTarget, buildFileTreeDescription, summarizeTask, detectCreateIntent, estimateTokenCount } from './contextBuilder';
@@ -20,7 +20,7 @@ export interface ProcessCallbacks {
   setTodoList: (todos: TodoItem[]) => void;
   updateSystemStep: (stepId: string, status: TodoItem['status'], details?: string) => void;
   initSystemSteps: () => void;
-  getActiveAgent: () => { systemPrompt: string; name: string };
+  getActiveAgent: () => { id: string; systemPrompt: string; name: string };
   getMessages: () => AIChatMessage[];
   getCurrentMessageId: () => string | null;
   emit: () => void;
@@ -108,14 +108,12 @@ export async function processWithAI(text: string, model: ModelConfig, cb: Proces
       const fileTree = buildFileTreeDescription();
       const activeAgent = cb.getActiveAgent();
 
-      const agentMap: Record<string, AgentId> = {
-        '通用助手': 'agent-general',
-        '世界观架构师': 'agent-worldbuilder',
-        '角色设计师': 'agent-character',
-        '剧情策划师': 'agent-plotter',
-        '文字润色师': 'agent-editor',
-      };
-      const agentId = agentMap[activeAgent?.name] || 'agent-general';
+      // 直接使用 agent.id，避免硬编码 name→id 映射导致的脆弱性
+      // 自定义 Agent 的 id 不在 AgentId 联合类型中，回退到 'agent-general'
+      const VALID_AGENT_IDS: ReadonlySet<string> = new Set(['agent-general', 'agent-worldbuilder', 'agent-character', 'agent-plotter', 'agent-editor']);
+      const agentId: AgentId = (activeAgent && VALID_AGENT_IDS.has(activeAgent.id))
+        ? activeAgent.id as AgentId
+        : 'agent-general';
 
       const composed = PromptComposer.composeForAssistant({
         agentId,
