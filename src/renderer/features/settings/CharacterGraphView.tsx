@@ -1,21 +1,7 @@
 import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { ContentCard } from '../../../shared/types';
-
-const ROLE_COLORS: Record<string, string> = {
-  '主角': '#fbbf24',
-  '女主': '#f472b6',
-  '反派': '#ef4444',
-  '反派配角': '#f97316',
-  '配角': '#60a5fa',
-};
-
-const getRoleColor = (role: string): string => {
-  for (const [key, color] of Object.entries(ROLE_COLORS)) {
-    if (role.includes(key)) return color;
-  }
-  return '#94a3b8';
-};
+import { ROLE_COLORS, getRoleColor } from '../../shared/constants/roleColors';
 
 interface ParsedCharacter {
   id: string;

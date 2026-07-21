@@ -23,6 +23,14 @@ import { PromptComposer } from '../../../shared/prompts';
 import AIProgressButton from '../../shared/components/AIProgressButton';
 import MindMapView from './MindMapView';
 import CharacterGraphView from './CharacterGraphView';
+import {
+  TYPE_LABELS,
+  TYPE_ICONS,
+  FOLDER_ICON_COLORS,
+  FOLDER_BG_GRADIENTS,
+  getFolderTypeIcon,
+  getFolderTypeLabel,
+} from './folderColors';
 
 interface DeletedCard extends ContentCard {
   deletedAt: string;
@@ -64,48 +72,6 @@ interface BubbleFolderContentProps {
   onToggleHistory?: () => void;
 }
 
-// ========== 常量映射 ==========
-
-const TYPE_LABELS: Record<string, string> = {
-  'world': '世界观',
-  'characters': '角色',
-  'timeline': '时间线',
-  'outline': '大纲',
-  'detailed_outline': '细纲',
-  'chapters': '章节',
-  'custom': '自定义',
-};
-
-const TYPE_ICONS: Record<string, string> = {
-  'world': 'fa-globe',
-  'characters': 'fa-users',
-  'timeline': 'fa-timeline',
-  'outline': 'fa-sitemap',
-  'detailed_outline': 'fa-list-check',
-  'chapters': 'fa-book',
-  'custom': 'fa-folder',
-};
-
-const FOLDER_ICON_COLORS: Record<string, string> = {
-  'world': 'text-emerald-400',
-  'characters': 'text-blue-400',
-  'timeline': 'text-amber-400',
-  'outline': 'text-violet-400',
-  'detailed_outline': 'text-cyan-400',
-  'chapters': 'text-pink-400',
-  'custom': 'text-rose-400',
-};
-
-const FOLDER_BG_GRADIENTS: Record<string, string> = {
-  'world': 'from-emerald-600/20 to-emerald-900/20',
-  'characters': 'from-blue-600/20 to-blue-900/20',
-  'timeline': 'from-amber-600/20 to-amber-900/20',
-  'outline': 'from-violet-600/20 to-violet-900/20',
-  'detailed_outline': 'from-cyan-600/20 to-cyan-900/20',
-  'chapters': 'from-pink-600/20 to-pink-900/20',
-  'custom': 'from-rose-600/20 to-rose-900/20',
-};
-
 function vFileToCard(vf: { id: string; name: string; content: string; metadata: { tags?: string[]; favorited?: boolean; batchId?: string | null; lastIndexedAt?: number; timeTag?: string }; createdAt: number; updatedAt: number }): ContentCard {
   return {
     id: vf.id,
@@ -128,7 +94,7 @@ const SimpleRelationshipGraph: React.FC<{
   characters: { id: string; name: string; factionId?: string }[];
 }> = ({ factions, characters }) => {
   const nodes: { id: string; label: string; type: 'faction' | 'character'; color: string }[] = [
-    ...factions.map(f => ({ id: f.id, label: f.name, type: 'faction' as const, color: 'var(--color-amber-400, #f59e0b)' })),
+    ...factions.map(f => ({ id: f.id, label: f.name, type: 'faction' as const, color: 'var(--color-amber-400)' })),
     ...characters.map(c => ({ id: c.id, label: c.name, type: 'character' as const, color: 'var(--color-primary-300)' })),
   ];
   const links: { source: string; target: string }[] = [];
@@ -177,7 +143,7 @@ const SimpleRelationshipGraph: React.FC<{
       </svg>
       <div className="flex gap-4 text-[10px] mt-2">
         <span style={{ color: 'var(--color-primary-300)' }}><i className="fas fa-circle mr-1"></i>角色</span>
-        <span style={{ color: 'var(--color-chart-2, #f59e0b)' }}><i className="fas fa-circle mr-1"></i>势力</span>
+        <span style={{ color: 'var(--color-chart-2)' }}><i className="fas fa-circle mr-1"></i>势力</span>
       </div>
     </div>
   );
@@ -292,7 +258,7 @@ const TimelineChart: React.FC<{ events: TimelineEvent[] }> = ({ events }) => {
 
     {createPortal(previewEvent && (
       <>
-        <div className="fixed inset-0 z-[99999]" style={{ backgroundColor: 'var(--color-surface-base, rgba(0,0,0,0.55))', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)' }} onClick={() => setPreviewEvent(null)} />
+        <div className="fixed inset-0 z-[99999]" style={{ backgroundColor: 'var(--color-surface-base)', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)' }} onClick={() => setPreviewEvent(null)} />
         <div
           className="fixed z-[100000] rounded-2xl shadow-2xl flex flex-col animate-fade-in overflow-hidden"
           style={{
@@ -443,11 +409,11 @@ const CardPreviewModal: React.FC<CardPreviewModalProps> = ({ card, onClose, onEd
     <div
       className="fixed inset-0 z-[99999] flex items-center justify-center p-4 sm:p-6"
       onClick={onClose}
-      style={{ backgroundColor: 'var(--color-surface-base, rgba(0,0,0,0.55))', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)' }}
+      style={{ backgroundColor: 'var(--color-surface-base)', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)' }}
     >
       <div
         className="relative w-[90vw] max-w-4xl h-[85vh] overflow-hidden rounded-2xl shadow-2xl border border-[var(--color-primary-200)] flex flex-col animate-fade-in-scale"
-        style={{ backgroundColor: 'var(--color-surface-overlay, rgba(10,10,20,0.98))', backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)' }}
+        style={{ backgroundColor: 'var(--color-surface-overlay)', backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)' }}
         onClick={(e) => e.stopPropagation()}
       >
         {/* 头部 */}
@@ -483,7 +449,7 @@ const CardPreviewModal: React.FC<CardPreviewModalProps> = ({ card, onClose, onEd
             </button>
             <button onClick={onDelete}
               className="px-4 py-2 text-xs font-medium rounded-lg transition-all hover:scale-[1.03]"
-              style={{ backgroundColor: 'rgba(220, 50, 50, 0.15)', color: 'var(--color-red-400)' }}
+              style={{ backgroundColor: 'var(--color-error-bg)', color: 'var(--color-error)' }}
               title="删除">
               <i className="fas fa-trash text-xs"></i>
             </button>
@@ -679,7 +645,7 @@ const ContentCardItem: React.FC<ContentCardProps> = ({
       <div
         className="fixed inset-0 z-[99999] flex items-center justify-center p-4"
         onClick={() => setShowDeleteOptions(false)}
-        style={{ backgroundColor: 'var(--color-surface-base, rgba(0,0,0,0.6))' }}
+        style={{ backgroundColor: 'var(--color-surface-base)' }}
       >
         <div
           className="relative w-full max-w-sm rounded-2xl shadow-2xl border overflow-hidden animate-fade-in-scale"
@@ -736,11 +702,11 @@ const ContentCardItem: React.FC<ContentCardProps> = ({
                 border: '1px solid var(--color-border-default)'
               }}
             >
-              <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0" style={{ backgroundColor: 'var(--color-red-50, #fef2f2)' }}>
-                <i className="fas fa-fire text-xs" style={{ color: 'var(--color-red-500, #ef4444)' }}></i>
+              <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0" style={{ backgroundColor: 'var(--color-red-50)' }}>
+                <i className="fas fa-fire text-xs" style={{ color: 'var(--color-red-500)' }}></i>
               </div>
               <div className="flex-1 min-w-0">
-                <div className="text-sm font-medium" style={{ color: 'var(--color-red-500, #ef4444)' }}>彻底删除</div>
+                <div className="text-sm font-medium" style={{ color: 'var(--color-red-500)' }}>彻底删除</div>
                 <div className="text-xs mt-0.5" style={{ color: 'var(--color-text-muted)' }}>文件将被永久删除，不可恢复</div>
               </div>
               <i className="fas fa-chevron-right text-xs" style={{ color: 'var(--color-text-muted)' }}></i>
@@ -786,12 +752,12 @@ const ContentCardItem: React.FC<ContentCardProps> = ({
 
     {createPortal(previewCard && (
       <>
-        <div className="fixed inset-0 z-[99999]" style={{ backgroundColor: 'var(--color-surface-base, rgba(0,0,0,0.55))', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)' }} onClick={() => setPreviewCard(null)} />
+        <div className="fixed inset-0 z-[99999]" style={{ backgroundColor: 'var(--color-surface-base)', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)' }} onClick={() => setPreviewCard(null)} />
         <div className="fixed inset-0 z-[100000] flex items-center justify-center" onClick={() => setPreviewCard(null)}>
           <div
             className="relative w-[90vw] max-w-4xl h-[85vh] border border-[var(--color-primary-200)] rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-fade-in-scale"
             style={{
-              backgroundColor: 'var(--color-surface-overlay, rgba(10,10,20,0.98))',
+              backgroundColor: 'var(--color-surface-overlay)',
               backdropFilter: 'blur(24px)',
               WebkitBackdropFilter: 'blur(24px)',
             }}
@@ -888,11 +854,11 @@ const CardEditorModal: React.FC<CardEditorModalProps> = ({ card, folderType, onC
   return createPortal(
     <div
       className={`z-[10000] ${isClosing ? 'animate-fade-out' : ''}`}
-      style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'var(--color-surface-base, rgba(0,0,0,0.55))', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)', animation: isClosing ? undefined : 'fadeIn 0.2s ease-out' }}
+      style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'var(--color-surface-base)', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)', animation: isClosing ? undefined : 'fadeIn 0.2s ease-out' }}
       onClick={isClosing ? undefined : handleClose}>
       <div
         className={`relative w-[90vw] max-w-4xl h-[85vh] border border-[var(--color-primary-200)] rounded-2xl shadow-2xl flex flex-col overflow-hidden ${isClosing ? '' : 'animate-fade-in-scale'}`}
-        style={{ backgroundColor: 'var(--color-surface-overlay, rgba(10,10,20,0.98))', backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)' }}
+        style={{ backgroundColor: 'var(--color-surface-overlay)', backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)' }}
         onClick={(e) => e.stopPropagation()}>
         {/* 标题栏 */}
         <div className="flex items-center justify-between px-6 py-3 border-b border-[var(--color-primary-100)] shrink-0">
@@ -914,7 +880,7 @@ const CardEditorModal: React.FC<CardEditorModalProps> = ({ card, folderType, onC
             </button>
             <button onClick={handleDeleteAndClose}
               className="px-4 py-2 text-xs font-medium rounded-lg transition-all hover:scale-[1.03]"
-              style={{ backgroundColor: 'rgba(220, 50, 50, 0.15)', color: 'var(--color-red-400)' }}
+              style={{ backgroundColor: 'var(--color-error-bg)', color: 'var(--color-error)' }}
               title="删除">
               <i className="fas fa-trash text-xs"></i>
             </button>
@@ -2054,7 +2020,7 @@ const BubbleFolderContent: React.FC<BubbleFolderContentProps> = ({
               </div>
             ) : (
               <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px]" style={{ background: 'var(--color-surface-hover)' }}>
-                <i className="fas fa-circle-exclamation text-amber-400"></i>
+                <i className="fas fa-circle-exclamation text-[var(--color-warning)]"></i>
                 <span style={{ color: 'var(--color-text-tertiary)' }}>
                   {project.novelSchemes.length > 0 ? '请在灵感萌发中选择方案' : '尚未创建灵感方案'}
                 </span>
@@ -2122,7 +2088,7 @@ const BubbleFolderContent: React.FC<BubbleFolderContentProps> = ({
                       {hints[folder.type] || hints.world}
                     </span>
                     {!isSingleFile && tagCount >= 15 && (
-                      <span className="text-[9px] px-1.5 py-0.5 rounded bg-amber-900/20 text-amber-400" title="生成大量内容可能消耗较多token">
+                      <span className="text-[9px] px-1.5 py-0.5 rounded bg-[var(--color-warning-bg)] text-[var(--color-warning)]" title="生成大量内容可能消耗较多token">
                         <i className="fas fa-triangle-exclamation mr-0.5"></i>大量
                       </span>
                     )}
@@ -2419,7 +2385,7 @@ const BubbleFolderContent: React.FC<BubbleFolderContentProps> = ({
                 {showNewMenu && (
                   <div className="absolute right-0 top-full mt-1.5 py-1.5 rounded-xl shadow-2xl border z-50 min-w-[160px] animate-fade-in-down"
                     style={{
-                      backgroundColor: 'var(--color-surface-overlay, rgba(20,20,35,0.97))',
+                      backgroundColor: 'var(--color-surface-overlay)',
                       backdropFilter: 'blur(20px)',
                       border: '1px solid var(--color-border-default)',
                     }}>
@@ -2496,7 +2462,7 @@ const BubbleFolderContent: React.FC<BubbleFolderContentProps> = ({
             </div>
             <div className="flex items-center gap-1">
               <button onClick={handleBatchDeleteCards}
-                className="px-3 py-1 text-xs rounded-lg text-red-400 hover:bg-red-900/20 transition-all flex items-center gap-1">
+                className="px-3 py-1 text-xs rounded-lg text-[var(--color-error)] hover:bg-[var(--color-error-bg)] transition-all flex items-center gap-1">
                 <i className="fas fa-trash text-[10px]"></i>批量删除
               </button>
             </div>
@@ -2539,9 +2505,9 @@ const BubbleFolderContent: React.FC<BubbleFolderContentProps> = ({
                     onClick={() => setShowClearRecycleConfirm(true)}
                     className="px-3 py-1.5 rounded-lg text-xs transition-all flex items-center gap-1.5"
                     style={{
-                      color: 'var(--color-red-500, #ef4444)',
-                      border: '1px solid var(--color-red-200, #fecaca)',
-                      backgroundColor: 'var(--color-red-50, #fef2f2)'
+                      color: 'var(--color-red-500)',
+                      border: '1px solid var(--color-red-200)',
+                      backgroundColor: 'var(--color-red-50)'
                     }}
                   >
                     <i className="fas fa-trash-alt"></i>
@@ -2628,9 +2594,9 @@ const BubbleFolderContent: React.FC<BubbleFolderContentProps> = ({
                         }}
                         className="px-3 py-1.5 rounded-lg text-xs transition-all flex items-center gap-1.5"
                         style={{
-                          color: 'var(--color-green-500, #22c55e)',
-                          border: '1px solid var(--color-green-200, #bbf7d0)',
-                          backgroundColor: 'var(--color-green-50, #f0fdf4)'
+                          color: 'var(--color-green-500)',
+                          border: '1px solid var(--color-green-200)',
+                          backgroundColor: 'var(--color-green-50)'
                         }}
                       >
                         <i className="fas fa-undo"></i>
@@ -2645,9 +2611,9 @@ const BubbleFolderContent: React.FC<BubbleFolderContentProps> = ({
                         }}
                         className="px-3 py-1.5 rounded-lg text-xs transition-all flex items-center gap-1.5"
                         style={{
-                          color: 'var(--color-red-500, #ef4444)',
-                          border: '1px solid var(--color-red-200, #fecaca)',
-                          backgroundColor: 'var(--color-red-50, #fef2f2)'
+                          color: 'var(--color-red-500)',
+                          border: '1px solid var(--color-red-200)',
+                          backgroundColor: 'var(--color-red-50)'
                         }}
                       >
                         <i className="fas fa-times"></i>
@@ -2725,9 +2691,9 @@ const BubbleFolderContent: React.FC<BubbleFolderContentProps> = ({
                         }}
                         className="px-3 py-1.5 rounded-lg text-xs transition-all flex items-center gap-1.5"
                         style={{
-                          color: 'var(--color-green-500, #22c55e)',
-                          border: '1px solid var(--color-green-200, #bbf7d0)',
-                          backgroundColor: 'var(--color-green-50, #f0fdf4)'
+                          color: 'var(--color-green-500)',
+                          border: '1px solid var(--color-green-200)',
+                          backgroundColor: 'var(--color-green-50)'
                         }}
                       >
                         <i className="fas fa-undo"></i>
@@ -2737,9 +2703,9 @@ const BubbleFolderContent: React.FC<BubbleFolderContentProps> = ({
                         onClick={() => setShowPermanentDeleteConfirm(card.id)}
                         className="px-3 py-1.5 rounded-lg text-xs transition-all flex items-center gap-1.5"
                         style={{
-                          color: 'var(--color-red-500, #ef4444)',
-                          border: '1px solid var(--color-red-200, #fecaca)',
-                          backgroundColor: 'var(--color-red-50, #fef2f2)'
+                          color: 'var(--color-red-500)',
+                          border: '1px solid var(--color-red-200)',
+                          backgroundColor: 'var(--color-red-50)'
                         }}
                       >
                         <i className="fas fa-times"></i>
@@ -2947,7 +2913,7 @@ const BubbleFolderContent: React.FC<BubbleFolderContentProps> = ({
         <div
           className="fixed inset-0 z-[99998]"
           onClick={() => setContextMenuFolder(null)}
-          style={{ backgroundColor: 'var(--color-surface-muted, rgba(0,0,0,0.15))' }}
+          style={{ backgroundColor: 'var(--color-surface-muted)' }}
         />
       ), document.body)}
       {createPortal(contextMenuFolder && (
@@ -2957,7 +2923,7 @@ const BubbleFolderContent: React.FC<BubbleFolderContentProps> = ({
           style={{
             left: Math.min(contextMenuPos.x, window.innerWidth - 180),
             top: Math.min(contextMenuPos.y, window.innerHeight - 120),
-            backgroundColor: 'var(--color-surface-overlay, rgba(20,20,35,0.97))',
+            backgroundColor: 'var(--color-surface-overlay)',
             backdropFilter: 'blur(20px)',
             border: '1px solid var(--color-border-default)',
           }}
@@ -2983,7 +2949,7 @@ const BubbleFolderContent: React.FC<BubbleFolderContentProps> = ({
               setContextMenuFolder(null);
             }}
             className="w-full px-4 py-2.5 text-left text-sm flex items-center gap-3 hover:bg-red-500/10 transition-colors"
-            style={{ color: 'var(--color-red-500, #ef4444)' }}
+            style={{ color: 'var(--color-red-500)' }}
           >
             <i className="fas fa-trash-can w-4 text-xs"></i>
             删除文件夹
@@ -2999,7 +2965,7 @@ const BubbleFolderContent: React.FC<BubbleFolderContentProps> = ({
           <div
             className="fixed inset-0 z-[99999] flex items-center justify-center p-4"
             onClick={() => { setShowFolderDeleteOptions(false); setDeletingFolderId(null); }}
-            style={{ backgroundColor: 'var(--color-surface-base, rgba(0,0,0,0.6))' }}
+            style={{ backgroundColor: 'var(--color-surface-base)' }}
           >
             <div
               className="relative w-full max-w-sm rounded-2xl shadow-2xl border overflow-hidden animate-fade-in-scale"
@@ -3051,11 +3017,11 @@ const BubbleFolderContent: React.FC<BubbleFolderContentProps> = ({
                     border: '1px solid var(--color-border-default)'
                   }}
                 >
-                  <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0" style={{ backgroundColor: 'var(--color-red-50, #fef2f2)' }}>
-                    <i className="fas fa-fire text-xs" style={{ color: 'var(--color-red-500, #ef4444)' }}></i>
+                  <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0" style={{ backgroundColor: 'var(--color-red-50)' }}>
+                    <i className="fas fa-fire text-xs" style={{ color: 'var(--color-red-500)' }}></i>
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="text-sm font-medium" style={{ color: 'var(--color-red-500, #ef4444)' }}>彻底删除</div>
+                    <div className="text-sm font-medium" style={{ color: 'var(--color-red-500)' }}>彻底删除</div>
                     <div className="text-xs mt-0.5" style={{ color: 'var(--color-text-muted)' }}>文件夹将被永久删除，不可恢复</div>
                   </div>
                   <i className="fas fa-chevron-right text-xs" style={{ color: 'var(--color-text-muted)' }}></i>

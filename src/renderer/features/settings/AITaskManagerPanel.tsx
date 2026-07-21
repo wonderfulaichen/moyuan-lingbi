@@ -10,27 +10,27 @@ export function AITaskManagerPanel() {
   const { tasks, runningTasks, stats, cancelTask, cancelAllTasks, clearCompleted, clearAll } = useAITaskManager();
   const [expandedTaskId, setExpandedTaskId] = useState<string | null>(null);
 
-  // 获取状态显示配置
+  // 获取状态显示配置（使用语义色变量，主题切换自动适配）
   const getStatusConfig = (status: TaskStatus) => {
     const configs = {
-      pending: { label: '等待中', color: 'text-yellow-600', bg: 'bg-yellow-100' },
-      running: { label: '运行中', color: 'text-blue-600', bg: 'bg-blue-100' },
-      completed: { label: '已完成', color: 'text-green-600', bg: 'bg-green-100' },
-      failed: { label: '失败', color: 'text-red-600', bg: 'bg-red-100' },
-      cancelled: { label: '已取消', color: 'text-gray-600', bg: 'bg-gray-100' },
+      pending: { label: '等待中', color: 'text-[var(--color-warning)]', bg: 'bg-[var(--color-warning-bg)]' },
+      running: { label: '运行中', color: 'text-[var(--color-info)]', bg: 'bg-[var(--color-info-bg)]' },
+      completed: { label: '已完成', color: 'text-[var(--color-success)]', bg: 'bg-[var(--color-success-bg)]' },
+      failed: { label: '失败', color: 'text-[var(--color-error)]', bg: 'bg-[var(--color-error-bg)]' },
+      cancelled: { label: '已取消', color: 'text-[var(--color-neutral)]', bg: 'bg-[var(--color-neutral-bg)]' },
     };
     return configs[status] || configs.pending;
   };
 
-  // 获取类型显示配置
+  // 获取类型显示配置（使用主题感知的 accent 色变量）
   const getTypeConfig = (type: AITask['type']) => {
     const configs = {
-      generation: { label: '生成', icon: 'fa-magic', color: 'text-purple-600' },
-      analysis: { label: '分析', icon: 'fa-search', color: 'text-blue-600' },
-      consistency: { label: '检查', icon: 'fa-check-circle', color: 'text-green-600' },
-      memory: { label: '记忆', icon: 'fa-brain', color: 'text-cyan-600' },
-      review: { label: '审查', icon: 'fa-clipboard-check', color: 'text-orange-600' },
-      other: { label: '其他', icon: 'fa-cube', color: 'text-gray-600' },
+      generation: { label: '生成', icon: 'fa-magic', color: 'text-[var(--color-primary-500)]' },
+      analysis: { label: '分析', icon: 'fa-search', color: 'text-[var(--color-info)]' },
+      consistency: { label: '检查', icon: 'fa-check-circle', color: 'text-[var(--color-success)]' },
+      memory: { label: '记忆', icon: 'fa-brain', color: 'text-[var(--color-accent-cyan)]' },
+      review: { label: '审查', icon: 'fa-clipboard-check', color: 'text-[var(--color-accent-orange)]' },
+      other: { label: '其他', icon: 'fa-cube', color: 'text-[var(--color-neutral)]' },
     };
     return configs[type] || configs.other;
   };
@@ -48,17 +48,17 @@ export function AITaskManagerPanel() {
   return (
     <div className="h-full flex flex-col">
       {/* 头部统计 */}
-      <div className="p-4 border-b border-gray-200">
+      <div className="p-4 border-b border-[var(--color-border-default)]">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
-            <i className="fas fa-robot text-purple-600"></i>
-            <h3 className="font-semibold text-gray-900">AI 任务管理</h3>
+            <i className="fas fa-robot text-[var(--color-primary-500)]"></i>
+            <h3 className="font-semibold text-[var(--color-text-primary)]">AI 任务管理</h3>
           </div>
           <div className="flex items-center gap-2">
             {stats.running > 0 && (
               <button
                 onClick={cancelAllTasks}
-                className="px-3 py-1.5 text-xs font-medium text-red-600 bg-red-50 rounded-lg hover:bg-red-100 transition-colors"
+                className="px-3 py-1.5 text-xs font-medium text-[var(--color-error)] bg-[var(--color-error-bg)] rounded-lg hover:bg-[var(--color-error-border)] transition-colors"
               >
                 <i className="fas fa-stop mr-1"></i>
                 全部停止
@@ -67,7 +67,7 @@ export function AITaskManagerPanel() {
             {stats.completed + stats.failed + stats.cancelled > 0 && (
               <button
                 onClick={clearCompleted}
-                className="px-3 py-1.5 text-xs font-medium text-gray-600 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                className="px-3 py-1.5 text-xs font-medium text-[var(--color-neutral)] bg-[var(--color-neutral-bg)] rounded-lg hover:bg-[var(--color-neutral-border)] transition-colors"
               >
                 <i className="fas fa-trash mr-1"></i>
                 清除已完成
@@ -78,21 +78,21 @@ export function AITaskManagerPanel() {
 
         {/* 统计信息 */}
         <div className="grid grid-cols-4 gap-2">
-          <div className="bg-blue-50 rounded-lg p-2 text-center">
-            <div className="text-lg font-bold text-blue-600">{stats.running + stats.pending}</div>
-            <div className="text-xs text-blue-600/70">进行中</div>
+          <div className="bg-[var(--color-info-bg)] rounded-lg p-2 text-center">
+            <div className="text-lg font-bold text-[var(--color-info)]">{stats.running + stats.pending}</div>
+            <div className="text-xs text-[var(--color-info)] opacity-70">进行中</div>
           </div>
-          <div className="bg-green-50 rounded-lg p-2 text-center">
-            <div className="text-lg font-bold text-green-600">{stats.completed}</div>
-            <div className="text-xs text-green-600/70">已完成</div>
+          <div className="bg-[var(--color-success-bg)] rounded-lg p-2 text-center">
+            <div className="text-lg font-bold text-[var(--color-success)]">{stats.completed}</div>
+            <div className="text-xs text-[var(--color-success)] opacity-70">已完成</div>
           </div>
-          <div className="bg-red-50 rounded-lg p-2 text-center">
-            <div className="text-lg font-bold text-red-600">{stats.failed}</div>
-            <div className="text-xs text-red-600/70">失败</div>
+          <div className="bg-[var(--color-error-bg)] rounded-lg p-2 text-center">
+            <div className="text-lg font-bold text-[var(--color-error)]">{stats.failed}</div>
+            <div className="text-xs text-[var(--color-error)] opacity-70">失败</div>
           </div>
-          <div className="bg-gray-50 rounded-lg p-2 text-center">
-            <div className="text-lg font-bold text-gray-600">{stats.total}</div>
-            <div className="text-xs text-gray-600/70">总计</div>
+          <div className="bg-[var(--color-neutral-bg)] rounded-lg p-2 text-center">
+            <div className="text-lg font-bold text-[var(--color-neutral)]">{stats.total}</div>
+            <div className="text-xs text-[var(--color-neutral)] opacity-70">总计</div>
           </div>
         </div>
       </div>
@@ -100,21 +100,21 @@ export function AITaskManagerPanel() {
       {/* 任务列表 */}
       <div className="flex-1 overflow-y-auto">
         {tasks.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-64 text-gray-400">
+          <div className="flex flex-col items-center justify-center h-64 text-[var(--color-text-muted)]">
             <i className="fas fa-inbox text-4xl mb-3"></i>
             <p className="text-sm">暂无AI任务</p>
           </div>
         ) : (
-          <div className="divide-y divide-gray-100">
+          <div className="divide-y divide-[var(--color-border-default)]">
             {tasks.map((task) => {
               const statusConfig = getStatusConfig(task.status);
               const typeConfig = getTypeConfig(task.type);
               const isExpanded = expandedTaskId === task.id;
 
               return (
-                <div key={task.id} className="p-3 hover:bg-gray-50 transition-colors">
+                <div key={task.id} className="p-3 hover:bg-[var(--color-surface-hover)] transition-colors">
                   {/* 任务头部 */}
-                  <div 
+                  <div
                     className="flex items-center justify-between cursor-pointer"
                     onClick={() => setExpandedTaskId(isExpanded ? null : task.id)}
                   >
@@ -122,14 +122,14 @@ export function AITaskManagerPanel() {
                       <i className={`fas ${typeConfig.icon} ${typeConfig.color}`}></i>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2">
-                          <span className="font-medium text-sm text-gray-900 truncate">
+                          <span className="font-medium text-sm text-[var(--color-text-primary)] truncate">
                             {task.name}
                           </span>
                           <span className={`px-1.5 py-0.5 rounded text-xs font-medium ${statusConfig.bg} ${statusConfig.color}`}>
                             {statusConfig.label}
                           </span>
                         </div>
-                        <div className="flex items-center gap-2 mt-0.5 text-xs text-gray-500">
+                        <div className="flex items-center gap-2 mt-0.5 text-xs text-[var(--color-text-muted)]">
                           <span>{typeConfig.label}</span>
                           <span>•</span>
                           <span>{formatDuration(task.startedAt, task.completedAt)}</span>
@@ -150,22 +150,22 @@ export function AITaskManagerPanel() {
                             e.stopPropagation();
                             cancelTask(task.id);
                           }}
-                          className="p-1.5 text-red-600 hover:bg-red-50 rounded transition-colors"
+                          className="p-1.5 text-[var(--color-error)] hover:bg-[var(--color-error-bg)] rounded transition-colors"
                           title="取消任务"
                         >
                           <i className="fas fa-times"></i>
                         </button>
                       )}
-                      <i className={`fas fa-chevron-${isExpanded ? 'up' : 'down'} text-gray-400`}></i>
+                      <i className={`fas fa-chevron-${isExpanded ? 'up' : 'down'} text-[var(--color-text-muted)]`}></i>
                     </div>
                   </div>
 
                   {/* 进度条 */}
                   {(task.status === 'running' || task.status === 'pending') && (
                     <div className="mt-2">
-                      <div className="h-1.5 bg-gray-200 rounded-full overflow-hidden">
-                        <div 
-                          className="h-full bg-blue-500 transition-all duration-300"
+                      <div className="h-1.5 bg-[var(--color-surface-muted)] rounded-full overflow-hidden">
+                        <div
+                          className="h-full bg-[var(--color-info)] transition-all duration-300"
                           style={{ width: `${task.progress}%` }}
                         ></div>
                       </div>
@@ -174,45 +174,45 @@ export function AITaskManagerPanel() {
 
                   {/* 扩展信息 */}
                   {isExpanded && (
-                    <div className="mt-3 p-3 bg-gray-50 rounded-lg">
+                    <div className="mt-3 p-3 bg-[var(--color-surface-muted)] rounded-lg">
                       {task.description && (
                         <div className="mb-2">
-                          <span className="text-xs font-medium text-gray-600">描述：</span>
-                          <span className="text-xs text-gray-700 ml-1">{task.description}</span>
+                          <span className="text-xs font-medium text-[var(--color-text-muted)]">描述：</span>
+                          <span className="text-xs text-[var(--color-text-secondary)] ml-1">{task.description}</span>
                         </div>
                       )}
-                      
+
                       <div className="grid grid-cols-2 gap-2 text-xs mb-2">
                         <div>
-                          <span className="font-medium text-gray-600">创建时间：</span>
-                          <span className="text-gray-700">
+                          <span className="font-medium text-[var(--color-text-muted)]">创建时间：</span>
+                          <span className="text-[var(--color-text-secondary)]">
                             {new Date(task.createdAt).toLocaleTimeString('zh-CN')}
                           </span>
                         </div>
                         {task.startedAt && (
                           <div>
-                            <span className="font-medium text-gray-600">开始时间：</span>
-                            <span className="text-gray-700">
+                            <span className="font-medium text-[var(--color-text-muted)]">开始时间：</span>
+                            <span className="text-[var(--color-text-secondary)]">
                               {new Date(task.startedAt).toLocaleTimeString('zh-CN')}
                             </span>
                           </div>
                         )}
                         {task.completedAt && (
                           <div>
-                            <span className="font-medium text-gray-600">完成时间：</span>
-                            <span className="text-gray-700">
+                            <span className="font-medium text-[var(--color-text-muted)]">完成时间：</span>
+                            <span className="text-[var(--color-text-secondary)]">
                               {new Date(task.completedAt).toLocaleTimeString('zh-CN')}
                             </span>
                           </div>
                         )}
                         <div>
-                          <span className="font-medium text-gray-600">任务ID：</span>
-                          <span className="text-gray-700 font-mono text-xs">{task.id.slice(0, 20)}...</span>
+                          <span className="font-medium text-[var(--color-text-muted)]">任务ID：</span>
+                          <span className="text-[var(--color-text-secondary)] font-mono text-xs">{task.id.slice(0, 20)}...</span>
                         </div>
                       </div>
 
                       {task.error && (
-                        <div className="p-2 bg-red-50 rounded text-xs text-red-700">
+                        <div className="p-2 bg-[var(--color-error-bg)] rounded text-xs text-[var(--color-error)]">
                           <i className="fas fa-exclamation-circle mr-1"></i>
                           {task.error}
                         </div>
@@ -220,11 +220,11 @@ export function AITaskManagerPanel() {
 
                       {task.result && (
                         <div className="mt-2">
-                          <span className="text-xs font-medium text-gray-600">结果：</span>
-                          <div className="mt-1 p-2 bg-white rounded border border-gray-200 max-h-32 overflow-y-auto">
-                            <pre className="text-xs text-gray-700 whitespace-pre-wrap">
-                              {typeof task.result === 'string' 
-                                ? task.result.slice(0, 500) 
+                          <span className="text-xs font-medium text-[var(--color-text-muted)]">结果：</span>
+                          <div className="mt-1 p-2 bg-[var(--color-surface-elevated)] rounded border border-[var(--color-border-default)] max-h-32 overflow-y-auto">
+                            <pre className="text-xs text-[var(--color-text-secondary)] whitespace-pre-wrap">
+                              {typeof task.result === 'string'
+                                ? task.result.slice(0, 500)
                                 : JSON.stringify(task.result, null, 2).slice(0, 500)}
                               {(typeof task.result === 'string' ? task.result.length : JSON.stringify(task.result).length) > 500 && '...'}
                             </pre>
@@ -242,8 +242,8 @@ export function AITaskManagerPanel() {
 
       {/* 底部提示 */}
       {runningTasks.length > 0 && (
-        <div className="p-3 bg-blue-50 border-t border-blue-200">
-          <p className="text-xs text-blue-700 flex items-center gap-2">
+        <div className="p-3 bg-[var(--color-info-bg)] border-t border-[var(--color-info-border)]">
+          <p className="text-xs text-[var(--color-info)] flex items-center gap-2">
             <i className="fas fa-info-circle"></i>
             <span>
               正在进行 {runningTasks.length} 个AI任务，切换标签页不会中断任务执行
@@ -264,17 +264,17 @@ export function AITaskIndicator() {
   if (!isRunning) return null;
 
   return (
-    <div className="flex items-center gap-2 px-3 py-1.5 bg-blue-50 rounded-lg text-xs">
-      <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
-      <span className="text-blue-700 font-medium">
+    <div className="flex items-center gap-2 px-3 py-1.5 bg-[var(--color-info-bg)] rounded-lg text-xs">
+      <div className="w-2 h-2 bg-[var(--color-info)] rounded-full animate-pulse"></div>
+      <span className="text-[var(--color-info)] font-medium">
         AI任务: {stats.running + stats.pending} 进行中
       </span>
       <div className="flex gap-1">
         {stats.running > 0 && (
-          <span className="text-blue-600">{stats.running}运行</span>
+          <span className="text-[var(--color-info)]">{stats.running}运行</span>
         )}
         {stats.pending > 0 && (
-          <span className="text-yellow-600">{stats.pending}等待</span>
+          <span className="text-[var(--color-warning)]">{stats.pending}等待</span>
         )}
       </div>
     </div>

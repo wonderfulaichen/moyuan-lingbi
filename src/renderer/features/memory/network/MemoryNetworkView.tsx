@@ -27,36 +27,11 @@ import { dataService } from '../../../shared/services/DataService';
 import { memoryBankService } from '../../../shared/services/MemoryBankService';
 import { useTheme } from '../../../shared/contexts/ThemeContext';
 import { useUIStore } from '../../../shared/stores/uiStore';
+import { RELATIONSHIP_COLORS, RELATIONSHIP_LABELS } from '../../../shared/constants/relationshipColors';
 
 interface MemoryNetworkViewProps {
   projectId: string;
 }
-
-const RELATIONSHIP_COLORS: Record<string, string> = {
-  family: '#f472b6',
-  friend: '#60a5fa',
-  romance: '#ec4899',
-  enemy: '#ef4444',
-  ally: '#34d399',
-  neutral: '#9ca3af',
-  master: '#a78bfa',
-  disciple: '#6366f1',
-  other: '#6b7280',
-  involved: '#fbbf24',
-};
-
-const RELATIONSHIP_LABELS: Record<string, string> = {
-  family: '家人',
-  friend: '朋友',
-  romance: '恋爱',
-  enemy: '敌对',
-  ally: '盟友',
-  neutral: '中立',
-  master: '师父',
-  disciple: '徒弟',
-  other: '其他',
-  involved: '参与',
-};
 
 const getLayoutedNodes = (nodes: any[], edges: any[]) => {
   const width = 800;

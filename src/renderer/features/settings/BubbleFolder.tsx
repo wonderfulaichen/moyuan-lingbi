@@ -2,6 +2,14 @@ import React, { useState, useCallback } from 'react';
 import { BubbleFolder as BubbleFolderType } from '../../../shared/types';
 import { useTheme } from '../../shared/contexts/ThemeContext';
 import { useUIStore } from '../../shared/stores/uiStore';
+import {
+  FOLDER_BG_COLORS,
+  FOLDER_BORDER_COLORS,
+  TYPE_ICONS,
+  TYPE_LABELS,
+  getFolderTypeIcon,
+  getFolderTypeLabel,
+} from './folderColors';
 
 interface BubbleFolderProps {
   folders: BubbleFolderType[];
@@ -13,41 +21,6 @@ interface BubbleFolderProps {
   onCreateSubFolder?: (parentId: string, name: string, type: BubbleFolderType['type']) => void;
   onCreateCard?: (folderId: string, title?: string) => void;
 }
-
-const FOLDER_BG_COLORS: Record<string, string> = {
-  'world': 'from-emerald-600/30 to-emerald-900/20',
-  'characters': 'from-blue-600/30 to-blue-900/20',
-  'timeline': 'from-amber-600/30 to-amber-900/20',
-  'custom': 'from-rose-600/30 to-rose-900/20',
-};
-
-const FOLDER_ICONS: Record<string, string> = {
-  'world': 'fa-globe',
-  'characters': 'fa-users',
-  'timeline': 'fa-timeline',
-  'custom': 'fa-folder',
-};
-
-const FOLDER_BORDER_COLORS: Record<string, string> = {
-  'world': 'border-emerald-500/30',
-  'characters': 'border-blue-500/30',
-  'timeline': 'border-amber-500/30',
-  'custom': 'border-rose-500/30',
-};
-
-const FOLDER_GLOW_COLORS: Record<string, string> = {
-  'world': 'shadow-emerald-900/30',
-  'characters': 'shadow-blue-900/30',
-  'timeline': 'shadow-amber-900/30',
-  'custom': 'shadow-rose-900/30',
-};
-
-const TYPE_LABELS: Record<string, string> = {
-  'world': '世界观',
-  'characters': '角色',
-  'timeline': '时间线',
-  'custom': '自定义',
-};
 
 const BubbleFolder: React.FC<BubbleFolderProps> = ({
   folders,
@@ -187,7 +160,7 @@ const BubbleFolder: React.FC<BubbleFolderProps> = ({
               )}
 
               {/* 文件夹图标 */}
-              <i className={`fas ${FOLDER_ICONS[folderType]} text-sm ${isActive ? 'text-[var(--color-primary-300)]' : 'text-gray-500'}`}></i>
+              <i className={`fas ${getFolderTypeIcon(folderType)} text-sm ${isActive ? 'text-[var(--color-primary-300)]' : 'text-[var(--color-text-muted)]'}`}></i>
 
               {/* 名称 */}
               {renamingId === folder.id ? (
@@ -200,7 +173,7 @@ const BubbleFolder: React.FC<BubbleFolderProps> = ({
                     if (e.key === 'Enter') handleConfirmRename();
                     if (e.key === 'Escape') setRenamingId(null);
                   }}
-                  className="flex-1 bg-gray-800/80 border border-[var(--color-primary-300)] rounded px-2 py-0.5 text-xs text-gray-200 focus:outline-none"
+                  className="flex-1 bg-[var(--color-surface-elevated)] border border-[var(--color-primary-300)] rounded px-2 py-0.5 text-xs text-[var(--color-text-primary)] focus:outline-none"
                   autoFocus
                   onClick={(e) => e.stopPropagation()}
                 />
@@ -218,13 +191,13 @@ const BubbleFolder: React.FC<BubbleFolderProps> = ({
               <div className="flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
                 <span
                   onClick={(e) => { e.stopPropagation(); handleStartRename(folder); }}
-                  className="p-1 rounded hover:bg-white/10 text-gray-500 hover:text-gray-200 cursor-pointer"
+                  className="p-1 rounded hover:bg-[var(--color-surface-hover)] text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] cursor-pointer"
                 >
                   <i className="fas fa-pen text-[8px]"></i>
                 </span>
                 <span
                   onClick={(e) => { e.stopPropagation(); handleStartDelete(folder); }}
-                  className="p-1 rounded hover:bg-red-900/30 text-gray-500 hover:text-red-300 cursor-pointer"
+                  className="p-1 rounded hover:bg-[var(--color-error-bg)] text-[var(--color-text-muted)] hover:text-[var(--color-error)] cursor-pointer"
                 >
                   <i className="fas fa-trash text-[8px]"></i>
                 </span>
@@ -275,9 +248,9 @@ const BubbleFolder: React.FC<BubbleFolderProps> = ({
       {/* 树形文件夹列表 */}
       <div className="flex-1 overflow-y-auto p-2">
         {rootFolders.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full text-gray-600">
+          <div className="flex flex-col items-center justify-center h-full text-[var(--color-text-muted)]">
             <i className="fas fa-folder-open text-3xl mb-2 opacity-30"></i>
-            <p className="text-xs text-gray-500">暂无文件夹</p>
+            <p className="text-xs text-[var(--color-text-muted)]">暂无文件夹</p>
           </div>
         ) : (
           <div className="space-y-0.5">
@@ -291,19 +264,19 @@ const BubbleFolder: React.FC<BubbleFolderProps> = ({
         <div className="fixed inset-0 z-[10001] flex items-center justify-center bg-black/50 backdrop-blur-sm animate-fade-in"
           onClick={() => setShowCreateModal(false)}
         >
-          <div className="bg-gray-900/95 border border-[var(--color-border-default)] rounded-2xl p-6 w-80 shadow-2xl"
+          <div className="bg-[var(--color-surface-elevated)] border border-[var(--color-border-default)] rounded-2xl p-6 w-80 shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
-            <h3 className="text-base font-semibold text-gray-200 mb-4">新建文件夹</h3>
+            <h3 className="text-base font-semibold text-[var(--color-text-primary)] mb-4">新建文件夹</h3>
             <div className="space-y-4">
               <div>
-                <label className="block text-xs text-gray-400 mb-1.5">名称</label>
+                <label className="block text-xs text-[var(--color-text-muted)] mb-1.5">名称</label>
                 <input
                   type="text"
                   value={newFolderName}
                   onChange={(e) => setNewFolderName(e.target.value)}
                   placeholder="文件夹名称"
-                  className="w-full bg-gray-800/60 border border-[var(--color-border-default)] rounded-lg px-3 py-2 text-sm text-gray-200 placeholder-gray-600 focus:outline-none focus:border-[var(--color-primary-300)] transition-all duration-200"
+                  className="w-full bg-[var(--color-surface-muted)] border border-[var(--color-border-default)] rounded-lg px-3 py-2 text-sm text-[var(--color-text-primary)] placeholder-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-primary-300)] transition-all duration-200"
                   autoFocus
                   onKeyDown={(e) => {
                     if (e.key === 'Enter') handleCreate();
@@ -311,7 +284,7 @@ const BubbleFolder: React.FC<BubbleFolderProps> = ({
                 />
               </div>
               <div>
-                <label className="block text-xs text-gray-400 mb-1.5">类型</label>
+                <label className="block text-xs text-[var(--color-text-muted)] mb-1.5">类型</label>
                 <div className="grid grid-cols-2 gap-2">
                   {(['custom', 'world', 'characters', 'timeline'] as const).map((type) => (
                     <button
@@ -321,11 +294,11 @@ const BubbleFolder: React.FC<BubbleFolderProps> = ({
                         flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium transition-all duration-200
                         ${newFolderType === type
                           ? `${FOLDER_BG_COLORS[type]} ${FOLDER_BORDER_COLORS[type]} border`
-                          : 'bg-gray-800/40 text-gray-500 hover:bg-gray-800/60 hover:text-gray-300 border border-transparent'
+                          : 'bg-[var(--color-surface-muted)] text-[var(--color-text-muted)] hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-text-primary)] border border-transparent'
                         }
                       `}
                     >
-                      <i className={`fas ${FOLDER_ICONS[type]}`}></i>
+                      <i className={`fas ${TYPE_ICONS[type]}`}></i>
                       <span>{TYPE_LABELS[type]}</span>
                     </button>
                   ))}
@@ -334,7 +307,7 @@ const BubbleFolder: React.FC<BubbleFolderProps> = ({
               <div className="flex gap-2 pt-2">
                 <button
                   onClick={() => setShowCreateModal(false)}
-                  className="flex-1 px-4 py-2 text-xs font-medium text-gray-400 bg-gray-800/40 hover:bg-gray-800/60 rounded-lg transition-all duration-200"
+                  className="flex-1 px-4 py-2 text-xs font-medium text-[var(--color-text-muted)] bg-[var(--color-surface-muted)] hover:bg-[var(--color-surface-hover)] rounded-lg transition-all duration-200"
                 >
                   取消
                 </button>
@@ -356,26 +329,26 @@ const BubbleFolder: React.FC<BubbleFolderProps> = ({
         <div className="fixed inset-0 z-[10001] flex items-center justify-center bg-black/50 backdrop-blur-sm animate-fade-in"
           onClick={() => setDeletingId(null)}
         >
-          <div className="bg-gray-900/95 border border-red-900/30 rounded-2xl p-6 w-72 shadow-2xl"
+          <div className="bg-[var(--color-surface-elevated)] border border-[var(--color-error-border)] rounded-2xl p-6 w-72 shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="text-center mb-4">
-              <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-red-900/30 flex items-center justify-center">
-                <i className="fas fa-exclamation-triangle text-red-400 text-lg"></i>
+              <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-[var(--color-error-bg)] flex items-center justify-center">
+                <i className="fas fa-exclamation-triangle text-[var(--color-error)] text-lg"></i>
               </div>
-              <h3 className="text-base font-semibold text-gray-200 mb-1">删除文件夹</h3>
-              <p className="text-xs text-gray-500">确定要删除此文件夹吗？此操作不可撤销。</p>
+              <h3 className="text-base font-semibold text-[var(--color-text-primary)] mb-1">删除文件夹</h3>
+              <p className="text-xs text-[var(--color-text-muted)]">确定要删除此文件夹吗？此操作不可撤销。</p>
             </div>
             <div className="flex gap-2">
               <button
                 onClick={() => setDeletingId(null)}
-                className="flex-1 px-4 py-2 text-xs font-medium text-gray-400 bg-gray-800/40 hover:bg-gray-800/60 rounded-lg transition-all duration-200"
+                className="flex-1 px-4 py-2 text-xs font-medium text-[var(--color-text-muted)] bg-[var(--color-surface-muted)] hover:bg-[var(--color-surface-hover)] rounded-lg transition-all duration-200"
               >
                 取消
               </button>
               <button
                 onClick={handleConfirmDelete}
-                className="flex-1 px-4 py-2 text-xs font-medium text-white bg-gradient-to-r from-red-600 to-rose-600 rounded-lg hover:from-red-700 hover:to-rose-700 transition-all duration-200"
+                className="flex-1 px-4 py-2 text-xs font-medium text-white bg-gradient-to-r from-[var(--color-error)] to-[var(--color-error)] rounded-lg hover:opacity-90 transition-all duration-200"
               >
                 删除
               </button>
@@ -408,18 +381,18 @@ const BubbleFolder: React.FC<BubbleFolderProps> = ({
                   {isCustom && (
                   <button
                     onClick={() => { setContextMenu(null); if (f) handleStartRename(f); }}
-                    className="w-full flex items-center gap-2 px-3 py-2 text-xs text-gray-300 hover:bg-white/5 transition-colors text-left"
+                    className="w-full flex items-center gap-2 px-3 py-2 text-xs text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)] transition-colors text-left"
                   >
-                    <i className="fas fa-pen text-[10px] text-gray-500 w-4 text-center"></i>
+                    <i className="fas fa-pen text-[10px] text-[var(--color-text-muted)] w-4 text-center"></i>
                     <span>重命名</span>
                   </button>
                   )}
                   {isCustom && (
                   <button
                     onClick={() => { setContextMenu(null); if (f) handleStartDelete(f); }}
-                    className="w-full flex items-center gap-2 px-3 py-2 text-xs text-red-400 hover:bg-red-900/20 transition-colors text-left"
+                    className="w-full flex items-center gap-2 px-3 py-2 text-xs text-[var(--color-error)] hover:bg-[var(--color-error-bg)] transition-colors text-left"
                   >
-                    <i className="fas fa-trash text-[10px] text-red-400/60 w-4 text-center"></i>
+                    <i className="fas fa-trash text-[10px] text-[var(--color-error)] opacity-60 w-4 text-center"></i>
                     <span>删除</span>
                   </button>
                   )}
@@ -430,12 +403,12 @@ const BubbleFolder: React.FC<BubbleFolderProps> = ({
                       setShowCreateSubModal(true);
                       setNewSubName('');
                     }}
-                    className="w-full flex items-center gap-2 px-3 py-2 text-xs text-gray-300 hover:bg-white/5 transition-colors text-left"
+                    className="w-full flex items-center gap-2 px-3 py-2 text-xs text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)] transition-colors text-left"
                   >
                     <i className="fas fa-folder-plus text-[10px] text-[var(--color-primary-400)] w-4 text-center"></i>
                     <span>新建子文件夹</span>
                   </button>
-                  <div className="border-t border-white/5 my-1"></div>
+                  <div className="border-t border-[var(--color-border-default)] my-1"></div>
                   <button
                     onClick={() => {
                       setContextMenu(null);
@@ -462,24 +435,24 @@ const BubbleFolder: React.FC<BubbleFolderProps> = ({
         <div className="fixed inset-0 z-[10001] flex items-center justify-center bg-black/50 backdrop-blur-sm animate-fade-in"
           onClick={() => setShowCreateSubModal(false)}
         >
-          <div className="bg-gray-900/95 border border-[var(--color-border-default)] rounded-2xl p-6 w-72 shadow-2xl"
+          <div className="bg-[var(--color-surface-elevated)] border border-[var(--color-border-default)] rounded-2xl p-6 w-72 shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
-            <h3 className="text-sm font-semibold text-gray-200 mb-4">新建子文件夹</h3>
-            <p className="text-[10px] text-gray-500 mb-3">在当前文件夹中创建</p>
+            <h3 className="text-sm font-semibold text-[var(--color-text-primary)] mb-4">新建子文件夹</h3>
+            <p className="text-[10px] text-[var(--color-text-muted)] mb-3">在当前文件夹中创建</p>
             <div className="space-y-3">
               <input
                 type="text"
                 value={newSubName}
                 onChange={(e) => setNewSubName(e.target.value)}
                 placeholder="文件夹名称"
-                className="w-full bg-gray-800/60 border border-[var(--color-border-default)] rounded-lg px-3 py-2 text-sm text-gray-200 placeholder-gray-600 focus:outline-none focus:border-[var(--color-primary-300)] transition-all"
+                className="w-full bg-[var(--color-surface-muted)] border border-[var(--color-border-default)] rounded-lg px-3 py-2 text-sm text-[var(--color-text-primary)] placeholder-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-primary-300)] transition-all"
                 autoFocus
                 onKeyDown={(e) => { if (e.key === 'Enter') handleCreateSub(); }}
               />
               <div className="flex gap-2">
                 <button onClick={() => setShowCreateSubModal(false)}
-                  className="flex-1 px-4 py-2 text-xs font-medium text-gray-400 bg-gray-800/40 hover:bg-gray-800/60 rounded-lg transition-all">
+                  className="flex-1 px-4 py-2 text-xs font-medium text-[var(--color-text-muted)] bg-[var(--color-surface-muted)] hover:bg-[var(--color-surface-hover)] rounded-lg transition-all">
                   取消
                 </button>
                 <button onClick={handleCreateSub} disabled={!newSubName.trim()}
