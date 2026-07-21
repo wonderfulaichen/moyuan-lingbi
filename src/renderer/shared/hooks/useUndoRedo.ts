@@ -18,79 +18,121 @@ interface UseUndoRedoReturn<T> {
   clearHistory: () => void;
 }
 
+/**
+ * 带撤销/重做功能的值管理 hook
+ *
+ * 历史栈使用 useState 管理（而非 useRef），确保 canUndo/canRedo/clearHistory
+ * 都能正确触发重渲染。副作用（onChange）通过 useEffect 触发，避免在
+ * setState updater 中执行副作用（React 18 StrictMode 下 updater 会被调用两次）。
+ */
 export function useUndoRedo<T>({
   initialValue,
   onChange,
   equalityFn,
 }: UseUndoRedoOptions<T>): UseUndoRedoReturn<T> {
   const [value, setValueState] = useState<T>(initialValue);
-  const historyRef = useRef<T[]>([initialValue]);
-  const currentIndexRef = useRef<number>(0);
-  const isUndoRedoRef = useRef<boolean>(false);
+  // 历史栈用 state 管理：修改时会触发重渲染，canUndo/canRedo 自动更新
+  const [history, setHistory] = useState<T[]>([initialValue]);
+  const [currentIndex, setCurrentIndex] = useState<number>(0);
 
-  const canUndo = currentIndexRef.current > 0;
-  const canRedo = currentIndexRef.current < historyRef.current.length - 1;
+  // 用 ref 保存最新值，避免连续调用时闭包陷阱
+  const valueRef = useRef(value);
+  const historyRef = useRef(history);
+  const indexRef = useRef(currentIndex);
+  useEffect(() => { valueRef.current = value; }, [value]);
+  useEffect(() => { historyRef.current = history; }, [history]);
+  useEffect(() => { indexRef.current = currentIndex; }, [currentIndex]);
+
+  // 用 ref 保存最新的 onChange，避免 undo/redo 因依赖 onChange 而频繁重建
+  const onChangeRef = useRef(onChange);
+  useEffect(() => {
+    onChangeRef.current = onChange;
+  }, [onChange]);
+
+  // 值变化时触发 onChange 副作用（在 updater 外执行，符合 React 纯函数原则）
+  useEffect(() => {
+    onChangeRef.current?.(value);
+  }, [value]);
 
   const setValue = useCallback((newValue: T | ((prev: T) => T), skipHistory?: boolean) => {
-    setValueState(prev => {
-      const resolved = typeof newValue === 'function' ? (newValue as (prev: T) => T)(prev) : newValue;
+    // 基于 ref 中的最新值计算 resolved，避免连续调用时闭包陷阱
+    const resolved = typeof newValue === 'function' ? (newValue as (prev: T) => T)(valueRef.current) : newValue;
+    setValueState(resolved);
+    valueRef.current = resolved;
 
-      if (!skipHistory && !isUndoRedoRef.current) {
-        const history = historyRef.current;
-        const currentIdx = currentIndexRef.current;
+    if (!skipHistory) {
+      const curHistory = historyRef.current;
+      const curIdx = indexRef.current;
+      // 历史栈更新：仅当新值与当前栈顶不同时才入栈
+      const currentTop = curHistory[curIdx];
+      const shouldPush = equalityFn
+        ? !equalityFn(resolved, currentTop)
+        : resolved !== currentTop;
+      if (!shouldPush) return;
 
-        if (equalityFn ? !equalityFn(resolved, history[currentIdx]) : resolved === history[currentIdx]) {
-          const newHistory = history.slice(0, currentIdx + 1);
-          newHistory.push(resolved);
-          if (newHistory.length > MAX_HISTORY) {
-            newHistory.shift();
-          } else {
-            currentIndexRef.current = currentIdx + 1;
-          }
-          historyRef.current = newHistory;
-        }
+      const newHistory = curHistory.slice(0, curIdx + 1);
+      newHistory.push(resolved);
+      let newIdx: number;
+      if (newHistory.length > MAX_HISTORY) {
+        newHistory.shift();
+        newIdx = newHistory.length - 1;
+      } else {
+        newIdx = curIdx + 1;
       }
-
-      isUndoRedoRef.current = false;
-      onChange?.(resolved);
-      return resolved;
-    });
-  }, [onChange, equalityFn]);
+      historyRef.current = newHistory;
+      indexRef.current = newIdx;
+      setHistory(newHistory);
+      setCurrentIndex(newIdx);
+    }
+  }, [equalityFn]);
 
   const undo = useCallback(() => {
-    if (!canUndo) return;
-    isUndoRedoRef.current = true;
-    currentIndexRef.current -= 1;
-    const newValue = historyRef.current[currentIndexRef.current];
+    const curIdx = indexRef.current;
+    if (curIdx <= 0) return;
+    const newIdx = curIdx - 1;
+    const newValue = historyRef.current[newIdx];
+    indexRef.current = newIdx;
+    valueRef.current = newValue;
+    setCurrentIndex(newIdx);
     setValueState(newValue);
-    onChange?.(newValue);
-  }, [canUndo, onChange]);
+  }, []);
 
   const redo = useCallback(() => {
-    if (!canRedo) return;
-    isUndoRedoRef.current = true;
-    currentIndexRef.current += 1;
-    const newValue = historyRef.current[currentIndexRef.current];
+    const curIdx = indexRef.current;
+    const curHistory = historyRef.current;
+    if (curIdx >= curHistory.length - 1) return;
+    const newIdx = curIdx + 1;
+    const newValue = curHistory[newIdx];
+    indexRef.current = newIdx;
+    valueRef.current = newValue;
+    setCurrentIndex(newIdx);
     setValueState(newValue);
-    onChange?.(newValue);
-  }, [canRedo, onChange]);
+  }, []);
 
   const clearHistory = useCallback(() => {
-    historyRef.current = [value];
-    currentIndexRef.current = 0;
-  }, [value]);
+    const curValue = valueRef.current;
+    historyRef.current = [curValue];
+    indexRef.current = 0;
+    setHistory([curValue]);
+    setCurrentIndex(0);
+  }, []);
+
+  const canUndo = currentIndex > 0;
+  const canRedo = currentIndex < history.length - 1;
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
+      const isCtrlOrCmd = e.ctrlKey || e.metaKey;
+      if (!isCtrlOrCmd) return;
+
+      if (e.key === 'z') {
         e.preventDefault();
         if (e.shiftKey) {
           redo();
         } else {
           undo();
         }
-      }
-      if ((e.ctrlKey || e.metaKey) && (e.key === 'y' || (e.key === 'z' && e.shiftKey))) {
+      } else if (e.key === 'y') {
         e.preventDefault();
         redo();
       }

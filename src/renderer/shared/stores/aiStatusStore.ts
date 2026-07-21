@@ -32,6 +32,17 @@ export interface AIStatusState {
   activeTaskId: string | null;
 }
 
+// 模块级定时器：setComplete 后 3 秒清空状态消息
+// 在 setGenerating/resetStatus/setComplete 入口处清理，避免竞态条件
+let completeResetTimer: ReturnType<typeof setTimeout> | null = null;
+
+function clearCompleteResetTimer() {
+  if (completeResetTimer) {
+    clearTimeout(completeResetTimer);
+    completeResetTimer = null;
+  }
+}
+
 export const useAIStatusStore = create<AIStatusState>()((set, get) => ({
   isGenerating: false,
   statusMessage: '',
@@ -45,6 +56,8 @@ export const useAIStatusStore = create<AIStatusState>()((set, get) => ({
   activeTaskId: null,
 
   setGenerating: (modelName: string, message: string = 'AI 生成中...', task: string = '') => {
+    // 启动新任务时清理上一个 completeResetTimer，避免旧定时器误清新任务状态
+    clearCompleteResetTimer();
     const taskId = `task-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
     const now = Date.now();
     const newTask: AITaskRecord = {
@@ -144,7 +157,10 @@ export const useAIStatusStore = create<AIStatusState>()((set, get) => ({
       };
     });
 
-    setTimeout(() => {
+    // 清理旧定时器后再设新定时器，避免连续 setComplete 产生多个排队定时器
+    clearCompleteResetTimer();
+    completeResetTimer = setTimeout(() => {
+      completeResetTimer = null;
       set(s => {
         if (s.isGenerating) return s;
         return { statusMessage: '', progress: 0 };
@@ -153,6 +169,8 @@ export const useAIStatusStore = create<AIStatusState>()((set, get) => ({
   },
 
   resetStatus: () => {
+    // 重置状态时清理挂起的定时器，避免定时器在 reset 后误清空新任务状态
+    clearCompleteResetTimer();
     set(s => ({
       isGenerating: false,
       statusMessage: '',

@@ -63,7 +63,7 @@ const WritingEditor: React.FC<WritingEditorProps> = ({
 
   const { handleKeyDown: handleSmartFormat, formatSelection } = useSmartFormat(formatOptions);
 
-  const { value: editorContent, setValue: setEditorContent, undo, redo, canUndo, canRedo } = useUndoRedo<string>({
+  const { value: editorContent, setValue: setEditorContent, undo, redo, canUndo, canRedo, clearHistory } = useUndoRedo<string>({
     initialValue: '',
   });
 
@@ -78,23 +78,22 @@ const WritingEditor: React.FC<WritingEditorProps> = ({
   const editPrompts = prompts.filter(p => p.category === 'edit');
 
   const currentContent = editingChapter?.content ?? '';
-  const [localContent, setLocalContent] = useState(currentContent);
 
+  // 切换章节时同步内容并清空历史栈，避免撤销跨章节串内容
   useEffect(() => {
-    setLocalContent(currentContent);
     setEditorContent(currentContent, true);
-  }, [editingChapterId, currentContent]);
+    clearHistory();
+  }, [editingChapterId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleContentChange = useCallback((newContent: string) => {
-    setLocalContent(newContent);
     setEditorContent(newContent);
   }, [setEditorContent]);
 
   const handleSaveContent = useCallback(() => {
-    if (editingChapterId && localContent !== currentContent) {
-      onUpdate({ chapters: project.chapters.map(c => c.id === editingChapterId ? { ...c, content: localContent } : c) });
+    if (editingChapterId && editorContent !== currentContent) {
+      onUpdate({ chapters: project.chapters.map(c => c.id === editingChapterId ? { ...c, content: editorContent } : c) });
     }
-  }, [editingChapterId, localContent, currentContent, onUpdate, project.chapters]);
+  }, [editingChapterId, editorContent, currentContent, onUpdate, project.chapters]);
 
   React.useEffect(() => {
     if (writingPrompts.length > 0 && !selectedPromptId) {
@@ -109,13 +108,13 @@ const WritingEditor: React.FC<WritingEditorProps> = ({
 
   // 更新写作统计和健康服务
   useEffect(() => {
-    const words = localContent.trim().split(/\s+/).filter(Boolean).length;
-    const chars = localContent.length;
+    const words = editorContent.trim().split(/\s+/).filter(Boolean).length;
+    const chars = editorContent.length;
     setWordCount(words);
     setCharCount(chars);
     wellnessService.updateActivity(words);
     updateWritingStats({ wordCount: words, charCount: chars });
-  }, [localContent]);
+  }, [editorContent]);
 
   // 定期检查健康消息
   useEffect(() => {
@@ -135,7 +134,7 @@ const WritingEditor: React.FC<WritingEditorProps> = ({
 
     const textarea = textareaRef.current;
     const cursorPos = textarea.selectionStart;
-    const textBeforeCursor = localContent.substring(0, cursorPos);
+    const textBeforeCursor = editorContent.substring(0, cursorPos);
     const linesBeforeCursor = textBeforeCursor.split('\n').length;
     const lineHeight = 28;
     const scrollTop = textarea.scrollTop;
@@ -144,18 +143,18 @@ const WritingEditor: React.FC<WritingEditorProps> = ({
     if (Math.abs(targetScrollTop - scrollTop) > lineHeight * 2) {
       textarea.scrollTop = Math.max(0, targetScrollTop);
     }
-  }, [localContent, typewriterMode]);
+  }, [editorContent, typewriterMode]);
 
   // 自动保存（停止输入 2 秒后保存）
   useEffect(() => {
-    if (!editingChapterId || localContent === currentContent) return;
+    if (!editingChapterId || editorContent === currentContent) return;
 
     const timer = setTimeout(() => {
       handleSaveContent();
     }, 2000);
 
     return () => clearTimeout(timer);
-  }, [localContent, editingChapterId, handleSaveContent]);
+  }, [editorContent, editingChapterId, handleSaveContent]);
 
   // 键盘快捷键
   useEffect(() => {
@@ -192,7 +191,7 @@ const WritingEditor: React.FC<WritingEditorProps> = ({
     const textarea = textareaRef.current;
     const start = textarea.selectionStart;
     const end = textarea.selectionEnd;
-    const currentContent = localContent;
+    const currentContent = editorContent;
 
     const result = formatSelection(currentContent, start, end, formatType);
 
@@ -202,14 +201,14 @@ const WritingEditor: React.FC<WritingEditorProps> = ({
       textarea.focus();
       textarea.setSelectionRange(result.newCursorPosition, result.newCursorPosition);
     }, 0);
-  }, [localContent, formatSelection]);
+  }, [editorContent, formatSelection]);
 
   const handleApplyInspiration = useCallback((text: string) => {
     if (!textareaRef.current || !editingChapterId) return;
 
     const textarea = textareaRef.current;
     const start = textarea.selectionStart;
-    const currentContent = localContent;
+    const currentContent = editorContent;
     const newContent = currentContent.substring(0, start) + text + currentContent.substring(start);
 
     handleContentChange(newContent);
@@ -268,12 +267,12 @@ const WritingEditor: React.FC<WritingEditorProps> = ({
 
       const result = await aiService.generate({
         model: activeModel,
-        prompt: prompt.template.replace('{{content}}', localContent),
+        prompt: prompt.template.replace('{{content}}', editorContent),
         signal: abortRef.current.signal,
       });
 
       if (result.text) {
-        handleContentChange(localContent + result.text);
+        handleContentChange(editorContent + result.text);
         showToast('AI续写完成', 'success');
       }
     } catch (error) {
@@ -399,7 +398,7 @@ const WritingEditor: React.FC<WritingEditorProps> = ({
         <div className="flex-1 overflow-hidden">
           <textarea
             ref={textareaRef}
-            value={localContent}
+            value={editorContent}
             onChange={(e) => {
               handleContentChange(e.target.value);
               setCursorPosition(e.target.selectionStart);
@@ -412,7 +411,7 @@ const WritingEditor: React.FC<WritingEditorProps> = ({
             }}
             onKeyDown={(e) => {
               if (!isGenerating) {
-                const result = handleSmartFormat(e, localContent, (e.target as HTMLTextAreaElement).selectionStart);
+                const result = handleSmartFormat(e, editorContent, (e.target as HTMLTextAreaElement).selectionStart);
                 if (result?.consumed) {
                   e.preventDefault();
                   handleContentChange(result.newText);
