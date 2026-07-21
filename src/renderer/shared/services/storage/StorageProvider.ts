@@ -1,12 +1,15 @@
 /**
  * 存储提供者接口
- * 
+ *
  * 为跨平台数据持久化提供统一抽象。
  * - Electron 环境：使用 Electron fs + localStorage
  * - WebView/Android 环境：使用 IndexedDB
- * 
+ *
  * 通过 createStorageProvider() 工厂函数自动检测平台并返回对应实现。
  */
+
+// isElectron 统一从 electronAPI 工具模块导出，避免重复实现和类型绕过
+export { isElectron } from '../../utils/electronAPI';
 
 export interface StorageProvider {
   /** 保存数据 */
@@ -19,13 +22,6 @@ export interface StorageProvider {
   list(prefix: string): Promise<string[]>;
   /** 清除所有数据 */
   clear(): Promise<void>;
-}
-
-/**
- * 检测当前是否为 Electron 环境
- */
-export function isElectron(): boolean {
-  return typeof window !== 'undefined' && !!(window as any).electronAPI;
 }
 
 /**

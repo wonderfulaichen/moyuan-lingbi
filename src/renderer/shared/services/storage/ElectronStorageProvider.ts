@@ -1,18 +1,28 @@
 /**
  * Electron 存储实现
- * 
+ *
  * 使用 Electron 的 fs 模块（通过 preload 暴露的 electronAPI）进行文件存储，
  * 同时配合 localStorage 作为缓存和后备。
+ *
+ * 注意：本类仅在 Electron 环境下由 createStorageProvider() 工厂实例化。
+ * 构造时会校验 electronAPI 存在性，避免在非 Electron 环境下被误用。
  */
 
 import { StorageProvider, DEFAULT_STORAGE_KEY } from './StorageProvider';
+import { getElectronAPI, ElectronAPI } from '../../utils/electronAPI';
 
 export class ElectronStorageProvider implements StorageProvider {
   private appDataPath: string | null = null;
-  private api: any;
+  private api: ElectronAPI;
 
   constructor() {
-    this.api = (window as any).electronAPI;
+    const api = getElectronAPI();
+    if (!api) {
+      // 防御性守卫：仅 Electron 环境应实例化本类
+      // 正常路径由 createStorageProvider() 工厂函数保证，此处防止绕过工厂直接 new
+      throw new Error('[ElectronStorageProvider] 仅能在 Electron 环境下实例化，但 electronAPI 为空');
+    }
+    this.api = api;
   }
 
   /**

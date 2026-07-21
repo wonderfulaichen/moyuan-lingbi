@@ -7,6 +7,7 @@ import './styles/mobile.css';
 import '@fortawesome/fontawesome-free/css/all.min.css';
 import { runMigration } from './shared/services/MigrationService';
 import { bootstrapModules } from './shared/modules';
+import { isElectron } from './shared/utils/electronAPI';
 
 // 启动加载组件
 function BootstrapApp() {
@@ -73,7 +74,7 @@ root.render(
   </React.StrictMode>
 );
 
-if ('serviceWorker' in navigator && !(window as any).electronAPI) {
+if ('serviceWorker' in navigator && !isElectron()) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('./sw.js').catch(() => {});
   });

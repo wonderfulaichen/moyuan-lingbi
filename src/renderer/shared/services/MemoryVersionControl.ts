@@ -243,11 +243,17 @@ export const MemoryVersionControl = {
       await writeJsonFile(indexFilePath, index);
 
       const versionFilePath = getVersionFilePath(projectId, versionId);
-      const exists = await window.electronAPI.exists(versionFilePath);
-      if (exists) {
-        try {
-          await window.electronAPI.writeFile(versionFilePath, '');
-        } catch {
+      // 显式守卫：浏览器模式下 electronAPI 不存在，跳过文件删除
+      // （index 已通过 writeJsonFile 的 localStorage fallback 正确更新）
+      if (window.electronAPI) {
+        const exists = await window.electronAPI.exists(versionFilePath);
+        if (exists) {
+          try {
+            // 使用 unlink 真正删除文件，而非 writeFile(path, '') 留下空文件
+            await window.electronAPI.unlink(versionFilePath);
+          } catch (error) {
+            console.warn(`[MemoryVersionControl] 删除版本文件失败 (${versionFilePath}):`, error);
+          }
         }
       }
       return true;

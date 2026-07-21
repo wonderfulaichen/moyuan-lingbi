@@ -62,9 +62,9 @@ export const storage = {
     }
 
     // 降级：Electron 环境中尝试从文件加载（兼容旧版本文件路径）
-    if (isElectron() && (window as any).electronAPI) {
+    const api = getElectronAPI();
+    if (isElectron() && api) {
       try {
-        const api = (window as any).electronAPI;
         const appDataPath = await api.getAppDataPath();
         const filePath = `${appDataPath}/app-state.json`;
         const exists = await api.exists(filePath);
