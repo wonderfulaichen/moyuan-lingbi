@@ -197,6 +197,11 @@ export class AgentRuntime {
       this.executableSteps = resolveExecutionOrder(plan);
       const executableSteps = this.executableSteps;
 
+      // 并行模式尚未实现：serialExecution=false 时告警，避免静默降级
+      if (!this.options.serialExecution) {
+        console.warn('[AgentRuntime] serialExecution=false 但并行模式尚未实现，将使用串行执行');
+      }
+
       // 6. 启动快照通知
       this.startSnapshotInterval(executableSteps);
 

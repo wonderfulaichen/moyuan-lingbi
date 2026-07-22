@@ -16,7 +16,7 @@
  * - 自环检测
  * - 无效索引保护
  */
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import type { AgentExecutionPlan } from '../types';
 import type { ExecutableStep } from '../types';
 import {
@@ -331,11 +331,20 @@ describe('topologicalSort', () => {
 // ============================================================
 
 describe('getReadyBatch', () => {
-  it('没有就绪步骤应返回空批次', () => {
+  it('串行模式下未找到就绪步骤时应 fallback 返回第一个可用步骤并告警', () => {
+    // 步骤 A 依赖步骤 1（inDegree=1，无入度为 0 的就绪步骤）
     const steps = [makeStep(0, 'A', [1])];
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
     const { batch, nextIndex } = getReadyBatch(steps, 0, true);
-    expect(batch).toHaveLength(1); // fallback: 返回第一个可用
+    // fallback：返回第一个可用步骤（避免静默卡死）
+    expect(batch).toHaveLength(1);
+    expect(batch[0].name).toBe('A');
     expect(nextIndex).toBe(1);
+    // 必须告警，避免静默降级
+    expect(warnSpy).toHaveBeenCalledWith(
+      expect.stringContaining('未找到入度为 0 的就绪步骤'),
+    );
+    warnSpy.mockRestore();
   });
 
   it('串行模式每次只返回一个步骤', () => {

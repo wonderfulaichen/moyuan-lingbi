@@ -195,6 +195,27 @@ describe('AgentRuntime', () => {
       expect(result.chainId).toBe('chain-1');
     });
 
+    it('serialExecution=false 时应告警并行模式尚未实现（避免静默降级）', async () => {
+      mockResolveExecutionOrder.mockReturnValue([makeExecutableStep(0, '第一步')]);
+      const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+      const runtimeParallel = new AgentRuntime({
+        projectId: 'proj-1',
+        serialExecution: false,
+      });
+
+      await runtimeParallel.execute({
+        chainId: 'test-chain',
+        steps: [{ agentId: 'agent-general', input: createTestInput('step-0', '第一步'), dependsOn: [] }],
+      });
+
+      // 必须告警，避免静默降级为串行
+      expect(warnSpy).toHaveBeenCalledWith(
+        expect.stringContaining('serialExecution=false 但并行模式尚未实现'),
+      );
+      warnSpy.mockRestore();
+    });
+
     it('空 plan 应抛出错误', async () => {
       await expect(runtime.execute({ chainId: 'test', steps: [] })).rejects.toThrow('执行计划不能为空');
     });

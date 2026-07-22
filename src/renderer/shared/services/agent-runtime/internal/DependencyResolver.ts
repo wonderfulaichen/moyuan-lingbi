@@ -257,8 +257,9 @@ export function getReadyBatch(
     }
   }
 
-  // 如果串行模式且没有找到入度为 0 的步骤，返回第一个可用的
+  // 串行模式下未找到入度为 0 的步骤：fallback 返回第一个可用，但告警避免静默降级
   if (serial && batch.length === 0 && startIndex < steps.length) {
+    console.warn('[DependencyResolver] getReadyBatch 未找到入度为 0 的就绪步骤，fallback 返回第一个可用步骤');
     batch.push(steps[startIndex]);
     nextIndex = startIndex + 1;
   }

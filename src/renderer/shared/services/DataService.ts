@@ -483,12 +483,14 @@ class DataService {
     if (this.data.activeProjectId === projectId) {
       this.data.activeProjectId = this.data.projects[0]?.id || null;
     }
-    // 清理该项目的回收站数据
+    // 清理该项目的回收站数据 + AI 会话残留
     try {
       localStorage.removeItem(getRecycleBinKey(projectId));
       localStorage.removeItem(getRecycleFolderKey(projectId));
+      localStorage.removeItem(`moyuan-ai-conversations-${projectId}`);
+      localStorage.removeItem(`moyuan-ai-active-agent-${projectId}`);
     } catch (e) {
-      console.error('[DataService] 清理回收站数据失败:', e);
+      console.error('[DataService] 清理项目残留数据失败:', e);
     }
     this.emit();
   }
