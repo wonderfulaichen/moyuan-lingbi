@@ -2,8 +2,8 @@
  * 文件内容类型推断工具
  *
  * 根据文件名扩展名推断 ContentType，用于：
- * - 文件图标区分（FileSidebar/FileExplorer）
- * - 未来 FileViewer 按类型渲染（markdown 解析、json 格式化、代码高亮等）
+ * - 文件图标区分
+ * - 未来按类型渲染（markdown 解析、json 格式化、代码高亮等）
  *
  * 设计原则：
  * - 纯函数，无副作用，易于测试
@@ -95,7 +95,7 @@ export interface ContentTypeIcon {
 
 /**
  * ContentType → 图标映射
- * 用于 FileSidebar/FileExplorer 统一渲染文件图标
+ * 用于统一渲染文件图标
  */
 const CONTENT_TYPE_ICON_MAP: Record<ContentType, ContentTypeIcon> = {
   markdown: { icon: 'fa-markdown', color: 'var(--color-primary-400)' },
