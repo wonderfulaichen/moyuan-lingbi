@@ -39,10 +39,12 @@ const STEPS: { id: StepId; label: string; icon: string; shortLabel: string }[] =
   { id: 'review', label: '智能审查', icon: 'fa-search', shortLabel: '审查' },
 ];
 
-function TopInfoBar({ activeProject, activeStep, activeModel }: {
+function TopInfoBar({ activeProject, activeStep, activeModel, aiPanelOpen, onToggleAIPanel }: {
   activeProject: AppData['projects'][0] | null;
   activeStep: StepId;
   activeModel: AppData['models'][0];
+  aiPanelOpen: boolean;
+  onToggleAIPanel: () => void;
 }) {
   const { isGenerating, statusMessage, progress, tokenUsage, error } = useAIStatusStore();
   const { zoomPercent, zoomIn, zoomOut, zoomReset } = useZoom();
@@ -224,6 +226,24 @@ function TopInfoBar({ activeProject, activeStep, activeModel }: {
 
         {/* 主题快速切换（暗色/亮色 + 配色选择） */}
         <ThemeToggle />
+
+        {/* 分隔线 */}
+        <div className="w-px h-4 mx-1" style={{ background: 'var(--color-border-default)' }} />
+
+        {/* AI 面板切换：收起后中间内容区获得更大空间（1366px 适配） */}
+        <button
+          onClick={onToggleAIPanel}
+          className="w-7 h-7 rounded-lg flex items-center justify-center transition-all duration-200 hover:bg-[var(--color-surface-hover)]"
+          style={{
+            color: aiPanelOpen ? 'var(--color-primary-400)' : 'var(--color-text-muted)',
+            background: aiPanelOpen ? 'var(--color-primary-100)' : 'transparent',
+          }}
+          title={aiPanelOpen ? '收起 AI 助手面板' : '展开 AI 助手面板'}
+          aria-label={aiPanelOpen ? '收起 AI 助手面板' : '展开 AI 助手面板'}
+          aria-pressed={aiPanelOpen}
+        >
+          <i className={`fas ${aiPanelOpen ? 'fa-window-maximize' : 'fa-window-restore'} text-[10px]`} />
+        </button>
       </div>
     </header>
   );
@@ -237,6 +257,17 @@ const App: React.FC = () => {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isCreateProjectOpen, setIsCreateProjectOpen] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState<{ id: string } | null>(null);
+  // AI 面板收起/展开：1366px 适配，收起后中间内容区获得更大空间
+  const [aiPanelOpen, setAiPanelOpen] = useState(() => {
+    try { return localStorage.getItem('moyuan-ai-panel-open') !== 'false'; } catch { return true; }
+  });
+  const toggleAiPanel = useCallback(() => {
+    setAiPanelOpen(prev => {
+      const next = !prev;
+      try { localStorage.setItem('moyuan-ai-panel-open', String(next)); } catch {}
+      return next;
+    });
+  }, []);
 
   // 获取记忆体模块状态
   const memoryModuleInstance = useModule('memory');
@@ -434,6 +465,8 @@ const App: React.FC = () => {
                 activeProject={activeProject}
                 activeStep={activeStep}
                 activeModel={activeModel}
+                aiPanelOpen={aiPanelOpen}
+                onToggleAIPanel={toggleAiPanel}
               />
 
               {/* ═══════ 主区域：左中右三栏 ═══════ */}
@@ -466,14 +499,16 @@ const App: React.FC = () => {
                   </Suspense>
                 </main>
 
-                {/* ── 右侧 AI 助手面板（常驻） ── */}
-                <AIAssistantPanel
-                  activeModel={activeModel}
-                  models={models}
-                  activeModelId={data.activeModelId}
-                  onSelectModel={(id) => dataService.setActiveModel(id)}
-                  onOpenSettings={() => setIsSettingsOpen(true)}
-                />
+                {/* ── 右侧 AI 助手面板（可收起，1366px 适配） ── */}
+                {aiPanelOpen && (
+                  <AIAssistantPanel
+                    activeModel={activeModel}
+                    models={models}
+                    activeModelId={data.activeModelId}
+                    onSelectModel={(id) => dataService.setActiveModel(id)}
+                    onOpenSettings={() => setIsSettingsOpen(true)}
+                  />
+                )}
 
               </div>
 
