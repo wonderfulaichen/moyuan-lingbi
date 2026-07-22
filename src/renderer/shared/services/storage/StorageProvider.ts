@@ -9,7 +9,8 @@
  */
 
 // isElectron 统一从 electronAPI 工具模块导出，避免重复实现和类型绕过
-export { isElectron } from '../../utils/electronAPI';
+import { isElectron } from '../../utils/electronAPI';
+export { isElectron };
 
 export interface StorageProvider {
   /** 保存数据 */

@@ -16,22 +16,31 @@ export interface ElectronDialogOptions {
   properties?: string[];
 }
 
-interface Window {
-  electronAPI?: {
-    getAppDataPath: () => Promise<string>;
-    readFile: (filePath: string) => Promise<string>;
-    writeFile: (filePath: string, data: string) => Promise<void>;
-    exists: (filePath: string) => Promise<boolean>;
-    unlink: (filePath: string) => Promise<void>;
-    openFileDialog: (options: ElectronDialogOptions) => Promise<string[] | null>;
-    saveFileDialog: (options: ElectronDialogOptions) => Promise<string | null>;
-    getVersion: () => string;
-    getPlatform: () => string;
-    minimize: () => void;
-    maximize: () => void;
-    close: () => void;
-    safeStorageAvailable: () => Promise<boolean>;
-    safeStorageEncrypt: (plaintext: string) => Promise<string>;
-    safeStorageDecrypt: (base64Cipher: string) => Promise<string>;
-  };
+/**
+ * 全局 Window 类型扩展
+ *
+ * 由于本文件存在 `export interface ElectronDialogOptions`，整个文件被视作模块而非全局脚本，
+ * `interface Window` 必须用 `declare global` 包装才能合并到全局 Window 类型，
+ * 否则 DataService.ts 等文件中访问 `window.electronAPI` 会报 TS2339。
+ */
+declare global {
+  interface Window {
+    electronAPI?: {
+      getAppDataPath: () => Promise<string>;
+      readFile: (filePath: string) => Promise<string>;
+      writeFile: (filePath: string, data: string) => Promise<void>;
+      exists: (filePath: string) => Promise<boolean>;
+      unlink: (filePath: string) => Promise<void>;
+      openFileDialog: (options: ElectronDialogOptions) => Promise<string[] | null>;
+      saveFileDialog: (options: ElectronDialogOptions) => Promise<string | null>;
+      getVersion: () => string;
+      getPlatform: () => string;
+      minimize: () => void;
+      maximize: () => void;
+      close: () => void;
+      safeStorageAvailable: () => Promise<boolean>;
+      safeStorageEncrypt: (plaintext: string) => Promise<string>;
+      safeStorageDecrypt: (base64Cipher: string) => Promise<string>;
+    };
+  }
 }

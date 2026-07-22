@@ -534,6 +534,7 @@ export const aiService = {
   async fetchAvailableModels(model: ModelConfig): Promise<{
     models: Array<{ name: string; id?: string }>;
     modelContextMap: Record<string, number>;
+    error?: string;
   }> {
     // 本地模型：使用 localModelService
     if (model.provider === 'local') {
@@ -577,7 +578,8 @@ export const aiService = {
       return { models, modelContextMap };
     } catch (error) {
       console.error('获取模型列表失败:', error);
-      return { models: [], modelContextMap: {} };
+      const errorMsg = error instanceof Error ? error.message : '获取模型列表失败';
+      return { models: [], modelContextMap: {}, error: errorMsg };
     }
   },
 

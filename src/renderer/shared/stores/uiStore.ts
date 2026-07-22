@@ -30,6 +30,7 @@ export function accumulateTodayWords(delta: number): void {
 }
 
 export interface UIStoreState {
+  // 状态字段
   inputText: string;
   activeTab: 'chat' | 'tasks';
   panelWidth: number;
@@ -57,7 +58,37 @@ export interface UIStoreState {
   dayTimeStart: string; // 例如 "07:00"
   nightTimeStart: string; // 例如 "19:00"
   writingStats: WritingStats;
+
+  // Setter 方法（与 store 实现对齐，确保类型安全消费）
+  setInputText: (text: string) => void;
+  setActiveTab: (tab: 'chat' | 'tasks') => void;
+  setPanelWidth: (width: number) => void;
+  setIsExpanded: (expanded: boolean) => void;
+  setIsResizing: (resizing: boolean) => void;
+  setEditingMsgId: (id: string | null) => void;
+  setEditContent: (content: string) => void;
+  toggleCollapsed: (msgId: string) => void;
+  setCopyToast: (id: string | null) => void;
+  setShowHistory: (show: boolean) => void;
+  setShowAgentMenu: (show: boolean) => void;
+  setRenamingId: (id: string | null) => void;
+  setRenameValue: (value: string) => void;
+  addAttachedFile: (file: { name: string; content: string; size: number }) => void;
+  removeAttachedFile: (idx: number) => void;
+  clearAttachedFiles: () => void;
+  setShowJumpMenu: (show: boolean) => void;
+  setShowAgentEditor: (show: boolean) => void;
+  setEditingAgent: (agent: import('../../../shared/types/fileSystem').AIAgent | null) => void;
+  setAiGenerating: (generating: boolean) => void;
+  setShowAiGenDialog: (show: boolean) => void;
+  setAiGenInput: (input: string) => void;
+  setIsAtBottom: (bottom: boolean) => void;
+  setAutoThemeMode: (mode: AutoThemeMode) => void;
+  setAnimationLevel: (level: AnimationLevel) => void;
+  setDayTimeStart: (time: string) => void;
+  setNightTimeStart: (time: string) => void;
   updateWritingStats: (updates: Partial<WritingStats>) => void;
+  resetWritingStats: () => void;
 }
 
 const defaultWritingStats: WritingStats = {

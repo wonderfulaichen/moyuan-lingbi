@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { memoryMaintenanceAgent } from './MemoryMaintenanceAgent';
 import { AtomicMemory, DynamicMemory, ModelConfig, Project } from '../../../../shared/types';
+import { VFile } from '../../../../shared/types/fileSystem';
 
 /**
  * MemoryMaintenanceAgent 单元测试
@@ -84,9 +85,8 @@ const mockedGetModelForTask = vi.mocked(modelRouter.getModelForTask);
 const createModel = (): ModelConfig => ({
   id: 'm1',
   name: '测试模型',
-  provider: 'openai',
+  provider: 'openai-compatible',
   apiKey: '',
-  baseUrl: '',
   modelName: 'gpt-test',
   contextWindow: 8000,
   maxTokens: 1000,
@@ -113,6 +113,28 @@ const makeExtractResult = (overrides: Partial<any> = {}): any => ({
   plots: [],
   dynamic: {},
   ...overrides,
+});
+
+/** 构造 mock VFile（避免每个测试用例重复书写完整 VFile 必填字段） */
+const mockFile = (id: string, name: string, content: string): VFile => ({
+  id,
+  name,
+  type: 'file',
+  parentId: null,
+  content,
+  metadata: {
+    tags: [],
+    favorited: false,
+    cardType: '',
+    references: [],
+    aiGenerated: false,
+    batchId: null,
+    sortOrder: 0,
+  },
+  childrenIds: [],
+  createdAt: 0,
+  updatedAt: 0,
+  version: 1,
 });
 
 // ============ 测试主体 ============
@@ -397,10 +419,10 @@ describe('MemoryMaintenanceAgent', () => {
       expect(c.relationships[0].description).toBe('朋友');
       expect(c.relationships[0].knownTo).toEqual([]);
       expect(c.secrets).toEqual(['身世']);
-      expect(c.arc).toEqual([{ chapter: 5, status: '觉醒中' }]);
+      expect(c.arc).toEqual({ start: '', current: '觉醒中', goal: '' });
     });
 
-    it('characters 新角色无 arcUpdate 时 arc 为空数组', async () => {
+    it('characters 新角色无 arcUpdate 时 arc 为空对象', async () => {
       mockedLoadAtomic.mockResolvedValue(createEmptyAtomic());
       const extracted = makeExtractResult({
         characters: [{ name: '李雷' }],
@@ -409,7 +431,7 @@ describe('MemoryMaintenanceAgent', () => {
       await memoryMaintenanceAgent.applyExtractionToMemory('p1', extracted, 1);
 
       const saved = mockedSaveAtomic.mock.calls[0][1] as AtomicMemory;
-      expect(saved.characters[0].arc).toEqual([]);
+      expect(saved.characters[0].arc).toEqual({ start: '', current: '', goal: '' });
     });
 
     it('characters 已有角色更新 identity 覆盖', async () => {
@@ -687,7 +709,7 @@ describe('MemoryMaintenanceAgent', () => {
     it('文件系统有角色文件 + 记忆体无时创建临时角色对象', async () => {
       mockedGetRootFolder.mockReturnValue('folder1');
       mockedGetChildren.mockReturnValue([
-        { id: 'f1', name: '李雷', type: 'file', content: '这是李雷的完整身份描述' },
+        mockFile('f1', '李雷', '这是李雷的完整身份描述'),
       ]);
       mockedLoadAtomic.mockResolvedValue(createEmptyAtomic());
 
@@ -700,7 +722,7 @@ describe('MemoryMaintenanceAgent', () => {
     it('文件系统有角色文件 + 记忆体有时补充 personality', async () => {
       mockedGetRootFolder.mockReturnValue('folder1');
       mockedGetChildren.mockReturnValue([
-        { id: 'f1', name: '李雷', type: 'file', content: '### 性格特质\n- **勇敢**\n- **聪明**' },
+        mockFile('f1', '李雷', '### 性格特质\n- **勇敢**\n- **聪明**'),
       ]);
       const atomic = createEmptyAtomic();
       atomic.characters.push({
@@ -722,10 +744,7 @@ describe('MemoryMaintenanceAgent', () => {
     it('personality 正则匹配 ### 性格特质 章节标题', async () => {
       mockedGetRootFolder.mockReturnValue('folder1');
       mockedGetChildren.mockReturnValue([
-        {
-          id: 'f1', name: '李雷', type: 'file',
-          content: '### 性格特质\n1. **勇敢**：敢于冒险\n2. **聪明**：思维敏捷',
-        },
+        mockFile('f1', '李雷', '### 性格特质\n1. **勇敢**：敢于冒险\n2. **聪明**：思维敏捷'),
       ]);
       mockedLoadAtomic.mockResolvedValue(createEmptyAtomic());
 
@@ -738,7 +757,7 @@ describe('MemoryMaintenanceAgent', () => {
     it('personality 正则匹配无章节时关键词 fallback（性格：）', async () => {
       mockedGetRootFolder.mockReturnValue('folder1');
       mockedGetChildren.mockReturnValue([
-        { id: 'f1', name: '李雷', type: 'file', content: '姓名：李雷\n性格：勇敢善良' },
+        mockFile('f1', '李雷', '姓名：李雷\n性格：勇敢善良'),
       ]);
       mockedLoadAtomic.mockResolvedValue(createEmptyAtomic());
 
@@ -750,7 +769,7 @@ describe('MemoryMaintenanceAgent', () => {
     it('personality 无匹配时 extractedPersonality 为空', async () => {
       mockedGetRootFolder.mockReturnValue('folder1');
       mockedGetChildren.mockReturnValue([
-        { id: 'f1', name: '李雷', type: 'file', content: '这是李雷的描述，没有任何相关关键词描述' },
+        mockFile('f1', '李雷', '这是李雷的描述，没有任何相关关键词描述'),
       ]);
       mockedLoadAtomic.mockResolvedValue(createEmptyAtomic());
 
@@ -763,7 +782,7 @@ describe('MemoryMaintenanceAgent', () => {
     it('角色 identity < 5 字符报 "身份描述过于简略"', async () => {
       mockedGetRootFolder.mockReturnValue('folder1');
       mockedGetChildren.mockReturnValue([
-        { id: 'f1', name: '李雷', type: 'file', content: '短' },
+        mockFile('f1', '李雷', '短'),
       ]);
       mockedLoadAtomic.mockResolvedValue(createEmptyAtomic());
 
@@ -805,7 +824,7 @@ describe('MemoryMaintenanceAgent', () => {
       mockedGetRootFolder.mockImplementation((type: string) => type === 'timeline' ? 'tl-folder' : null);
       mockedGetChildren.mockImplementation((folderId: string) => {
         if (folderId === 'tl-folder') {
-          return [{ id: 'tl1', name: '时间线', type: 'file', content: '这是一段足够长的时间线内容' }];
+          return [mockFile('tl1', '时间线', '这是一段足够长的时间线内容')];
         }
         return [];
       });
@@ -819,7 +838,7 @@ describe('MemoryMaintenanceAgent', () => {
     it('角色关系 targetId 不在角色列表时报 "关系目标未找到"', async () => {
       mockedGetRootFolder.mockReturnValue('folder1');
       mockedGetChildren.mockReturnValue([
-        { id: 'f1', name: '李雷', type: 'file', content: '性格：勇敢' },
+        mockFile('f1', '李雷', '性格：勇敢'),
       ]);
       const atomic = createEmptyAtomic();
       atomic.characters.push({
@@ -848,11 +867,11 @@ describe('MemoryMaintenanceAgent', () => {
       mockedGetRootFolder.mockImplementation((type: string) => type === 'timeline' ? 'tl' : 'char-folder');
       mockedGetChildren.mockImplementation((folderId: string) => {
         if (folderId === 'char-folder') {
-          return [{ id: 'f1', name: '李雷', type: 'file', content: '完整身份描述\n性格：勇敢' }];
+          return [mockFile('f1', '李雷', '完整身份描述\n性格：勇敢')];
         }
         if (folderId === 'tl') {
           // timeline 文件内容长度需 > 10 才被视为有效（源码 line 498）
-          return [{ id: 'tl1', name: '时间线', type: 'file', content: '这是一段足够长的时间线内容用于通过长度检查' }];
+          return [mockFile('tl1', '时间线', '这是一段足够长的时间线内容用于通过长度检查')];
         }
         return [];
       });

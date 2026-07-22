@@ -20,6 +20,7 @@ export interface AITaskRecord {
 }
 
 export interface AIStatusState {
+  // 状态字段
   isGenerating: boolean;
   statusMessage: string;
   progress: number;
@@ -30,6 +31,18 @@ export interface AIStatusState {
   currentTask: string;
   tasks: AITaskRecord[];
   activeTaskId: string | null;
+
+  // Setter 方法（与 store 实现对齐，供 AIStatusContext 等消费方类型安全访问）
+  setGenerating: (modelName: string, message?: string, task?: string) => void;
+  setProgress: (progress: number) => void;
+  setStatusMessage: (message: string) => void;
+  setTokenUsage: (usage: TokenUsage) => void;
+  setError: (error: string | null) => void;
+  setComplete: () => void;
+  resetStatus: () => void;
+  addTask: (task: Omit<AITaskRecord, 'startTime' | 'id'> & { startTime?: number; id?: string }) => string;
+  setActiveTask: (taskId: string | null) => void;
+  clearCompletedTasks: () => void;
 }
 
 // 模块级定时器：setComplete 后 3 秒清空状态消息
@@ -189,7 +202,7 @@ export const useAIStatusStore = create<AIStatusState>()((set, get) => ({
     }));
   },
 
-  addTask: (task: Omit<AITaskRecord, 'startTime'> & { startTime?: number }): string => {
+  addTask: (task: Omit<AITaskRecord, 'startTime' | 'id'> & { startTime?: number; id?: string }): string => {
     const id = task.id || `task-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
     const newTask: AITaskRecord = {
       ...task as AITaskRecord,

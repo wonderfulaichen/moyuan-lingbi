@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { consistencyService, ConsistencyIssue, ConsistencyIssueType } from '../../../shared/services/ConsistencyService';
-import { Character } from '../../../shared/types';
+import { Character } from '../../../../shared/types';
 import { useTheme } from '../../../shared/contexts/ThemeContext';
 import { useUIStore } from '../../../shared/stores/uiStore';
 
@@ -141,7 +141,7 @@ const ConsistencyPanel: React.FC<ConsistencyPanelProps> = ({
                   style={{
                     background: filterType === type ? themeInfo.primaryColor + '20' : 'var(--bg-tertiary)',
                     color: filterType === type ? themeInfo.primaryColor : 'var(--text-secondary)',
-                    ringColor: filterType === type ? themeInfo.primaryColor : 'transparent',
+                    boxShadow: filterType === type ? `0 0 0 1px ${themeInfo.primaryColor}` : 'none',
                   }}
                 >
                   {typeLabels[type]}
@@ -164,7 +164,7 @@ const ConsistencyPanel: React.FC<ConsistencyPanelProps> = ({
                   style={{
                     background: filterSeverity === severity ? themeInfo.primaryColor + '20' : 'var(--bg-tertiary)',
                     color: filterSeverity === severity ? themeInfo.primaryColor : 'var(--text-secondary)',
-                    ringColor: filterSeverity === severity ? themeInfo.primaryColor : 'transparent',
+                    boxShadow: filterSeverity === severity ? `0 0 0 1px ${themeInfo.primaryColor}` : 'none',
                   }}
                 >
                   {severityLabels[severity]}
@@ -234,7 +234,7 @@ const ConsistencyPanel: React.FC<ConsistencyPanelProps> = ({
                         style={{
                           background: selectedIssue?.id === issue.id ? `${themeInfo.primaryColor}10` : 'var(--bg-tertiary)',
                           borderColor: selectedIssue?.id === issue.id ? themeInfo.primaryColor : 'var(--border-color)',
-                          ringColor: selectedIssue?.id === issue.id ? themeInfo.primaryColor : 'transparent',
+                          boxShadow: selectedIssue?.id === issue.id ? `0 0 0 1px ${themeInfo.primaryColor}` : 'none',
                         }}
                       >
                         <div className="flex items-start gap-3">

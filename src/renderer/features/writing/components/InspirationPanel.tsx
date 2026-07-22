@@ -168,7 +168,7 @@ const InspirationPanel: React.FC<InspirationPanelProps> = ({ isOpen, onClose, on
                 style={{
                   background: selectedType === t.type ? `${themeInfo.primaryColor}20` : 'var(--bg-tertiary)',
                   color: selectedType === t.type ? themeInfo.primaryColor : 'var(--text-secondary)',
-                  ringColor: selectedType === t.type ? themeInfo.primaryColor : 'transparent',
+                  boxShadow: selectedType === t.type ? `0 0 0 1px ${themeInfo.primaryColor}` : 'none',
                 }}
               >
                 <i className={`fas ${t.icon}`} />

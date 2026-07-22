@@ -8,7 +8,7 @@
  * - createLinkedToken 父子级联取消
  * - delay 函数的取消感知行为
  */
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { CancellationToken, CancelledError, delay } from './CancellationToken';
 
 describe('CancellationToken', () => {

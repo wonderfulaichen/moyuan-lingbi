@@ -68,7 +68,10 @@ export async function executePlannerAgent(
 
   // 3. 构建 AgentInput
   const agentInput: AgentInput = {
+    stepId: `planner-${Date.now()}`,
+    userRequest: fullPrompt,
     task: 'outline',
+    messages: [],
     context: {
       relevantMemory: [{ type: 'outline', content: fullPrompt, id: 'planner-memory', timestamp: Date.now() }],
       stepHistory: [],

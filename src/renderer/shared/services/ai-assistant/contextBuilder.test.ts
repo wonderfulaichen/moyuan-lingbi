@@ -65,6 +65,10 @@ function createFile(overrides: Partial<VFile> = {}): VFile {
       favorited: false,
       aiGenerated: false,
       wordCount: 0,
+      cardType: '',
+      references: [],
+      batchId: null,
+      sortOrder: 0,
     },
     ...overrides,
   } as VFile;
@@ -95,7 +99,7 @@ function createProject(overrides: Partial<ProjectMeta> = {}): ProjectMeta {
     id: 'proj-1',
     title: '测试项目',
     intro: '测试简介',
-    inspiration: { text: '', images: [] },
+    inspiration: { text: '', tags: [], promptHistory: [] },
     novelSchemes: [],
     selectedSchemeId: null,
     outline: '',
@@ -376,7 +380,7 @@ describe('buildFileTreeDescription', () => {
       id: 'file1',
       name: '主角.md',
       content: '内容',
-      metadata: { favorited: true, tags: ['主角', 'card'], folderType: 'characters', aiGenerated: false, wordCount: 2 },
+      metadata: { favorited: true, tags: ['主角', 'card'], folderType: 'characters', aiGenerated: false, wordCount: 2, cardType: '', references: [], batchId: null, sortOrder: 0 },
     });
     mockedDataService.getChildren.mockReturnValue([file]);
     const result = buildFileTreeDescription();
@@ -405,7 +409,7 @@ describe('buildForTarget', () => {
 
   it('有项目无 memory 命中时返回 header + 灵感 + 方案 + 进度', () => {
     const project = createProject({
-      inspiration: { text: '一段灵感', images: [] },
+      inspiration: { text: '一段灵感', tags: [], promptHistory: [] },
       outline: '大纲内容',
     });
     mockedDataService.getActiveProject.mockReturnValue(project);
@@ -435,7 +439,6 @@ describe('buildForTarget', () => {
   it('memory 抛错时回退到 target 分支', () => {
     const project = createProject();
     mockedDataService.getActiveProject.mockReturnValue(project);
-    mockedMemoryBank.buildContextForMemorySync = vi.fn(); // 确保不影响
     mockedMemoryBank.buildContextFromMemorySync.mockImplementation(() => {
       throw new Error('memory error');
     });
@@ -472,7 +475,7 @@ describe('buildForTarget', () => {
 
   it('includeInspiration=false 时不输出灵感部分', () => {
     const project = createProject({
-      inspiration: { text: '一段灵感', images: [] },
+      inspiration: { text: '一段灵感', tags: [], promptHistory: [] },
     });
     mockedDataService.getActiveProject.mockReturnValue(project);
     mockedDataService.getChildren.mockReturnValue([]);
@@ -520,7 +523,7 @@ describe('buildFullContext', () => {
 
   it('有项目时拼接所有 section', () => {
     const project = createProject({
-      inspiration: { text: '灵感', images: [] },
+      inspiration: { text: '灵感', tags: [], promptHistory: [] },
       outline: '大纲',
     });
     mockedDataService.getActiveProject.mockReturnValue(project);
@@ -535,7 +538,7 @@ describe('buildFullContext', () => {
 
   it('空 section 应被过滤', () => {
     const project = createProject({
-      inspiration: { text: '', images: [] }, // 灵感为空
+      inspiration: { text: '', tags: [], promptHistory: [] }, // 灵感为空
     });
     mockedDataService.getActiveProject.mockReturnValue(project);
     mockedDataService.getChildren.mockReturnValue([]);

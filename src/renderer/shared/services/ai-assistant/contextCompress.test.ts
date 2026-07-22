@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { compressHistoryIfNeeded, CompressResult } from './contextCompress';
-import { AIChatMessage, ModelConfig } from '../../../../shared/types/fileSystem';
+import { ModelConfig } from '../../../../shared/types';
+import { AIChatMessage } from '../../../../shared/types/fileSystem';
 
 /**
  * contextCompress 测试

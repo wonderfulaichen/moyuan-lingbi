@@ -700,7 +700,7 @@ describe('revertOperations', () => {
   it('回滚应按逆序执行（后进先回滚）', () => {
     const order: string[] = [];
     mockedDataService.deleteFile.mockImplementation((id) => { order.push(`delete:${id}`); });
-    mockedDataService.updateFile.mockImplementation((id) => { order.push(`update:${id}`); });
+    mockedDataService.updateFile.mockImplementation((id) => { order.push(`update:${id}`); return {} as any; });
 
     const ops = [
       { id: 'op-1', messageId: 'msg-1', type: 'create_file' as const, fileId: 'f1', fileName: 'A', parentId: null, timestamp: Date.now() },

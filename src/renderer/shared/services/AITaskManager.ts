@@ -109,7 +109,9 @@ class AITaskManager {
 
     } catch (error) {
       // 任务失败
-      if (task.status !== 'cancelled') {
+      // 注：task.status 类型在 try 块内被收窄为 'running'，但外部可能通过 cancel() 改为 'cancelled'，
+      // 需要用类型断言绕过控制流分析，确保运行时正确判断
+      if ((task.status as TaskStatus) !== 'cancelled') {
         task.status = 'failed';
         task.error = error instanceof Error ? error.message : '未知错误';
         task.completedAt = Date.now();

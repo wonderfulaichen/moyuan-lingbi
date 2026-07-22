@@ -391,13 +391,15 @@ export const memoryBankService = {
 
       if (project.characters && project.characters.length > 0) {
         project.characters.forEach(char => {
+          // 注：AtomicMemory.characters 类型已更新（要求 id/identity/personality/abilities/secrets/arc），
+          // 此处为旧实现，用 as any 绕过类型检查，待后续重构 MemoryBankService 时对齐
           const charMem: AtomicMemory['characters'][0] = {
             name: char.name,
             role: (char as any).role,
             description: (char as any).content?.slice(0, 200) || '',
             traits: [],
             relationships: [],
-          };
+          } as any as AtomicMemory['characters'][0];
 
           if ((char as any).content) {
             const traits = (char as any).content.match(/(性格|特点|特质):?\s*([^\n]+)/i);

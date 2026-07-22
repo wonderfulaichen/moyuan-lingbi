@@ -17,7 +17,7 @@
  * - parseLLMResponse 优先解析 ```json``` 代码块
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { CancellationToken, CancelledError } from './CancellationToken';
 import {
   executeStep,
@@ -26,7 +26,7 @@ import {
   LLMTemporaryError,
 } from './StepRunner';
 import type { AgentDefinition, AgentInput } from '../types';
-import type { ModelConfig } from '../../../../shared/types';
+import type { ModelConfig } from '../../../../../shared/types';
 
 // ============ Mock 依赖 ============
 
@@ -75,9 +75,8 @@ const mockedGetData = vi.mocked(dataService.getData);
 const createModel = (): ModelConfig => ({
   id: 'm1',
   name: '测试模型',
-  provider: 'openai',
+  provider: 'openai-compatible',
   apiKey: '',
-  baseUrl: '',
   modelName: 'gpt-test',
   contextWindow: 8000,
   maxTokens: 1000,
@@ -119,7 +118,7 @@ describe('StepRunner', () => {
     mockedGetModel.mockReturnValue(createModel());
     mockedGenerate.mockResolvedValue({ content: 'LLM 响应' } as any);
     mockedBuildAIContext.mockReturnValue('项目正典');
-    mockedGetActiveProject.mockReturnValue({ title: '测试项目', genre: '玄幻', style: '轻松' });
+    mockedGetActiveProject.mockReturnValue({ title: '测试项目' } as any);
     mockedGetData.mockReturnValue({ models: [createModel()] } as any);
   });
 
@@ -417,7 +416,7 @@ describe('StepRunner', () => {
   describe('buildSystemPrompt（间接测试）', () => {
     it('含 context + project + relevantMemory + activeSteps 全部拼装', async () => {
       mockedBuildAIContext.mockReturnValue('项目正典内容');
-      mockedGetActiveProject.mockReturnValue({ title: '我的书', genre: '玄幻', style: '轻松' });
+      mockedGetActiveProject.mockReturnValue({ title: '我的书', genre: '玄幻', style: '轻松' } as any);
       const input = createInput({
         context: {
           relevantMemory: [{ type: 'character', content: '记忆内容' }],

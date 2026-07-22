@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { migrateOldProject, runMigration } from './MigrationService';
 import { Project, AppState } from '../../../shared/types';
 import { AppData } from '../../../shared/types/fileSystem';
@@ -32,7 +32,7 @@ function createOldProject(overrides: Partial<Project> = {}): Project {
     timelineEvents: [],
     folders: [],
     ...overrides,
-  };
+  } as Project;
 }
 
 describe('MigrationService', () => {
@@ -119,9 +119,9 @@ describe('MigrationService', () => {
     it('应该迁移 characters 到角色文件夹（过滤空名称）', () => {
       const project = createOldProject({
         characters: [
-          { id: 'c1', name: '李云飞', background: '山村少年', personality: '勇敢', appearance: '俊朗', gender: '男', age: '20' },
-          { id: 'c2', name: '新角色' }, // 应被过滤
-          { id: 'c3', name: '  ' }, // 应被过滤
+          { id: 'c1', name: '李云飞', background: '山村少年', personality: '勇敢', appearance: '俊朗', gender: '男', age: '20' } as any,
+          { id: 'c2', name: '新角色' } as any, // 应被过滤
+          { id: 'c3', name: '  ' } as any, // 应被过滤
         ],
       });
 
@@ -140,7 +140,7 @@ describe('MigrationService', () => {
     it('应该迁移 timelineEvents 到时间线文件夹', () => {
       const project = createOldProject({
         timelineEvents: [
-          { id: 'e1', title: '神魔大战', description: '上古大战', timestamp: '万年前' },
+          { id: 'e1', title: '神魔大战', description: '上古大战', timestamp: '万年前', order: 0 },
         ],
       });
 
@@ -198,11 +198,11 @@ describe('MigrationService', () => {
           {
             id: 'fold1', name: '自定义文件夹', type: 'custom',
             contentCards: [
-              { id: 'card1', title: '收藏卡片', content: '内容', tagText: '', isFavorited: true, batchId: 'b1' },
-              { id: 'card2', title: '未收藏', content: '内容2', tagText: '', isFavorited: false, batchId: null },
+              { id: 'card1', title: '收藏卡片', content: '内容', tagText: '', isFavorited: true, batchId: 'b1', createdAt: 0, updatedAt: 0 },
+              { id: 'card2', title: '未收藏', content: '内容2', tagText: '', isFavorited: false, batchId: null, createdAt: 0, updatedAt: 0 },
             ],
             children: [],
-          },
+          } as any,
         ],
       });
 
@@ -226,14 +226,14 @@ describe('MigrationService', () => {
             contentCards: [],
             children: [
               {
-                id: 'sub1', name: '子文件夹', type: 'sub',
+                id: 'sub1', name: '子文件夹', type: 'custom',
                 contentCards: [
-                  { id: 'c1', title: '子卡片', content: '内容', tagText: '', isFavorited: true, batchId: null },
+                  { id: 'c1', title: '子卡片', content: '内容', tagText: '', isFavorited: true, batchId: null, createdAt: 0, updatedAt: 0 },
                 ],
                 children: [],
-              },
+              } as any,
             ],
-          },
+          } as any,
         ],
       });
 

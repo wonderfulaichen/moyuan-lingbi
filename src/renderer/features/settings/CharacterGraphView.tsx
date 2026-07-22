@@ -13,7 +13,7 @@ interface ParsedCharacter {
 }
 
 function extractRealNameFromContent(content: string, fileTitle: string): string {
-  const shortTitle = fileTitle.replace(/^[【\[［]\d+[/／]\d+[】\]］]\s*[：:]\s*/).trim();
+  const shortTitle = fileTitle.replace(/^[【\[［]\d+[/／]\d+[】\]］]\s*[：:]\s*/, '').trim();
   if (shortTitle.length >= 2 && shortTitle.length <= 15 && !/^(?:一、|二、|三、|##\s*)/.test(shortTitle)) {
     return shortTitle;
   }

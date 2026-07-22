@@ -37,6 +37,7 @@ interface DeletedCard extends ContentCard {
   folderId: string;
   folderName: string;
   folderType: string;
+  order: number;
 }
 
 interface DeletedFolder {
@@ -1597,6 +1598,8 @@ const BubbleFolderContent: React.FC<BubbleFolderContentProps> = ({
         title: vf.name,
         content: vf.content || '',
         tagText: '',
+        isFavorited: false,
+        batchId: null,
         folderId: folder.id,
         folderName: folder.name,
         folderType: folder.type,
@@ -1619,6 +1622,7 @@ const BubbleFolderContent: React.FC<BubbleFolderContentProps> = ({
           folderId: folder.id,
           folderName: folder.name,
           folderType: folder.type,
+          order: 0,
           deletedAt: new Date().toISOString()
         };
         setDeletedCards(prev => [...prev, deletedCard]);
@@ -1658,7 +1662,11 @@ const BubbleFolderContent: React.FC<BubbleFolderContentProps> = ({
             title: vf.name,
             content: vf.content || '',
             tagText: '',
+            isFavorited: false,
+            batchId: null,
             folderId: folder.id,
+            folderName: folder.name,
+            folderType: folder.type,
             createdAt: typeof vf.createdAt === 'number' ? vf.createdAt : Date.now(),
             updatedAt: Date.now(),
             order: 0,
@@ -1677,6 +1685,9 @@ const BubbleFolderContent: React.FC<BubbleFolderContentProps> = ({
           newDeletedCards.push({
             ...c,
             folderId: folder.id,
+            folderName: folder.name,
+            folderType: folder.type,
+            order: 0,
             deletedAt: new Date().toISOString()
           });
           return false;
@@ -2575,6 +2586,7 @@ const BubbleFolderContent: React.FC<BubbleFolderContentProps> = ({
                               vfileId: df.vfileId || undefined,
                               children: df.children,
                               contentCards: df.contentCards,
+                              createdAt: Date.now(),
                             };
                             onUpdateFolder(targetFolder.id, {
                               children: [...(targetFolder.children || []), restoredFolder]

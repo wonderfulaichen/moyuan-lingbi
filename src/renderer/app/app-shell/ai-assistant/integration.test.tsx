@@ -19,8 +19,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import React from 'react';
-import type { AIAgent } from '../../../shared/types/fileSystem';
-import type { ModelConfig } from '../../../shared/types';
+import type { AIAgent } from '../../../../shared/types/fileSystem';
+import type { ModelConfig } from '../../../../shared/types';
 
 // ============================================================
 // Mock：aiAssistant 服务 + useAIStatus context
@@ -106,7 +106,7 @@ const mockModel: ModelConfig = {
   apiType: 'openai',
   apiKey: 'test-key',
   baseUrl: 'https://test',
-} as ModelConfig;
+} as unknown as ModelConfig;
 
 // ============================================================
 // 测试包装组件：复现 AIAssistantPanel 中的关键集成

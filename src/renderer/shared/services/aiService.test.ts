@@ -26,7 +26,7 @@ vi.mock('./AITaskManager', () => {
     return fn();
   });
   const mockUpdateTask = vi.fn();
-  const mockWaitForTask = vi.fn(async (id: string) => mockWaitForTask._result);
+  const mockWaitForTask = vi.fn(async (id: string) => (mockWaitForTask as any)._result);
   (mockWaitForTask as any)._result = { content: 'mock result' };
   return {
     aiTaskManager: {

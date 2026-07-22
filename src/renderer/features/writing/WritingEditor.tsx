@@ -69,7 +69,7 @@ const WritingEditor: React.FC<WritingEditorProps> = ({
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const abortRef = useRef<AbortController | null>(null);
-  const { setGenerating, setProgress, setStatusMessage, setComplete, setError: setAIError, addTask, setTokenUsage, status } = useAIStatus();
+  const { setGenerating, setProgress, setStatusMessage, setComplete, setError: setAIError, addTask, setTokenUsage, resetStatus, status } = useAIStatus();
   const { showToast } = useToast();
   const { updateWritingStats } = useUIStore();
 
@@ -113,7 +113,7 @@ const WritingEditor: React.FC<WritingEditorProps> = ({
     setWordCount(words);
     setCharCount(chars);
     wellnessService.updateActivity(words);
-    updateWritingStats({ wordCount: words, charCount: chars });
+    updateWritingStats({ totalWords: words, totalCharacters: chars });
   }, [editorContent]);
 
   // 定期检查健康消息
@@ -258,7 +258,7 @@ const WritingEditor: React.FC<WritingEditorProps> = ({
     if (!editingChapter || !activeModel) return;
 
     setIsGenerating(true);
-    setGenerating(true);
+    setGenerating(activeModel.modelName, 'AI 生成中...', 'writing');
     abortRef.current = new AbortController();
 
     try {
@@ -267,12 +267,12 @@ const WritingEditor: React.FC<WritingEditorProps> = ({
 
       const result = await aiService.generate({
         model: activeModel,
-        prompt: prompt.template.replace('{{content}}', editorContent),
+        prompt: prompt.content.replace('{{content}}', editorContent),
         signal: abortRef.current.signal,
       });
 
-      if (result.text) {
-        handleContentChange(editorContent + result.text);
+      if (result.content) {
+        handleContentChange(editorContent + result.content);
         showToast('AI续写完成', 'success');
       }
     } catch (error) {
@@ -281,7 +281,7 @@ const WritingEditor: React.FC<WritingEditorProps> = ({
       }
     } finally {
       setIsGenerating(false);
-      setGenerating(false);
+      resetStatus();
       abortRef.current = null;
     }
   };
@@ -289,7 +289,7 @@ const WritingEditor: React.FC<WritingEditorProps> = ({
   const handleAbort = () => {
     abortRef.current?.abort();
     setIsGenerating(false);
-    setGenerating(false);
+    resetStatus();
   };
 
   if (!editingChapter) {

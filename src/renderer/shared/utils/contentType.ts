@@ -11,7 +11,7 @@
  * - 无扩展名 fallback 到 'unknown'
  */
 
-import type { ContentType } from '../../shared/types/fileSystem';
+import type { ContentType } from '../../../shared/types/fileSystem';
 
 // ============================================================
 // 扩展名映射表

@@ -84,7 +84,7 @@ describe('detectAgentState', () => {
 
     it('pendingConfirm 优先级高于 isProcessing/streamingContent/pendingPrompt', () => {
       const confirm: PendingConfirm = { files: [] };
-      const prompt = { content: 'question' } as AIPendingPrompt;
+      const prompt = { content: 'question' } as unknown as AIPendingPrompt;
 
       // 同时存在所有状态，pendingConfirm 应胜出
       const result = detectAgentState(
@@ -108,7 +108,7 @@ describe('detectAgentState', () => {
 
   describe('等待用户输入（pendingPrompt，次高优先级）', () => {
     it('应返回 WAITING_CONFIRM + answer_question', () => {
-      const prompt = { content: '请回答' } as AIPendingPrompt;
+      const prompt = { content: 'question' } as unknown as AIPendingPrompt;
 
       const result = detectAgentState(emptyMessages, false, null, null, prompt);
 
@@ -119,7 +119,7 @@ describe('detectAgentState', () => {
     });
 
     it('pendingPrompt 优先级高于 isProcessing/streamingContent', () => {
-      const prompt = { content: 'q' } as AIPendingPrompt;
+      const prompt = { content: 'q' } as unknown as AIPendingPrompt;
 
       const result = detectAgentState(emptyMessages, true, 'streaming', null, prompt);
 
@@ -163,7 +163,7 @@ describe('detectAgentState', () => {
   describe('优先级顺序验证', () => {
     it('pendingConfirm > pendingPrompt > streamingContent+isProcessing > isProcessing', () => {
       // 逐级移除，验证优先级
-      const prompt = { content: 'q' } as AIPendingPrompt;
+      const prompt = { content: 'q' } as unknown as AIPendingPrompt;
       const confirm: PendingConfirm = { files: [] };
 
       // 全部存在 → WAITING_CONFIRM (confirm)
@@ -195,7 +195,7 @@ describe('detectAgentState', () => {
         detectAgentState(emptyMessages, true, null, null, null),
         detectAgentState(emptyMessages, true, 's', null, null),
         detectAgentState(emptyMessages, false, null, { files: [] }, null),
-        detectAgentState(emptyMessages, false, null, null, { content: 'q' } as AIPendingPrompt),
+        detectAgentState(emptyMessages, false, null, null, { content: 'q' } as unknown as AIPendingPrompt),
       ];
 
       for (const result of testCases) {

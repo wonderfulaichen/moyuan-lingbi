@@ -128,9 +128,25 @@ export interface KnowledgeItem {
 
 // ========== 提示词模板类型 ==========
 
+/**
+ * 提示词模板分类
+ *
+ * 与 src/shared/prompts/types.ts 中的 TaskPrompt.category / FoundationPrompt.category
+ * 以及 PromptLayer 对齐，覆盖项目中实际使用的所有分类值。
+ */
+export type PromptCategory =
+  // 基础任务分类（来自 TaskPrompt.category）
+  | 'inspiration' | 'character' | 'world' | 'timeline'
+  | 'outline' | 'chapter' | 'writing' | 'edit' | 'summary'
+  | 'memory' | 'analysis'
+  // Foundation 层分类（来自 FoundationPrompt.category）
+  | 'tool-format' | 'workflow' | 'file-rules' | 'canon-system' | 'compress'
+  // 层级标识（用于 SettingsModal 图标映射）
+  | 'agent' | 'format' | 'rule' | 'foundation';
+
 export interface PromptTemplate {
   id: string;
-  category: 'inspiration' | 'character' | 'outline' | 'chapter' | 'edit' | 'writing' | 'summary';
+  category: PromptCategory;
   name: string;
   content: string;
 }

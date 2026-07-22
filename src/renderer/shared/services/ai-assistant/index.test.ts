@@ -109,9 +109,8 @@ const mockedNanoid = vi.mocked(nanoid);
 const createModel = (): ModelConfig => ({
   id: 'm1',
   name: '测试模型',
-  provider: 'openai',
+  provider: 'openai-compatible',
   apiKey: '',
-  baseUrl: '',
   modelName: 'gpt-test',
   contextWindow: 8000,
   maxTokens: 1000,
@@ -138,7 +137,7 @@ describe('AIAssistantService', () => {
 
     // 重置 processWithAI 默认行为
     mockedProcessWithAI.mockResolvedValue({ waitingForUser: false });
-    mockedGetPlanState.mockReturnValue({ steps: [] });
+    mockedGetPlanState.mockReturnValue({ steps: [], model: null, currentIndex: 0 });
   });
 
   afterEach(() => {
@@ -372,7 +371,7 @@ describe('AIAssistantService', () => {
       const onStepToggle = vi.fn();
       const step = { title: 's1', description: '', enabled: true, status: 'pending' as const };
       (service as any).state.pendingPrompt = { type: 'plan', title: 't', steps: [step], onConfirm: vi.fn(), onCancel: vi.fn(), onStepToggle };
-      mockedGetPlanState.mockReturnValue({ steps: [{ ...step, enabled: false }] });
+      mockedGetPlanState.mockReturnValue({ steps: [{ ...step, enabled: false }], model: null, currentIndex: 0 });
 
       // 修复后：源码底部冗余的 function getPlanState() 已删除，使用顶部 import 的版本，vitest mock 生效
       service.togglePlanStep(0, false);

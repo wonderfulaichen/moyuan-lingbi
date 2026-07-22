@@ -2,7 +2,7 @@ import { useCallback, useRef } from 'react';
 
 export type FormatType = 'bold' | 'italic' | 'dialogue' | 'quote' | 'list' | 'heading';
 
-interface SmartFormatOptions {
+export interface SmartFormatOptions {
   autoIndent: boolean;
   autoClose: boolean;
   smartQuote: boolean;
@@ -110,7 +110,7 @@ export function useSmartFormat(options: Partial<SmartFormatOptions> = {}) {
     };
   }, []);
 
-  const handleKeyDown = useCallback((e: KeyboardEvent, text: string, cursorPosition: number): FormatResult | null => {
+  const handleKeyDown = useCallback((e: { key: string; preventDefault: () => void }, text: string, cursorPosition: number): FormatResult | null => {
     const key = e.key;
     const before = text.substring(0, cursorPosition);
     const after = text.substring(cursorPosition);

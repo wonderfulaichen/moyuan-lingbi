@@ -37,7 +37,7 @@ const BUILT_IN_TASK_MAP: Record<string, TaskType[]> = {
   'agent-sub-reviewer': ['review'],
   'agent-sub-planner': ['outline'],
   'agent-sub-researcher': ['general'],
-  'agent-sub-memory': ['memory'],
+  'agent-sub-memory': ['agent-memory'],
 };
 
 /**
@@ -53,7 +53,7 @@ const BUILT_IN_TOOL_MAP: Record<string, string[]> = {
   'agent-sub-reviewer': ['file'],
   'agent-sub-planner': ['file', 'memory'],
   'agent-sub-researcher': ['search', 'memory'],
-  'agent-sub-memory': ['memory'],
+  'agent-sub-memory': ['agent-memory'],
 };
 
 // ============================================================
@@ -275,7 +275,7 @@ class AgentRegistryService {
 ## 行为准则
 - 每次整理后输出变更摘要
 - 检测到矛盾时标记并报告`,
-      compatibleTasks: BUILT_IN_TASK_MAP['agent-sub-memory'] || ['memory'],
+      compatibleTasks: BUILT_IN_TASK_MAP['agent-sub-memory'] || ['agent-memory'],
       allowedToolCategories: BUILT_IN_TOOL_MAP['agent-sub-memory'] || ['memory'],
       maxRetries: 3,
       hiddenOfDefault: false,

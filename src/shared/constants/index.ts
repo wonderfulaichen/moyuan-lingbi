@@ -1,4 +1,4 @@
-import { ModelConfig } from '../types';
+import { ModelConfig, PromptTemplate } from '../types';
 
 export interface ProviderInfo {
   label: string;
@@ -137,7 +137,7 @@ export const INITIAL_MODELS: ModelConfig[] = [
   },
 ];
 
-export const DEFAULT_PROMPTS: Array<{ id: string; name: string; content: string; category: string }> = [
+export const DEFAULT_PROMPTS: PromptTemplate[] = [
   {
     id: 'task-inspire-tags',
     name: '灵感标签发散',
@@ -435,21 +435,21 @@ export const DEFAULT_PROMPTS: Array<{ id: string; name: string; content: string;
   },
 ];
 
-export function getKnownModelSpec(modelName: string): { contextWindow?: number } {
-  const known: Record<string, { contextWindow: number }> = {
-    'gpt-4o': { contextWindow: 128000 },
-    'gpt-4o-mini': { contextWindow: 128000 },
-    'gpt-4-turbo': { contextWindow: 128000 },
-    'gpt-4': { contextWindow: 8192 },
-    'claude-3-5-sonnet': { contextWindow: 200000 },
-    'claude-3-opus': { contextWindow: 200000 },
-    'deepseek-chat': { contextWindow: 64000 },
-    'deepseek-coder': { contextWindow: 64000 },
-    'qwen2.5:7b': { contextWindow: 32768 },
-    'qwen2.5:14b': { contextWindow: 32768 },
-    'llama3.1:8b': { contextWindow: 128000 },
-    'llama3.2:3b': { contextWindow: 128000 },
-    'gemma2:9b': { contextWindow: 8192 },
+export function getKnownModelSpec(modelName: string): { contextWindow?: number; maxTokens?: number } {
+  const known: Record<string, { contextWindow: number; maxTokens?: number }> = {
+    'gpt-4o': { contextWindow: 128000, maxTokens: 16384 },
+    'gpt-4o-mini': { contextWindow: 128000, maxTokens: 16384 },
+    'gpt-4-turbo': { contextWindow: 128000, maxTokens: 4096 },
+    'gpt-4': { contextWindow: 8192, maxTokens: 4096 },
+    'claude-3-5-sonnet': { contextWindow: 200000, maxTokens: 8192 },
+    'claude-3-opus': { contextWindow: 200000, maxTokens: 4096 },
+    'deepseek-chat': { contextWindow: 64000, maxTokens: 8192 },
+    'deepseek-coder': { contextWindow: 64000, maxTokens: 8192 },
+    'qwen2.5:7b': { contextWindow: 32768, maxTokens: 4096 },
+    'qwen2.5:14b': { contextWindow: 32768, maxTokens: 4096 },
+    'llama3.1:8b': { contextWindow: 128000, maxTokens: 4096 },
+    'llama3.2:3b': { contextWindow: 128000, maxTokens: 4096 },
+    'gemma2:9b': { contextWindow: 8192, maxTokens: 2048 },
   };
   return known[modelName] || {};
 }

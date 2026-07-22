@@ -226,7 +226,7 @@ const WhiteNoisePanel: React.FC<WhiteNoisePanelProps> = ({ isOpen, onClose }) =>
                   style={{
                     background: isActive ? `${profile.color}15` : 'var(--bg-tertiary)',
                     border: `1px solid ${isActive ? profile.color : 'var(--border-color)'}`,
-                    ringColor: isActive ? profile.color : 'transparent',
+                    boxShadow: isActive ? `0 0 0 1px ${profile.color}` : 'none',
                   }}
                   onClick={() => handleNoiseToggle(profile.id)}
                 >

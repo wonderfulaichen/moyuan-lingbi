@@ -190,7 +190,8 @@ export class UnifiedExecutor {
           return `⚠️ 跳过创建「${action.name || '未命名'}」：内容为空或过短（可能输出被截断，请重试）`;
         }
         const parentFile = parentId ? dataService.getFile(parentId) : null;
-        const isCharacterFolder = parentFile?.metadata?.tags?.includes('characters') || parentFile?.type === 'characters';
+        // 注：parentFile.type 只能为 'folder' | 'file'，'characters' 分类通过 metadata.tags 标识
+        const isCharacterFolder = parentFile?.metadata?.tags?.includes('characters') ?? false;
 
         if (isCharacterFolder && fileContent.length > 20 && !isValidCharacterContent(fileContent)) {
           return `❌ 内容格式不是有效的角色档案（缺少角色类型标记或姓名字段），跳过创建「${action.name || '未命名'}」。请重新输出包含【角色类型】和基本信息的角色卡内容。`;

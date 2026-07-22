@@ -55,7 +55,10 @@ export async function executeResearcherAgent(
 - 保持客观，不编造事实`);
 
   const agentInput: AgentInput = {
+    stepId: `researcher-${Date.now()}`,
+    userRequest: promptParts.join('\n'),
     task: 'general',
+    messages: [],
     context: {
       relevantMemory: [
         { type: 'context', content: promptParts.join('\n'), id: 'researcher-memory', timestamp: Date.now() },

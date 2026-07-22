@@ -122,7 +122,7 @@ const FormatToolbar: React.FC<FormatToolbarProps> = ({
         style={{
           background: showSettings ? themeInfo.primaryColor + '20' : 'transparent',
           color: showSettings ? themeInfo.primaryColor : 'var(--text-secondary)',
-          ringColor: showSettings ? themeInfo.primaryColor : 'transparent',
+          boxShadow: showSettings ? `0 0 0 1px ${themeInfo.primaryColor}` : 'none',
         }}
         title="格式化设置"
       >

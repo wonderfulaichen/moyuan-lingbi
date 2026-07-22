@@ -145,7 +145,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
   const handleResetSinglePrompt = useCallback((promptId: string) => {
     const defaultPrompt = DEFAULT_PROMPTS.find(p => p.id === promptId);
     removeUserOverride(promptId);
-    const updated = prompts.map(p => {
+    const updated = prompts.map((p): PromptTemplate => {
       if (p.id !== promptId) return p;
       if (defaultPrompt) return { ...defaultPrompt };
       return { ...p, content: getPromptContent(promptId) };

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { renderHook, act, renderHookWithOptions } from '@testing-library/react';
+import { renderHook, act } from '@testing-library/react';
 import { useUndoRedo } from './useUndoRedo';
 
 describe('useUndoRedo', () => {
@@ -76,7 +76,7 @@ describe('useUndoRedo', () => {
       // 连续 undo 不应越界
       act(() => result.current.undo());
       expect(result.current.value).toBe('a');
-      expect(result.current.currentIndex).toBeUndefined(); // currentIndex 不在返回值中
+      expect((result.current as any).currentIndex).toBeUndefined(); // currentIndex 不在返回值中
     });
 
     it('redo 在边界时安全（不越界）', () => {

@@ -62,7 +62,10 @@ export async function executeMemoryAgent(
 - 按结构化格式输出（分类：角色/地点/事件/规则）`);
 
   const agentInput: AgentInput = {
+    stepId: `memory-agent-${Date.now()}`,
+    userRequest: promptParts.join('\n'),
     task: 'memory',
+    messages: [],
     context: {
       relevantMemory: [
         { type: 'memory', content: promptParts.join('\n'), id: 'memory-agent-memory', timestamp: Date.now() },

@@ -287,6 +287,7 @@ ${contextInfo}
           }
         } else {
           atomic.characters.push({
+            id: newChar.name,
             name: newChar.name,
             identity: newChar.identity,
             publicIdentity: newChar.publicIdentity,
@@ -299,10 +300,11 @@ ${contextInfo}
             knownTo: [],
             })) : [],
             secrets: newChar.secrets || [],
-            arc: newChar.arcUpdate?.current ? [{
-              chapter: chapterNumber,
-              status: newChar.arcUpdate.current,
-            }] : [],
+            arc: {
+              start: '',
+              current: newChar.arcUpdate?.current || '',
+              goal: '',
+            },
           });
         }
       });
