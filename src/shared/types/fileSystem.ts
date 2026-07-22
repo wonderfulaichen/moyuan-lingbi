@@ -1,3 +1,14 @@
+/**
+ * 文件内容类型（用于图标区分和未来渲染增强）
+ * - markdown: Markdown 文档（.md/.markdown）
+ * - json: JSON 数据文件（.json）
+ * - code: 代码文件（.ts/.tsx/.js/.jsx/.py/.java 等）
+ * - outline: 大纲文件（.outline）
+ * - text: 纯文本（默认）
+ * - unknown: 未识别（文件夹或无扩展名）
+ */
+export type ContentType = 'markdown' | 'json' | 'code' | 'outline' | 'text' | 'unknown';
+
 export interface VFile {
   id: string;
   name: string;
@@ -9,6 +20,8 @@ export interface VFile {
   createdAt: number;
   updatedAt: number;
   version: number;
+  /** 内容类型（文件创建时根据扩展名推断，文件夹固定为 'unknown'） */
+  contentType?: ContentType;
 }
 
 export interface VFileMetadata {

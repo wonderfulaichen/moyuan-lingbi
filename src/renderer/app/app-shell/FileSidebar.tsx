@@ -3,6 +3,7 @@ import { ProjectMeta } from '../../../shared/types/fileSystem';
 import { ModelConfig } from '../../../shared/types';
 import { dataService } from '../../shared/services/DataService';
 import { InputModal } from '../../shared/components/Modal';
+import { getContentTypeIcon } from '../../shared/utils/contentType';
 import AppIcon from '../../../assets/icon.png';
 
 interface FileSidebarProps {
@@ -53,7 +54,10 @@ const FileSidebar: React.FC<FileSidebarProps> = ({
     return children.map(file => {
       const isFolder = file.type === 'folder';
       const isExpanded = expanded.has(file.id);
-      const iconInfo = FOLDER_ICONS[file.metadata.cardType || ''] || { icon: isFolder ? 'fa-folder' : 'fa-file-lines', color: 'var(--color-primary-300)' };
+      // 文件夹优先用 cardType 映射，文件用 contentType 映射
+      const iconInfo = isFolder
+        ? (FOLDER_ICONS[file.metadata.cardType || ''] || { icon: 'fa-folder', color: 'var(--color-primary-300)' })
+        : getContentTypeIcon(file.contentType);
 
       return (
         <div key={file.id}>
@@ -71,7 +75,7 @@ const FileSidebar: React.FC<FileSidebarProps> = ({
                 </span>
               ) : <span className="w-4 shrink-0"></span>}
 
-              <i className={`fas ${isFolder ? (isExpanded ? 'fa-folder-open' : iconInfo.icon) : 'fa-file-lines'} text-xs`} style={{ color: iconInfo.color }}></i>
+              <i className={`fas ${isFolder ? (isExpanded ? 'fa-folder-open' : iconInfo.icon) : iconInfo.icon} text-xs`} style={{ color: iconInfo.color }}></i>
 
               {renamingId === file.id ? (
                 <input

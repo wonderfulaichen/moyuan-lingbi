@@ -5,6 +5,7 @@ import { dataService } from '../../shared/services/DataService';
 import { aiService } from '../../shared/services/aiService';
 import { useAIStatus } from '../../shared/contexts/AIStatusContext';
 import { InputModal } from '../../shared/components/Modal';
+import { getContentTypeIcon } from '../../shared/utils/contentType';
 
 interface FileExplorerProps {
   activeFileId: string | null;
@@ -234,7 +235,9 @@ const FileExplorer: React.FC<FileExplorerProps> = ({ activeFileId, onSelectFile,
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-w-6xl">
             {children.map((child, i) => {
-              const childInfo = ICON_MAP[child.metadata.cardType || ''] || { icon: child.type === 'folder' ? 'fa-folder' : 'fa-file-lines', color: child.type === 'folder' ? '#f59e0b' : 'var(--color-primary-400)' };
+              const childInfo = child.type === 'folder'
+                ? (ICON_MAP[child.metadata.cardType || ''] || { icon: 'fa-folder', color: '#f59e0b' })
+                : getContentTypeIcon(child.contentType);
               const colorHex = typeof childInfo.color === 'string' && childInfo.color.startsWith('#') ? childInfo.color : 'var(--color-primary-300)';
               return (
                 <div

@@ -5,6 +5,7 @@ import { getPromptLibrary } from '../../../shared/prompts';
 import { memoryBankService } from './MemoryBankService';
 import { accumulateTodayWords } from '../stores/uiStore';
 import { nanoid } from '../utils/nanoid';
+import { inferContentType } from '../utils/contentType';
 
 function getRecycleBinKey(projectId: string) { return `moyuan-recycle-bin-${projectId}`; }
 function getRecycleFolderKey(projectId: string) { return `moyuan-recycle-folder-${projectId}`; }
@@ -528,6 +529,8 @@ class DataService {
       createdAt: now,
       updatedAt: now,
       version: 1,
+      // 文件夹固定为 unknown，文件根据扩展名推断
+      contentType: params.type === 'folder' ? 'unknown' : inferContentType(params.name),
     };
 
     fs.files[id] = file;
